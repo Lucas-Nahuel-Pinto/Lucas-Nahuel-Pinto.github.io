@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { LANGS } from '../../lib/i18n';
+
+export function getStaticPaths() {
+  return LANGS.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as 'es' | 'en';
+
+const copy = {
+  es: {
+    title: 'Sobre mí',
+    body: 'QA Engineer enfocado en calidad de software con agentes de IA, trazabilidad real en Jira y automatización reproducible. Sección en construcción.',
+  },
+  en: {
+    title: 'About',
+    body: 'QA Engineer focused on software quality with AI agents, real Jira traceability and reproducible automation. Section under construction.',
+  },
+}[lang];
+---
+
+<BaseLayout lang={lang} title={copy.title} path="/sobre-mi">
+  <h1>{copy.title}</h1>
+  <p class="muted">{copy.body}</p>
+</BaseLayout>

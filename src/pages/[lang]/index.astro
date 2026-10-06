@@ -1,0 +1,68 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { LANGS } from '../../lib/i18n';
+
+export function getStaticPaths() {
+  return LANGS.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as 'es' | 'en';
+
+const copy = {
+  es: {
+    heroRole: 'QA Engineer',
+    heroPitch:
+      'Diseño flujos de QA que evitan bugs en vez de cazarlos: trazabilidad completa, checklists navegables y automatización con agentes.',
+    scroll: 'Ver proyectos ↓',
+    workTitle: 'Proyectos',
+    comingSoon: 'Los casos de estudio se cargan en la próxima fase.',
+  },
+  en: {
+    heroRole: 'QA Engineer',
+    heroPitch:
+      'I design QA flows that prevent bugs instead of hunting them: full traceability, navigable checklists and agent-driven automation.',
+    scroll: 'See projects ↓',
+    workTitle: 'Projects',
+    comingSoon: 'Case studies load in the next phase.',
+  },
+}[lang];
+---
+
+<BaseLayout lang={lang} path="">
+  <section class="hero">
+    <p class="role">{copy.heroRole}</p>
+    <h1>Lucas Pinto</h1>
+    <p class="pitch">{copy.heroPitch}</p>
+    <a class="btn btn-primary" href="#work">{copy.scroll}</a>
+  </section>
+
+  <section id="work">
+    <h2>{copy.workTitle}</h2>
+    <p class="muted">{copy.comingSoon}</p>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding: 4.5rem 0 3rem;
+    text-align: center;
+  }
+  .role {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    margin: 0 0 0.5rem;
+  }
+  .hero h1 {
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    margin: 0 0 0.75rem;
+  }
+  .pitch {
+    max-width: 640px;
+    margin: 0 auto 1.5rem;
+    color: var(--fg-muted);
+    font-size: 1.1rem;
+  }
+</style>

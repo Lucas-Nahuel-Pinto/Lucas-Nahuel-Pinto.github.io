@@ -1,0 +1,83 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import { UI, localizePath, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = UI[lang];
+const here = Astro.url.pathname;
+const otherLang = lang === 'es' ? 'en' : 'es';
+const workHref = `${lang === 'es' ? '/es' : '/en'}#work`;
+---
+
+<header class="nav">
+  <div class="container nav-inner">
+    <a class="brand" href={`/${lang}`}>Lucas Pinto</a>
+    <nav class="links" aria-label="main">
+      <a href={workHref}>{t.navWork}</a>
+      <a href={`/${lang}/sobre-mi`}>{t.navAbout}</a>
+      <a href="https://github.com/Lucas-Nahuel-Pinto" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <div class="actions">
+      <a class="lang" href={localizePath(here, otherLang)}>{t.langSwitch}</a>
+      <ThemeToggle lang={lang} />
+    </div>
+  </div>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    min-height: 3.25rem;
+  }
+  .brand {
+    font-weight: 700;
+    color: var(--fg);
+  }
+  .links {
+    display: flex;
+    gap: 1rem;
+    flex: 1;
+  }
+  .links a {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+  }
+  .links a:hover {
+    color: var(--accent);
+  }
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .lang {
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.35rem 0.6rem;
+    color: var(--fg);
+  }
+  .lang:hover {
+    border-color: var(--accent);
+    text-decoration: none;
+  }
+  @media (max-width: 640px) {
+    .links {
+      display: none;
+    }
+  }
+</style>

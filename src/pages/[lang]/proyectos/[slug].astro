@@ -1,0 +1,18 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { LANGS } from '../../../lib/i18n';
+
+export const SLUGS = ['qa-flow-checklists', 'jira-traceability', 'harness-config'] as const;
+
+export function getStaticPaths() {
+  return LANGS.flatMap((lang) => SLUGS.map((slug) => ({ params: { lang, slug } })));
+}
+
+const lang = Astro.params.lang as 'es' | 'en';
+const slug = Astro.params.slug!;
+---
+
+<BaseLayout lang={lang} title={slug} path={`/proyectos/${slug}`}>
+  <h1>{slug}</h1>
+  <p class="muted">Case study — en construcción (fase 3).</p>
+</BaseLayout>

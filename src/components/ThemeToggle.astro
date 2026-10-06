@@ -1,0 +1,45 @@
+---
+interface Props {
+  lang: 'es' | 'en';
+}
+const { lang } = Astro.props;
+---
+<button
+  id="theme-toggle"
+  type="button"
+  aria-label={lang === 'es' ? 'Cambiar tema' : 'Toggle theme'}
+  class="theme-toggle"
+>
+  <span class="icon-sun" aria-hidden="true">☀️</span>
+  <span class="icon-moon" aria-hidden="true">🌙</span>
+</button>
+
+<style>
+  .theme-toggle {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0.4rem 0.55rem;
+  }
+  .theme-toggle:hover {
+    border-color: var(--accent);
+  }
+  :global([data-theme='light']) .icon-moon,
+  :global([data-theme='dark']) .icon-sun {
+    display: none;
+  }
+</style>
+
+<script is:inline>
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    const root = document.documentElement;
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try {
+      localStorage.setItem('theme', next);
+    } catch {}
+  });
+</script>

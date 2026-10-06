@@ -1,0 +1,70 @@
+---
+import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import { UI, type Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  path?: string;
+}
+
+const { lang, title, description, path = '' } = Astro.props;
+const t = UI[lang];
+const fullTitle = title ? `${title} · ${t.siteTitle}` : t.siteTitle;
+const desc = description ?? t.siteDescription;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const esUrl = new URL(`/es${path}`, Astro.site);
+const enUrl = new URL(`/en${path}`, Astro.site);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="es" href={esUrl} />
+    <link rel="alternate" hreflang="en" href={enUrl} />
+    <link rel="alternate" hreflang="x-default" href={esUrl} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="generator" content={Astro.generator} />
+    <script
+      is:inline
+      define:vars={{ defaultTheme: 'no-preference' }}
+    >
+      (() => {
+        let theme = null;
+        try {
+          theme = localStorage.getItem('theme');
+        } catch {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <script type="application/ld+json" set:html={JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'Person',
+      name: 'Lucas Nahuel Pinto',
+      jobTitle: 'QA Engineer',
+      url: Astro.site?.toString(),
+      sameAs: ['https://github.com/Lucas-Nahuel-Pinto'],
+    })} />
+  </head>
+  <body>
+    <Navbar lang={lang} />
+    <main class="container">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+  </body>
+</html>
