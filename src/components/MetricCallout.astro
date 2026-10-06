@@ -1,0 +1,44 @@
+---
+import type { Metric } from '../lib/projects';
+
+interface Props {
+  metric: Metric;
+  align?: 'start' | 'center';
+}
+
+const { metric, align = 'start' } = Astro.props;
+---
+
+<div class:list={['metric', align === 'center' && 'center']}>
+  <span class="metric-value">{metric.value}</span>
+  <span class="metric-label">{metric.label}</span>
+</div>
+
+<style>
+  .metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    background: var(--card);
+  }
+  .metric.center {
+    text-align: center;
+    align-items: center;
+    border-left-width: 1px;
+    border-top: 4px solid var(--accent);
+  }
+  .metric-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1.1;
+  }
+  .metric-label {
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+  }
+</style>

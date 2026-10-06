@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>harness-config — cómo funciona</title>
+<style>
+/* ============================================================
+   Self-contained dark deck. Tokens inlined (html-ppt base + tokyo-night)
+   plus custom visuals. No external CSS/JS — one file, offline.
+   ============================================================ */
+:root{
+  --bg:#1a1b26;--bg-soft:#16161e;--surface:#24283b;--surface-2:#2f334d;
+  --border:rgba(192,202,245,.12);--border-strong:rgba(192,202,245,.24);
+  --text-1:#c0caf5;--text-2:#a9b1d6;--text-3:#565f89;
+  --accent:#7aa2f7;--accent-2:#bb9af7;--accent-3:#7dcfff;
+  --good:#9ece6a;--warn:#e0af68;--bad:#f7768e;
+  --grad:linear-gradient(135deg,#7aa2f7,#bb9af7 55%,#f7768e);
+  --radius:14px;--radius-sm:9px;--radius-lg:22px;
+  --shadow:0 10px 30px rgba(0,0,0,.45);
+  --shadow-lg:0 24px 62px rgba(0,0,0,.6);
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+  --font-mono:'JetBrains Mono','SFMono-Regular',Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text-1);
+  font-family:var(--font-sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+code,kbd,pre{font-family:var(--font-mono)}
+a{color:var(--accent);text-decoration:none}
+
+.deck{position:relative;width:100vw;height:100vh;overflow:hidden;background:radial-gradient(1200px 800px at 80% -10%,rgba(122,162,247,.10),transparent 60%),var(--bg)}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;
+  padding:clamp(36px,5vh,72px) clamp(40px,6vw,96px);
+  opacity:0;pointer-events:none;transform:translateX(34px);overflow:hidden;
+  transition:opacity .45s var(--ease),transform .45s var(--ease)}
+.slide.is-active{opacity:1;pointer-events:auto;transform:translateX(0);z-index:2}
+.slide.is-prev{transform:translateX(-34px)}
+
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--text-3);margin-bottom:14px}
+h1{font-size:clamp(34px,5vw,64px);line-height:1.05;font-weight:800;letter-spacing:-.03em;margin:0 0 16px}
+h2{font-size:clamp(26px,3.4vw,44px);line-height:1.1;font-weight:750;letter-spacing:-.02em;margin:0 0 22px}
+h3{font-size:20px;font-weight:650;margin:0 0 8px}
+.lede{font-size:clamp(16px,1.6vw,21px);color:var(--text-2);font-weight:300;max-width:72ch}
+.dim{color:var(--text-2)}.dim2{color:var(--text-3)}
+.mono{font-family:var(--font-mono)}
+.gradient-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.strong{font-weight:700;color:var(--text-1)}
+
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g4{grid-template-columns:repeat(4,1fr)}
+.mt-s{margin-top:10px}.mt-m{margin-top:20px}.mt-l{margin-top:34px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow)}
+.card h3{margin-top:0}
+.card-accent{border-top:3px solid var(--accent)}
+.card-good{border-top:3px solid var(--good)}
+.card-bad{border-top:3px solid var(--bad)}
+.card-warn{border-top:3px solid var(--warn)}
+
+code{background:var(--surface-2);padding:.12em .42em;border-radius:5px;font-size:.88em;color:var(--accent-3)}
+.tag{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;
+  background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);margin:0 6px 6px 0}
+.tag-good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good);border-color:color-mix(in srgb,var(--good) 34%,transparent)}
+.tag-bad{background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad);border-color:color-mix(in srgb,var(--bad) 34%,transparent)}
+.tag-info{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);border-color:color-mix(in srgb,var(--accent) 34%,transparent)}
+.tag-warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn);border-color:color-mix(in srgb,var(--warn) 34%,transparent)}
+
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}
+th{background:var(--surface-2);font-weight:650;color:var(--text-1)}
+tr:last-child td{border-bottom:0}
+td.k{color:var(--text-2)}
+
+ul.clean{list-style:none;padding:0;margin:0}
+ul.clean li{padding-left:26px;position:relative;margin:9px 0;color:var(--text-2)}
+ul.clean li::before{content:"›";position:absolute;left:6px;color:var(--accent);font-weight:700}
+ul.clean li strong{color:var(--text-1)}
+
+.flow{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;justify-content:center}
+.node{background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--radius-sm);
+  padding:14px 16px;min-width:150px;text-align:center;font-size:14px;display:flex;flex-direction:column;justify-content:center}
+.node .n-t{font-weight:700;color:var(--text-1)}
+.node .n-s{font-size:12px;color:var(--text-3);margin-top:3px}
+.node.accent{border-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 40%,transparent)}
+.node.good{border-color:color-mix(in srgb,var(--good) 55%,transparent)}
+.node.gen{border-color:color-mix(in srgb,var(--warn) 55%,transparent)}
+.arrow{align-self:center;color:var(--text-3);font-size:22px;padding:0 10px}
+.flow.vert{flex-direction:column;align-items:center}
+.flow.vert .arrow{transform:rotate(90deg);padding:6px 0}
+
+.cascade{display:flex;flex-direction:column;gap:12px;max-width:780px;margin:0 auto}
+.layer{border-radius:var(--radius-sm);padding:14px 20px;border:1px solid var(--border);display:flex;align-items:center;gap:14px}
+.layer .rank{font-weight:800;font-size:20px;color:var(--text-3);width:26px;text-align:center}
+.layer .body{flex:1}
+.layer.l1{background:color-mix(in srgb,var(--accent) 12%,var(--surface));border-color:color-mix(in srgb,var(--accent) 40%,transparent);margin-left:0}
+.layer.l2{background:color-mix(in srgb,var(--accent-2) 10%,var(--surface));border-color:color-mix(in srgb,var(--accent-2) 34%,transparent);margin-left:38px}
+.layer.l3{background:var(--surface);margin-left:76px}
+.wins{font-size:12px;font-weight:700;color:var(--good);text-transform:uppercase;letter-spacing:.08em}
+
+.callout{border-left:4px solid var(--accent);background:var(--surface);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:14px 18px;color:var(--text-2)}
+.callout.warn{border-left-color:var(--warn)}
+.callout.good{border-left-color:var(--good)}
+.callout.bad{border-left-color:var(--bad)}
+
+.steps{counter-reset:s;display:flex;flex-direction:column;gap:12px}
+.step{display:flex;gap:14px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px}
+.step .num{counter-increment:s;flex:none;width:30px;height:30px;border-radius:50%;background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent);font-weight:800;display:flex;align-items:center;justify-content:center}
+.step .num::before{content:counter(s)}
+.step .body{flex:1;color:var(--text-2)}
+.step .body strong{color:var(--text-1)}
+
+.progress{position:fixed;left:0;right:0;bottom:0;height:3px;background:transparent;z-index:20}
+.progress>span{display:block;height:100%;width:0;background:var(--accent);transition:width .3s var(--ease)}
+.foot{position:fixed;bottom:16px;left:36px;right:36px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--text-3);z-index:15;pointer-events:none}
+.dotnav{position:fixed;top:18px;right:30px;display:flex;gap:6px;z-index:20}
+.dotnav button{width:9px;height:9px;border-radius:50%;border:0;background:var(--surface-2);cursor:pointer;padding:0;opacity:.7}
+.dotnav button.on{background:var(--accent);opacity:1;transform:scale(1.25)}
+.help{position:fixed;top:18px;left:30px;font-size:12px;color:var(--text-3);z-index:20}
+@media print{.slide{position:relative;opacity:1!important;transform:none!important;height:100vh;page-break-after:always}.progress,.foot,.dotnav,.help{display:none!important}}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+  <!-- 1 · COVER -->
+  <section class="slide is-active">
+    <div style="text-align:center;max-width:920px;margin:0 auto">
+      <div class="eyebrow">Guía visual · Boilerplate QA Engineering</div>
+      <h1><span class="gradient-text">harness-config</span></h1>
+      <p class="lede" style="margin:0 auto 8px">Un solo lugar para armar a tus agentes: elegir <strong>con qué herramientas trabajan</strong> y <strong>con qué modelos de IA razonan</strong>.</p>
+      <p class="dim2" style="font-size:15px">Un comando · dos mitades · un buscador de modelos</p>
+      <div class="mt-l">
+        <span class="tag tag-info">OpenCode</span>
+        <span class="tag tag-info">Codex</span>
+        <span class="tag tag-info">Claude Code</span>
+        <span class="tag">300+ modelos</span>
+        <span class="tag">6 roles QA</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 · METÁFORA (taller = harness) -->
+  <section class="slide">
+    <div class="eyebrow">La idea, en una imagen</div>
+    <h2>Tu <span class="gradient-text">harness</span> es como un taller</h2>
+    <p class="lede">El <strong>harness</strong> es el entorno donde trabaja tu agente: el CLI junto con toda su configuración. Pensalo como un taller: hay <strong>herramientas</strong> colgadas en la pared y <strong>gente</strong> que trabaja.</p>
+    <div class="grid g3 mt-l">
+      <div class="card card-accent">
+        <h3>🧰 Las herramientas</h3>
+        <p class="dim">El navegador, la base de datos, el buscador. El harness las deja disponibles y <strong>el agente las usa</strong>. Hay muchas; sacás solo las que el trabajo pide. En la jerga: los <code>MCPs</code>.</p>
+      </div>
+      <div class="card card-accent">
+        <h3>🧑🔧 El que dirige</h3>
+        <p class="dim">El <strong>agente principal</strong>: quien piensa y te responde. Su cerebro es el <strong>modelo principal</strong>.</p>
+      </div>
+      <div class="card card-accent">
+        <h3>👷 Los especialistas</h3>
+        <p class="dim">Subagentes para tareas puntuales: uno que revisa, otro que redacta. Cada uno con su <strong>modelo por rol</strong>.</p>
+      </div>
+    </div>
+    <div class="callout mt-m"><strong>Para no mezclar los términos:</strong> el <strong>agente</strong> es quien trabaja y usa las herramientas; el <strong>harness</strong> es el taller que se las da. <code>harness-config</code> arma ese taller.</div>
+  </section>
+
+  <!-- 3 · QUÉ RESUELVE -->
+  <section class="slide">
+    <div class="eyebrow">Para qué sirve</div>
+    <h2>Los problemas que te saca de encima</h2>
+    <div class="grid g2 mt-s">
+      <div class="card card-warn"><h3>✍️ Configurar a mano</h3><p class="dim">Los agentes leen 3 archivos en 3 formatos distintos. Hacerlo a mano es lento y fácil de romper. <strong>Acá elegís una vez y se escribe solo.</strong></p></div>
+      <div class="card card-warn"><h3>💨 Que tu config se pierda</h3><p class="dim">La config de la sesión se vuelve a escribir cada vez que entrás al repo. Si algo lo pusiste a mano, <strong>desaparece</strong>. Con esto, tu elección queda guardada aparte.</p></div>
+      <div class="card card-warn"><h3>🔎 Buscar entre cientos</h3><p class="dim">Hay 300+ modelos disponibles. Sin buscador, elegir uno es adivinar. <strong>Acá filtrás escribiendo</strong> y ves todo agrupado y ordenado.</p></div>
+      <div class="card card-warn"><h3>⚰️ Que un modelo desaparezca</h3><p class="dim">Los proveedores retiran modelos sin avisar y el agente falla sin explicar por qué. <strong>Acá te enterás antes</strong>, con un aviso claro.</p></div>
+      <div class="card card-warn"><h3>↩️ Menús sin salida</h3><p class="dim">Entrabas a elegir y no podías volver atrás. <strong>Ahora cada menú tiene "volver"</strong>, sin perder lo hecho.</p></div>
+      <div class="card card-warn"><h3>🤝 Acordar en equipo</h3><p class="dim">¿Qué modelo hace cada trabajo? Sin un lugar donde escribirlo, cada uno hace lo suyo. <strong>Acá el acuerdo queda registrado</strong> y lo reciben todos.</p></div>
+    </div>
+  </section>
+
+  <!-- 4 · DOS MITADES -->
+  <section class="slide">
+    <div class="eyebrow">Cómo está armado</div>
+    <h2>Dos mitades, un comando</h2>
+    <p class="lede">Todo empieza en un mismo lugar. Desde ahí elegís una de las dos mitades según lo que necesites.</p>
+    <div class="flow mt-l">
+      <div class="node accent"><span class="n-t">bun run harness-config</span><span class="n-s">el punto de entrada</span></div>
+      <div class="arrow">→</div>
+      <div class="node gen"><span class="n-t">session</span><span class="n-s">herramientas + modelo principal</span></div>
+      <div class="arrow">·</div>
+      <div class="node good"><span class="n-t">roles</span><span class="n-s">un modelo por especialista</span></div>
+    </div>
+    <div class="grid g2 mt-l">
+      <div class="callout"><strong>session</strong> = el taller de <em>hoy</em>, en tu máquina: qué herramientas sacás y quién dirige. Se rearma solo, no molesta a nadie.</div>
+      <div class="callout good"><strong>roles</strong> = los especialistas del equipo: quién hace cada trabajo. Es un acuerdo, por eso queda escrito en el repo.</div>
+    </div>
+    <div class="callout mt-m"><strong>Y siempre podés volver.</strong> En las dos mitades hay una opción para regresar al menú principal sin perder nada. Se explica más adelante.</div>
+  </section>
+
+  <!-- 5 · DOS CONFIGURACIONES, DOS LUGARES -->
+  <section class="slide">
+    <div class="eyebrow">La diferencia clave</div>
+    <h2>Dos configuraciones, dos lugares</h2>
+    <div class="grid g2 mt-s">
+      <div class="card card-accent">
+        <h3><code>session</code> — tu setup personal</h3>
+        <p class="dim">Es como el fondo de pantalla y los atajos de <strong>tu</strong> compu: los cambiás a tu gusto, cuando querés, y a nadie más le afecta.</p>
+        <ul class="clean">
+          <li>Se guarda en <strong>tu máquina</strong></li>
+          <li>Se rearma sola al entrar al repo</li>
+          <li>Nadie más lo ve</li>
+        </ul>
+      </div>
+      <div class="card card-good">
+        <h3><code>roles</code> — los acuerdos del equipo</h3>
+        <p class="dim">Es como el reglamento de la oficina: si lo cambiás, cambia el trabajo de todos. Por eso queda <strong>escrito y con historial</strong>.</p>
+        <ul class="clean">
+          <li>Se guarda en <strong>el repositorio</strong></li>
+          <li>Se cambia a propósito, no solo</li>
+          <li>Lo recibe todo el equipo</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout mt-m warn"><strong>Regla simple:</strong> lo personal nunca toca lo compartido. Por eso el arranque automático al entrar al repo ajusta solo la mitad <code>session</code> y <strong>nunca</strong> te pregunta ni escribe los archivos del equipo.</div>
+  </section>
+
+  <!-- 6 · POR QUÉ UNA SE COMPARTE Y LA OTRA NO -->
+  <section class="slide">
+    <div class="eyebrow">La pregunta obvia</div>
+    <h2>¿Por qué <code>roles</code> se comparte y <code>session</code> no?</h2>
+    <p class="lede">No es un capricho: son <strong>dos tipos de decisión</strong> distintos. La pregunta es siempre la misma: <em>¿esto cambia el trabajo de los demás o solo el mío?</em></p>
+    <div class="grid g2 mt-m">
+      <div class="card card-good">
+        <h3>🤝 Cambia el trabajo de todos → va al repo</h3>
+        <p class="dim">Qué modelo hace cada rol es un <strong>acuerdo</strong>. Se guarda en el repositorio para que todo el equipo reparta el trabajo igual y los resultados se puedan repetir.</p>
+      </div>
+      <div class="card card-accent">
+        <h3>🙋 Es solo tuyo → queda en tu máquina</h3>
+        <p class="dim">Con qué modelo hablás vos es una <strong>preferencia</strong>. Se guarda local para no imponerle tu gusto a nadie.</p>
+      </div>
+    </div>
+    <div class="callout mt-m bad"><strong>¿Y si el rol fuera personal?</strong> Cada dev usaría un modelo distinto para la misma tarea. Un problema aparecería en una máquina y no en otra, y nadie sabría por qué. Por eso el ruteo por rol es un <strong>acuerdo</strong>: se decide una vez, igual para todos.</div>
+  </section>
+
+  <!-- 7 · FLUJO SESSION -->
+  <section class="slide">
+    <div class="eyebrow">Recorrido 1</div>
+    <h2>Cómo se configura <code>session</code></h2>
+    <div class="flow mt-s">
+      <div class="node accent"><span class="n-t">Menú</span><span class="n-s">elegís session</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><span class="n-t">Perfil de herramientas</span><span class="n-s">base / e2e / api / sprint…</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><span class="n-t">Buscador de modelos</span><span class="n-s">elegís quién dirige</span></div>
+      <div class="arrow">→</div>
+      <div class="node gen"><span class="n-t">Escribe la config</span><span class="n-s">3 archivos, listos</span></div>
+    </div>
+    <div class="grid g3 mt-l">
+      <div class="card"><h3>1 · Perfil</h3><p class="dim">Un atajo de herramientas: <code>base</code> trae dos; <code>sprint</code> trae cinco (navegador, API, base de datos, docs, buscador). O armás el tuyo a mano.</p></div>
+      <div class="card"><h3>2 · Modelo</h3><p class="dim">Elegís quién dirige la sesión, con búsqueda por nombre.</p></div>
+      <div class="card"><h3>3 · Escritura</h3><p class="dim">Se escriben los 3 archivos con tus elecciones. Abrís el agente y ya está todo.</p></div>
+    </div>
+    <div class="callout mt-m"><strong>Puede correrse solo.</strong> Sin abrir el menú, un perfil directo:<br><code>bun run harness-config session base</code> — útil para scripts y para el arranque automático.</div>
+  </section>
+
+  <!-- 8 · FLUJO ROLES -->
+  <section class="slide">
+    <div class="eyebrow">Recorrido 2</div>
+    <h2>Cómo se asignan los <code>roles</code></h2>
+    <div class="flow mt-s">
+      <div class="node accent"><span class="n-t">Menú</span><span class="n-s">elegís roles</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><span class="n-t">Lista de roles</span><span class="n-s">6 especialistas</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><span class="n-t">Buscador de modelos</span><span class="n-s">el mismo buscador</span></div>
+      <div class="arrow">→</div>
+      <div class="node good"><span class="n-t">Escribe los agentes</span><span class="n-s">archivos del equipo</span></div>
+    </div>
+    <div class="grid g3 mt-l">
+      <div class="card card-good"><h3>qa-plan</h3><p class="dim2">Razonar y planificar</p></div>
+      <div class="card card-good"><h3>qa-code</h3><p class="dim2">Escribir tests</p></div>
+      <div class="card card-good"><h3>qa-review</h3><p class="dim2">Revisar código</p></div>
+      <div class="card card-good"><h3>qa-bulk</h3><p class="dim2">Trabajo mecánico</p></div>
+      <div class="card card-good"><h3>qa-write</h3><p class="dim2">Redactar prosa</p></div>
+      <div class="card card-good"><h3>qa-vision</h3><p class="dim2">Mirar capturas</p></div>
+    </div>
+    <div class="callout mt-m good"><strong>Ejemplo.</strong> Para <code>qa-review</code> elegís el modelo que mejor revisa código; para <code>qa-write</code>, el que mejor redacta. Antes de guardar, el menú te muestra un resumen de lo que va a cambiar.</div>
+  </section>
+
+  <!-- 9 · ELEGIR UN MODELO -->
+  <section class="slide">
+    <div class="eyebrow">El buscador</div>
+    <h2>Elegir un modelo, sin adivinar</h2>
+    <p class="lede">Con 300+ modelos, la clave es <strong>encontrar el tuyo rápido</strong>. Las dos mitades usan el mismo buscador, así que se aprende una sola vez.</p>
+    <div class="grid g3 mt-l">
+      <div class="card"><h3>🔤 Buscás escribiendo</h3><p class="dim">Escribís <code>gemini</code>, <code>claude</code> o <code>gpt</code> y la lista se filtra sola.</p></div>
+      <div class="card"><h3>🗂️ Todo agrupado</h3><p class="dim">Primero los <strong>gratis</strong>, después por proveedor y origen. Todo en orden, no una lista suelta.</p></div>
+      <div class="card"><h3>📍 Marcado el actual</h3><p class="dim">El que ya está en uso aparece señalado, para no perderte.</p></div>
+    </div>
+    <div class="callout mt-m"><strong>Ejemplo paso a paso.</strong> Buscás <code>glm</code> → aparecen solo los modelos que contienen esa palabra, agrupados y ordenados → elegís uno → listo. Sin scrollear 300 items ni memorizar nombres raros.</div>
+  </section>
+
+  <!-- 10 · CASCADA -->
+  <section class="slide">
+    <div class="eyebrow">De dónde sale el modelo</div>
+    <h2>¿Quién decide el modelo por defecto?</h2>
+    <p class="lede">Se busca en <strong>tres lugares, en orden</strong>. Gana el primero que tenga algo. Es una cascada.</p>
+    <div class="cascade mt-m">
+      <div class="layer l1"><div class="rank">1</div><div class="body"><strong>Tu elección personal</strong><br><span class="dim2 mono">.selected-harness-model</span> <span class="tag tag-warn">solo tuya</span></div><div class="wins">gana si existe</div></div>
+      <div class="layer l2"><div class="rank">2</div><div class="body"><strong>El default del equipo</strong><br><span class="dim2 mono">project.yaml → harness.opencode_default_model</span> <span class="tag tag-good">en el repo</span></div><div class="wins">si no elegiste vos</div></div>
+      <div class="layer l3"><div class="rank">3</div><div class="body"><strong>Nadie fija nada</strong><br><span class="dim2">Se deja que el propio agente elija por su cuenta</span></div><div class="wins">último recurso</div></div>
+    </div>
+    <div class="callout mt-m"><strong>Ejemplo.</strong> Vos elegís un modelo distinto al del equipo. La próxima vez que entrás al repo, se usa <strong>el tuyo</strong>. Si algún día no elegís ninguno, cae al del equipo, sin que nadie más se entere de tu preferencia.</div>
+  </section>
+
+  <!-- 11 · DEPRECACIÓN -->
+  <section class="slide">
+    <div class="eyebrow">Cuando un modelo se retira</div>
+    <h2>Modelos que dejan de existir</h2>
+    <p class="lede">Es como una pieza que deja de fabricarse: el proveedor la retira sin avisar. El sistema te lo dice <strong>antes</strong> de que te rompa la sesión.</p>
+    <div class="grid g2 mt-m">
+      <div class="card card-good"><h3>🟢 Al elegir</h3><p class="dim">El buscador <strong>oculta los modelos retirados</strong>: no te deja elegir algo que ya no sirve.</p></div>
+      <div class="card card-warn"><h3>🟡 Al usar</h3><p class="dim">Si el que tenías ya no está, aparece un <strong>aviso claro</strong> con el paso para reemplazarlo. Te avisa, no te frena.</p></div>
+    </div>
+    <div class="callout mt-m warn">¿Por qué solo avisa y no bloquea? Porque el chequeo es <strong>sin internet</strong> y tiene que ser instantáneo: corre cada vez que entrás al repo. Una caída de red no puede dejarte afuera.</div>
+  </section>
+
+  <!-- 12 · VOLVER ATRÁS -->
+  <section class="slide">
+    <div class="eyebrow">Navegación</div>
+    <h2>Siempre podés volver</h2>
+    <p class="lede">Las dos mitades tienen una opción <strong>"← volver"</strong>: regresás al menú principal sin perder lo que venías haciendo. Nunca te quedás sin salida.</p>
+    <div class="flow mt-s">
+      <div class="node accent"><span class="n-t">Menú principal</span><span class="n-s">session | roles</span></div>
+      <div class="arrow">→</div>
+      <div class="node"><span class="n-t">El submenú</span><span class="n-s">elegís "← volver"</span></div>
+      <div class="arrow">→</div>
+      <div class="node good"><span class="n-t">Vuelve al menú</span><span class="n-s">sin perder nada</span></div>
+    </div>
+    <div class="grid g2 mt-m">
+      <div class="callout"><strong>Cómo lo logra.</strong> El submenú le manda una señal al menú principal ("quieren volver") y este se reabre solo. Es una puerta giratoria: entrás, cambiás de idea y salís sin trabar nada.</div>
+      <div class="callout good"><strong>Si no hay menú principal.</strong> Cuando lanzás una mitad directo, "volver" simplemente cancela con un mensaje claro. Nunca te deja colgado.</div>
+    </div>
+  </section>
+
+  <!-- 13 · EJEMPLO COMPLETO -->
+  <section class="slide">
+    <div class="eyebrow">En la práctica</div>
+    <h2>Un día de trabajo, paso a paso</h2>
+    <div class="steps mt-s">
+      <div class="step"><div class="num"></div><div class="body">Abrís el menú: <code>bun run harness-config</code> → elegís <strong>session</strong>.</div></div>
+      <div class="step"><div class="num"></div><div class="body">Elegís el perfil <code>sprint</code>: te deja listas navegador, API, base de datos, docs y buscador.</div></div>
+      <div class="step"><div class="num"></div><div class="body">En el buscador escribís <code>glm</code> y elegís quién dirige la sesión.</div></div>
+      <div class="step"><div class="num"></div><div class="body">Se escriben los 3 archivos de config. Abrís el agente y ya tiene todo listo para testear.</div></div>
+      <div class="step"><div class="num"></div><div class="body">Otro día, elegís <strong>roles</strong> y le asignás a <code>qa-review</code> el modelo que mejor revisa código. Eso queda en el repo, y el equipo lo recibe.</div></div>
+    </div>
+  </section>
+
+  <!-- 14 · CHULETA -->
+  <section class="slide">
+    <div class="eyebrow">Para llevar</div>
+    <h2>Chuleta de comandos</h2>
+    <table>
+      <thead><tr><th style="width:48%">Comando</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td><code>bun run harness-config</code></td><td>Abre el menú: <code>session</code>, <code>roles</code>, ayuda, salir</td></tr>
+        <tr><td><code>bun run harness-config session</code></td><td>Elegir herramientas + modelo principal, paso a paso</td></tr>
+        <tr><td><code>bun run harness-config session base</code></td><td>Mismo resultado con el perfil <code>base</code>, sin preguntas</td></tr>
+        <tr><td><code>bun run harness-config roles</code></td><td>Asignar un modelo a cada rol QA</td></tr>
+        <tr><td><code>bun run harness-config roles --list</code></td><td>Ver la lista de modelos disponibles</td></tr>
+        <tr><td><code>bun run harness-config-default</code></td><td>Arranque automático al entrar al repo (sin preguntas)</td></tr>
+        <tr><td><code>bun run harness-config:roles:test</code></td><td>Corre los tests del buscador y catálogo de modelos</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 15 · CIERRE -->
+  <section class="slide">
+    <div style="text-align:center;max-width:880px;margin:0 auto">
+      <div class="eyebrow">En una frase</div>
+      <h1 style="font-size:clamp(26px,3.4vw,44px)">Elegís <span class="gradient-text">las herramientas</span> y <span class="gradient-text">los cerebros</span> que usan tus agentes, todo desde un mismo lugar.</h1>
+      <div class="grid g3 mt-l" style="text-align:left">
+        <div class="card card-accent"><h3>session</h3><p class="dim2">Herramientas + modelo principal, en tu máquina.</p></div>
+        <div class="card card-accent"><h3>cascada</h3><p class="dim2">Tu elección, si no el default del equipo.</p></div>
+        <div class="card card-good"><h3>roles</h3><p class="dim2">Un especialista por tarea, acordado en el repo.</p></div>
+      </div>
+      <p class="dim2 mt-l" style="font-size:14px">¿Preguntas?</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="help">click o → avanzar · ← volver · puntos para saltar · <span id="pos">1</span>/<span id="tot">15</span></div>
+<div class="dotnav" id="dots"></div>
+<div class="foot"><span>harness-config</span><span>Boilerplate QA Engineering</span></div>
+<div class="progress"><span id="bar"></span></div>
+
+<script>
+(function(){
+  var slides=[].slice.call(document.querySelectorAll('.slide'));
+  var i=0,n=slides.length;
+  var pos=document.getElementById('pos'),tot=document.getElementById('tot'),bar=document.getElementById('bar'),dots=document.getElementById('dots');
+  tot.textContent=n;
+  slides.forEach(function(_,k){var b=document.createElement('button');b.title='Slide '+(k+1);b.onclick=function(){go(k)};dots.appendChild(b)});
+  function render(){
+    slides.forEach(function(s,k){s.classList.toggle('is-active',k===i);s.classList.toggle('is-prev',k<i)});
+    pos.textContent=i+1;
+    bar.style.width=((i+1)/n*100)+'%';
+    [].forEach.call(dots.children,function(d,k){d.classList.toggle('on',k===i)});
+    location.hash='/'+(i+1);
+  }
+  function go(k){i=Math.max(0,Math.min(n-1,k));render()}
+  document.addEventListener('keydown',function(e){
+    if(['ArrowRight','ArrowDown','PageDown',' ','Enter'].indexOf(e.key)>=0){e.preventDefault();go(i+1)}
+    else if(['ArrowLeft','ArrowUp','PageUp'].indexOf(e.key)>=0){e.preventDefault();go(i-1)}
+    else if(e.key==='Home'){go(0)} else if(e.key==='End'){go(n-1)}
+  });
+  document.getElementById('deck').addEventListener('click',function(e){
+    if(e.target.closest('.dotnav'))return;
+    go(i+1);
+  });
+  if(location.hash){var m=location.hash.match(/\/(\d+)/);if(m)go(parseInt(m[1],10)-1)}
+  render();
+})();
+</script>
+</body>
+</html>

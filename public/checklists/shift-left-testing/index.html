@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist — Shift-Left Testing (manual QA)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    padding: 2rem 1rem 4rem;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  header p { color: var(--muted); margin-top: .35rem; font-size: .95rem; }
+  .progress-bar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: .6rem .9rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; row-gap: .45rem;
+  }
+  .progress-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; min-width: 120px; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width .3s; }
+  .progress-label { font-size: .85rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .search { display: flex; align-items: center; gap: .3rem; }
+  .search input {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: .3rem .55rem; font-size: .82rem; width: 160px; outline: none;
+    transition: border-color .15s;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search input::-webkit-search-cancel-button { cursor: pointer; }
+  .search-count {
+    font-size: .74rem; color: var(--muted); min-width: 42px; text-align: center;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .search-count.none { color: var(--red); font-weight: 700; }
+  .search button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; width: 26px; height: 26px; font-size: .8rem; line-height: 1;
+    cursor: pointer; transition: background .15s;
+  }
+  .search button:hover { background: var(--border); }
+  mark.hit { background: rgba(210,153,34,.45); color: var(--text); border-radius: 3px; padding: 0 1px; }
+  mark.hit.hit-current { background: var(--accent); color: var(--bg); font-weight: 700; }
+  section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.1rem 1.3rem; margin-bottom: 1.1rem;
+  }
+  h2 {
+    font-size: 1.05rem; font-weight: 700; margin-bottom: .8rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  h2 .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .d-prep .dot { background: var(--accent); }
+  .d-sel .dot { background: var(--orange); }
+  .d-ref .dot { background: var(--purple); }
+  .d-hand .dot { background: var(--green); }
+  .d-no .dot { background: var(--red); }
+  ul { list-style: none; }
+  li.item { padding: .3rem 0; }
+  li.item label {
+    display: flex; align-items: flex-start; gap: .6rem;
+    cursor: pointer; padding: .35rem .5rem; border-radius: 6px;
+    transition: background .15s;
+  }
+  li.item label:hover { background: var(--surface2); }
+  input[type="checkbox"] {
+    accent-color: var(--green); width: 16px; height: 16px;
+    margin-top: .28rem; flex-shrink: 0; cursor: pointer;
+  }
+  li.item.done .txt { color: var(--muted); text-decoration: line-through; }
+  li.item.done .ex .ex-body { opacity: .65; }
+  .sub { margin-left: 1.5rem; margin-top: .15rem; border-left: 2px solid var(--border); padding-left: .7rem; }
+  .sub li.item label { padding: .22rem .4rem; font-size: .92rem; }
+  details.ex { margin: .1rem 0 .45rem 2.2rem; }
+  .sub details.ex { margin-left: 1.6rem; }
+  details.ex summary {
+    cursor: pointer; list-style: none;
+    font-size: .74rem; color: var(--muted); user-select: none;
+    padding: .1rem .45rem; border: 1px dashed var(--border);
+    border-radius: 999px; display: inline-block;
+    transition: color .15s, border-color .15s;
+  }
+  details.ex summary::-webkit-details-marker { display: none; }
+  details.ex summary::before { content: "+ "; font-weight: 700; }
+  details.ex[open] summary::before { content: "− "; }
+  details.ex summary:hover { color: var(--accent); border-color: var(--accent); }
+  details.ex[open] summary { color: var(--accent); border-color: var(--accent); border-style: solid; }
+  .ex-body {
+    margin-top: .4rem; background: var(--surface2);
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: .6rem .8rem;
+    font-size: .87rem; color: var(--muted);
+  }
+  .ex-body p + p, .ex-body p + ul, .ex-body ul + p { margin-top: .45rem; }
+  .ex-body ul { padding-left: 1.1rem; list-style: disc; }
+  .ex-body li { margin: .15rem 0; }
+  code {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: .05rem .35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .85em; color: var(--accent);
+  }
+  .ex-body code { background: var(--bg); }
+  strong { color: var(--text); }
+  .warn {
+    background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.4);
+    border-radius: 6px; padding: .55rem .8rem; margin: .6rem 0 .3rem;
+    font-size: .9rem; color: var(--orange);
+  }
+  table { border-collapse: collapse; width: 100%; margin: .5rem 0 .3rem; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; }
+  th { background: var(--surface2); color: var(--muted); font-weight: 600; }
+  td code { font-size: .82em; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700;
+    padding: .08rem .45rem; border-radius: 999px; vertical-align: middle;
+  }
+  .tag-field { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.4); }
+  .tag-desc { background: rgba(188,140,255,.15); color: var(--purple); border: 1px solid rgba(188,140,255,.4); }
+  .note { color: var(--muted); font-size: .88rem; margin-top: .3rem; }
+  .actions { display: flex; gap: .6rem; margin-top: 1rem; }
+  .actions button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: .45rem .9rem; font-size: .85rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .actions button:hover { background: var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Checklist — Shift-Left Testing</h1>
+  <p>Flujo manual del QA · un ticket por vez · estados de artefactos en Jira</p>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
+  <span class="progress-label" id="label">0 / 0</span>
+  <div class="search">
+    <input type="search" id="searchInput" placeholder="Buscar…" autocomplete="off" spellcheck="false" aria-label="Buscar en el documento">
+    <span class="search-count" id="searchCount"></span>
+    <button type="button" id="searchPrev" title="Anterior (Shift+Enter)" aria-label="Anterior">↑</button>
+    <button type="button" id="searchNext" title="Siguiente (Enter)" aria-label="Siguiente">↓</button>
+  </div>
+</div>
+
+<section class="d-prep">
+  <h2><span class="dot"></span>Preparación</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="p1"><span class="txt">Verificar contextos: <code>.context/business/*</code> + <code>.context/master-test-plan.md</code> existen (si no → parar, correr <code>/project-discovery</code>)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Son los mapas de negocio (features, entidades, endpoints) y el plan maestro de pruebas. Sin ellos el refinamiento sale "a ciegas": los nombres de entidades no coinciden con el dominio, no sabes qué módulos ya están priorizados y las preguntas al PO salen genéricas.</p>
+        <p>El skill exige parar y derivar a <code>/project-discovery</code> en vez de improvisar — un ATP pre-sprint escrito sin contexto es el desperdicio más caro del ciclo.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-sel">
+  <h2><span class="dot"></span>Selección</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="s1"><span class="txt">Leer el ticket (ACs, descripción, parent épica, comentarios)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Fuente de verdad: el campo <code>acceptance_criteria</code>, la descripción, la épica padre (de ahí se hereda contexto vía el feature/test plan) y los comentarios (decisiones ya tomadas por PO/Dev — evita re-preguntar lo resuelto).</p>
+        <p>Si el ticket no trae ACs escritas, ese ya es el primer hallazgo de refinamiento: no se puede refinar lo que no existe, se escala antes de invertir más tiempo.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s2"><span class="txt">Descartar tipos ≠ Story (Bug / Spike / Tech-debt)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Shift-left es pre-sprint y solo aplica a <strong>Stories con ACs</strong>: Bugs son reactivos (no tienen ACs upstream que refinar), Spikes son exploración (criterio de éxito, no comportamiento) y Tech-debt no cambia comportamiento observable.</p>
+        <p>Procesar un tipo equivocado produce un ATP que nadie va a ejecutar.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s3"><span class="txt">Detectar ya refinado (label <code>shift-left-reviewed</code> + <code>shift-left-{fecha}</code> &lt;30 días) → decidir saltar o refrescar</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Los dos labels son el marcador de frescura: <code>shift-left-reviewed</code> marca que ya pasó, el label datado dice <strong>cuándo</strong>. Si tiene &lt;30 días y las ACs no cambiaron → refinería duplicada, saltar.</p>
+        <p>Si pasó de 30 días o la Story cambió desde entonces → el análisis está vencido y se refresca completo (más barato que actuar sobre refinamiento viejo).</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s4"><span class="txt">Aplicar veto + riesgo: veto (CSS/docs sin cambio de comportamiento) → descartar; money/auth/integridad/state machine → refinado obligatorio; score 0-3 → descartar; 4+ → refinado completo</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Filtro de ROI: el tiempo de refinamiento es finito y se gana donde hay riesgo.</p>
+        <ul>
+          <li><strong>Veto</strong> — cambios sin comportamiento (CSS, docs, copy, refactor limpio): no hay nada que refinar, solo code review.</li>
+          <li><strong>Obligatorio</strong> — dinero, auth, integridad, state machines: refinado completo aunque el score salga bajo, aquí un escape cuesta caro.</li>
+          <li><strong>Score</strong> — factores de riesgo (funcionalidad nueva, datos dinámicos, ACs explícitas, UI visible). 0-3 descarta, 4+ refina completo.</li>
+        </ul>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s5"><span class="txt">Crear/encontrar subtarea <code>[QA] Shift-Left Review</code> → mover a <strong>In Progress</strong> (si el proyecto no permite subtareas: warning y seguir)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>La subtarea es el <strong>rastro de trabajo</strong> de QA en la Story: ahí se postean las anotaciones exhaustivas al final (y se cierra en Done). Find-or-create — si ya existe una del ciclo, se reutiliza, nunca se duplica.</p>
+        <p>Moverla a In Progress refleja en el tablero que el refinamiento está en curso. Si el proyecto no tiene tipos de subtarea configurados, se emite warning y se sigue sin bloquear.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-ref">
+  <h2><span class="dot"></span>Refinamiento</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="r1"><span class="txt">Analizar Story: casos edge no listados, ambigüedades, reglas de negocio implícitas, testabilidad</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Es el corazón del valor pre-sprint: los defects nacen de requisitos ambiguos, no de código malo. Se buscan 4 cosas:</p>
+        <ul>
+          <li><strong>Ambigüedades</strong> — "el usuario puede iniciar sesión" ¿HTTP 200 o toast? Sin definir, no hay asersión posible.</li>
+          <li><strong>Edge cases no listados</strong> — OTP expirado, whitespace en inputs, doble submit…</li>
+          <li><strong>Reglas implícitas</strong> — comportamientos que el equipo da por obvios y la Story no enuncia.</li>
+          <li><strong>Testabilidad</strong> — veredicto: ¿el AC se puede verificar objetivamente? ("funciona rápido" sin métrica = No).</li>
+        </ul>
+        <p>Si la Story está clara, se dice "sin problemas" — inventar preguntas para llenar checklist es anti-patrón.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r2"><span class="txt">Refinar ACs a Given/When/Then con datos concretos; inferencias marcadas <strong>NEEDS PO/DEV CONFIRMATION</strong></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Las ACs originales se reescriben como escenarios ejecutables: <strong>Given</strong> (estado inicial + rol + datos), <strong>When</strong> (acción con valores exactos — "john+test\@example.com", no "email válido"), <strong>Then</strong> (resultado UI + status/body API + cambio en DB).</p>
+        <p>Todo comportamiento <strong>inferido</strong> (deducido por QA, no literal en la Story) se marca <strong>NEEDS PO/DEV CONFIRMATION</strong> — el marcador va al Jira para que PO decida en planning. Así lo inferido nunca se confirma en silencio.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r3"><span class="txt">Producir solo <strong>nombres de outlines</strong> + estimación de cobertura (Positive / Negative / Boundary / Integration) — sin tablas de parametrización ni datos de prueba</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Acotación deliberada del alcance pre-sprint: shift-left produce el <strong>qué</strong> se va a probar (nombres de outlines + cobertura estimada por tipo), no el <strong>cómo</strong> ejecutarlo.</p>
+        <p>Tablas de parametrización, pasos numerados y test-data JSON son trabajo de <code>/sprint-testing</code> Stage 1 (Planificación) — hacerlos aquí se desperdician si la estimación de PO mueve el scope de la Story.</p>
+        <p>La cobertura muestra <strong>0 explícitos</strong> en tipos vacíos — ocultar ceros sesga la estimación de PO.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-hand">
+  <h2><span class="dot"></span>Handoff a Jira</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="h1"><span class="txt">Escribir ACs refinadas en campo <code>acceptance_criteria</code> (si no existe → comentario <code>## Acceptance Criteria</code>)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El campo custom es la ubicación canónica — Dev implementa y PO acepta contra ese texto. Si la instancia no tiene el campo, el fallback es un comentario estructurado con ese heading (nunca bloquear por un campo faltante).</p>
+        <p>Si shift-left corrió antes, <strong>actualizar</strong> el campo, no duplicar en otro lado.</p>
+      </div></details>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="h2"><span class="txt">Agregar sección <code>QA Refinements (Shift-Left Analysis)</code> al final del description (leer antes, nunca sobrescribir) <span class="tag tag-desc">Description</span></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Es el extracto que PO ve de un vistazo en el UI de Jira durante grooming — el ATP completo vive en su campo, esto es el resumen accionable. Regla de oro: <strong>leer la descripción actual primero y agregar la sección al final</strong>; sobrescribir destruye el contenido original del equipo.</p>
+        <p>Si la sección ya existe (corrida previa), se <em>actualiza</em> (mismo heading, fecha nueva), no se duplica.</p>
+      </div></details>
+      <div class="sub">
+        <ul>
+          <li class="item">
+            <label><input type="checkbox" data-k="h2a"><span class="txt"><code>Edge Cases Identified</code> — tabla de casos edge del refinamiento</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Tabla escenario / ¿en la Story? / criticidad / acción. Es el primer filtro de scope: PO decide aquí si cada edge case se agrega al AC o solo se prueba — sin esto, el scope de testing se decide a tacazos en ejecución.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h2b"><span class="txt"><code>Clarified Business Rules</code> — reglas que la Story original no enunciaba</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Reglas que QA extrajo del análisis y que la Story no decía literalmente (ej. "los cupones no son acumulables con puntos"). Cerradas aquí, no se rediscuten en ejecución.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h2c"><span class="txt"><code>Critical Questions for PO</code> — lista numerada</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Preguntas que <strong>bloquean sprint planning</strong>: sin respuesta la Story no está lista para estimarse. Cada una lleva contexto + impacto si no se responde + sugerencia — una pregunta sin contexto se ignora.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h2d"><span class="txt"><code>Technical Questions for Dev</code> — lista numerada</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Preguntas técnicas que <strong>bloquean implementación</strong> (contratos de API, manejo de errores, estados). Separadas de las de PO para que cada audiencia vea solo lo suyo.</p></div></details>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="h3"><span class="txt">Escribir ATP completo en campo <code>acceptance_test_plan</code> (si no existe → comentario <code>## Acceptance Test Plan (ATP)</code> con cuerpo completo) <span class="tag tag-field">ATP field</span></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El ATP (Acceptance Test Plan) es <strong>el</strong> artefacto pre-sprint: lo que PO/Dev usan para estimar y lo que <code>/sprint-testing</code> Stage 1 (Planificación) expande in-sprint. Modalidad jira-native: campo custom; si no existe, comentario estructurado con cuerpo completo (fallback, nunca bloquear).</p>
+        <p><strong>Un solo ATP por Story</strong> — una segunda versión "(DRAFT)" después hay que reconciliarla.</p>
+      </div></details>
+      <div class="sub">
+        <ul>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3a"><span class="txt">Encabezado: <code>Shift-Left Refinement: {KEY} — {Title}</code> + Status (<code>Refined — Awaiting PO Estimation</code>), Mode, Refined on/by, Modality</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>El flag de estado es el de pre-sprint (<code>Refined — Awaiting PO Estimation</code>), distinto al in-sprint de sprint-testing (<code>Test Analysis — Ready for Execution</code>). Marca en qué fase de vida está la planificación para quien lo abre frío.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3b"><span class="txt"><code>Phase 1 — Critical Analysis</code>: contexto business (persona, value prop, KPIs, journey) + contexto técnico (frontend, backend, servicios externos) + tabla de complejidad + esfuerzo estimado + herencia de épica (si aplica)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Responde "¿por qué importa probar esto y qué tan difícil es?". La tabla de complejidad y el esfuerzo estimado son los números que PO usa para decidir si el ticket entra al sprint con este alcance. La <strong>herencia de épica</strong> evita duplicar: lo ya respondido en el feature/test plan se cita, no se re-deriva.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3c"><span class="txt"><code>Phase 2 — Story Quality Analysis</code>: tabla de ambigüedades, tabla de gaps, tabla de edge cases no listados, contradicciones, veredicto de testabilidad</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Las 4 tablas + veredicto. Es lo que convierte "testear la Story" en "arreglar los requisitos antes de que Dev codee sobre supuestos" — el defecto más barato del ciclo es el que se previene aquí.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3d"><span class="txt"><code>Phase 3 — Refined Acceptance Criteria</code>: cada AC original descompuesta en escenarios Given/When/Then con tipo y prioridad + escenarios nuevos con marcador <strong>NEEDS PO/DEV CONFIRMATION</strong></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Cada AC explotada en escenarios con Type (Positive/Negative/Boundary/Edge) y Priority. 1:N por defecto: una AC no trivial implica varios escenarios. El tipo/prioridad determinan el orden de ejecución in-sprint.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3e"><span class="txt"><code>Phase 4 — Test Outlines</code>: tabla de estimación de cobertura (con 0 explícitos en tipos vacíos) + lista de outlines solo con nombre, precondición de 1 línea y esperado de 1 línea</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Pre-sprint el outline va "en economy": nombre "Should &lt;comportamiento&gt; &lt;condición&gt;" + precondición + esperado, una línea cada uno. Pasos numerados y test-data llegan en sprint-testing Stage 1 (Planificación) — el ATP es un superset vivo, no un documento congelado.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3f"><span class="txt"><code>Phase 5 — Edge Cases</code>: tabla outline (edge case / ¿en la Story original? / criticidad / acción)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Copia canónica de la tabla de edge cases dentro del ATP. <strong>Misma data</strong> que <code>Edge Cases Identified</code> del Description — dos presentaciones de un solo hallazgo, no dos hallazgos distintos. Criticidad + acción definen si PO lo agrega al AC o solo se prueba.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3g"><span class="txt"><code>Story Quality Assessment</code>: veredicto (Good / Needs Improvement / Significant Issues) + findings</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Veredicto en una línea para PO: si dice <em>Significant Issues</em>, la Story no debería entrar al sprint tal cual. Los findings respaldan el veredicto con evidencia concreta (qué tabla, qué AC).</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3h"><span class="txt"><code>Critical Questions for PO</code> — bloquean sprint planning</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Cada pregunta: contexto + impacto si no se responde + sugerencia. Son el gate de planning — sin estas respuestas la Story no está estimable.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3i"><span class="txt"><code>Technical Questions for Dev</code> — bloquean implementación</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Mismo formato, audiencia distinta: contratos, manejo de errores, decisiones técnicas que Dev debe confirmar antes de codear.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3j"><span class="txt"><code>Suggested Story Improvements</code> (si aplica)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Sugerencias de reestructuración de la Story (reordenar ACs, partir en dos, mover alcance) — solo si aplican; sección vacía se omite, no se rellena con relleno.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3k"><span class="txt"><code>Data feasibility flags</code> (o "No data feasibility risks identified.")</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body">
+              <p>Por AC, el path de datos para poder probarlo en staging:</p>
+              <ul>
+                <li><strong>Discover</strong> — el dato ya existe (hay pagos → probar filtro "pagados").</li>
+                <li><strong>Modify</strong> — existe base y hay que alterarla (promover usuario a Admin).</li>
+                <li><strong>Generate</strong> — crearlo desde cero (cupón vía API/DB/UI).</li>
+              </ul>
+              <p>Sin ninguno → AC blocked. Un flag de nivel veto se escala al usuario ya; los menores quedan visibles para que PO decida (mover la story o pedir pre-work) <strong>antes</strong> de estimar.</p>
+            </div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3l"><span class="txt"><code>Recommended testing strategy</code>: pre-implementation / during / post-implementation</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Qué conviene probar en cada ventana: pre (mocks, revisión de contrato API), durante (ejecutar outlines a medida que Dev entrega), post (regresión del área de la story + módulos colaterales). Alinea las expectativas de QA con el timeline real del sprint.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3m"><span class="txt"><code>Risks &amp; mitigation</code> — riesgo, likelihood, impacto, outlines que lo mitigan</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Matriz riesgo → mitigación. La última columna es clave: ata cada riesgo a outlines concretos, demostrando que el plan de prueba cubre los riesgos identificados en vez de listarlos decorativamente.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="h3n"><span class="txt"><code>Next steps</code> — respuestas PO/Dev pendientes + puntero a <code>/sprint-testing</code></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Cierre operativo: quién debe responder qué, y qué skill sigue (<code>/sprint-testing</code> Stage 1 (Planificación) expande este ATP cuando la Story entre al sprint). Mantiene la cadena Stage 0 (refinamiento shift-left) → Stage 1 (Planificación) explícita en el propio artefacto.</p></div></details>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="h4"><span class="txt">Comentario handoff: puntero al campo + acción requerida para PO/Dev-lead</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Comentario corto en la Story que dice dónde está el ATP y qué debe hacer el destinatario ("revisar 3 Critical Questions antes de estimar"). Un artefacto sin handoff explícito se archiva sin leer — el comentario es el disparador de la acción.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="h5"><span class="txt">Añadir labels: <code>shift-left-reviewed</code> + <code>shift-left-{YYYY-MM-DD}</code> (añadir, sin borrar los viejos)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Los labels son el marcador de frescura que sprint-testing Stage 1 (Planificación) lee para el short-circuit. <strong>Añadir</strong>, nunca reemplazar: los labels viejos documentan la línea de tiempo de refinamientos de la Story.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="h6"><span class="txt">Setear <code>qa_assignee</code> = yo, solo si está vacío (nunca pisar owner existente)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Custom field del dueño QA de la Story — distinto del <code>assignee</code> nativo (que queda para Dev). Regla <em>read-before-write</em>: solo se escribe si está vacío; jamás pisar un owner existente salvo handover explícito y justificado.</p>
+      </div></details>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="h7"><span class="txt">Transicionar ticket al camino más corto hasta <strong>Estimation</strong>:</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Shift-left solo <strong>empuja hacia adelante hasta Estimation</strong>: el refinamiento está listo, ahora PO estima. Nunca se salta a Ready For Dev — ese movimiento es de PO/Dev lead.</p>
+      </div></details>
+      <table>
+        <thead><tr><th>Estado actual</th><th>Transición</th></tr></thead>
+        <tbody>
+          <tr><td>Backlog</td><td><code>analyze</code> → <code>estimate</code></td></tr>
+          <tr><td>Shift-Left QA</td><td><code>estimate</code></td></tr>
+          <tr><td>Estimation</td><td>nada</td></tr>
+          <tr><td>Ready For Dev o posterior</td><td>skip + warning</td></tr>
+        </tbody>
+      </table>
+      <div class="warn">⚠ Nunca pasar de <strong>Estimation</strong> — PO/Dev lead hace <code>estimate → ready_for_dev</code>.</div>
+    </li>
+
+    <li class="item" style="margin-top:.6rem">
+      <label><input type="checkbox" data-k="h8"><span class="txt">Postear anotaciones exhaustivas en la subtarea <code>[QA] Shift-Left Review</code> → mover a <strong>Done</strong></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>La subtarea concentra el detalle fino (análisis por AC, decisiones, contexto) para no ensuciar la descripción de la Story. Al cerrarla queda el rastro completo de quién refinó qué, consultable sin abrir el ATP entero.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="h9"><span class="txt">Re-sincronizar (<code>bun run jira:sync-issues get &lt;KEY&gt; --include-comments</code>) y verificar: campo ATP poblado, comentario puntero, subtarea Done</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Verificación post-escritura: el sync regenera los <code>.md</code> locales desde Jira, así que si el campo ATP aparece poblado en el archivo sincronizado, la escritura <strong>sí</strong> llegó a Jira. También se confirma el comentario puntero y la subtarea cerrada — los 3 entregables del handoff.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-no">
+  <h2><span class="dot"></span>No hacer</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="n1"><span class="txt">No crear item Test Plan pre-sprint (lo crea <code>/sprint-testing</code> Stage 1 (Planificación) desde el campo)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Pre-sprint no hay Sprint Test Plan ni ítem: el ATP vive en el <strong>campo</strong> de la Story. El ítem <code>Test Plan</code> de Xray lo crea sprint-testing Stage 1 (Planificación) find-or-create desde ese mismo campo — crearlo antes genera un contenedor huérfano que hay que reconciliar.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n2"><span class="txt">No ejecutar nada (sin smoke, DB ni browser) — esto es solo lectura de código/APIs para factibilidad</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Shift-left es análisis, no ejecución: leer código/esquemas para juzgar factibilidad de datos está bien, correr el sistema no. La ejecución pertenece a sprint-testing Stage 2 (Ejecución) — mezclarlas produce resultados pre-sprint que nadie puede reproducir.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n3"><span class="txt">No forzar preguntas PO solo para llenar checklist</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Si la Story está clara, el veredicto es "sin problemas". Preguntas fabricadas entrenan al equipo a ignorar la salida de QA — el costo es perder credibilidad cuando sí hay una pregunta crítica.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n4"><span class="txt">No git commit — Jira es canónico</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Todo el output del refinamiento vive en Jira (campo, descripción, labels, subtarea). Los <code>.md</code> locales son caché de solo lectura que se regenera con el sync — commitearlos crea una segunda fuente de verdad que diverge.</p></div></details>
+    </li>
+  </ul>
+</section>
+
+<div class="actions">
+  <button id="reset">Reiniciar checklist</button>
+</div>
+
+</div>
+
+<script>
+(function () {
+  var KEY = 'sl-checklist-v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type=checkbox]'));
+  var fill = document.getElementById('fill');
+  var label = document.getElementById('label');
+
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+
+  function refresh() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      b.checked = !!state[b.dataset.k];
+      b.closest('.item').classList.toggle('done', b.checked);
+      if (b.checked) done++;
+    });
+    var pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+    fill.style.width = pct + '%';
+    label.textContent = done + ' / ' + boxes.length + '  (' + pct + '%)';
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  function syncParents() {
+    for (var i = boxes.length - 1; i >= 0; i--) {
+      var p = boxes[i];
+      var pli = p.closest('li.item');
+      if (!pli) continue;
+      var kids = pli.querySelectorAll('.sub input[type=checkbox]');
+      if (!kids.length) continue;
+      var all = true;
+      for (var j = 0; j < kids.length; j++) {
+        if (!state[kids[j].dataset.k]) { all = false; break; }
+      }
+      state[p.dataset.k] = all;
+    }
+  }
+
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () {
+      state[b.dataset.k] = b.checked;
+      var li = b.closest('li.item');
+      if (li) {
+        Array.prototype.slice.call(li.querySelectorAll('.sub input[type=checkbox]')).forEach(function (k) {
+          state[k.dataset.k] = b.checked;
+        });
+      }
+      syncParents();
+      refresh();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    if (confirm('¿Reiniciar todo el checklist?')) {
+      state = {};
+      refresh();
+    }
+  });
+
+  refresh();
+})();
+</script>
+<script>
+(function () {
+  var input = document.getElementById('searchInput');
+  var count = document.getElementById('searchCount');
+  var btnPrev = document.getElementById('searchPrev');
+  var btnNext = document.getElementById('searchNext');
+  var root = document.querySelector('.wrap');
+  var marks = [], cur = -1, timer;
+
+  function clearMarks() {
+    var old = document.querySelectorAll('mark.hit');
+    for (var i = 0; i < old.length; i++) {
+      var m = old[i];
+      m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
+    }
+    root.normalize();
+    marks = [];
+    cur = -1;
+  }
+
+  function highlight(term) {
+    clearMarks();
+    count.textContent = '';
+    count.classList.remove('none');
+    if (!term) return;
+    var lower = term.toLowerCase();
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        var tag = p.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK' || tag === 'INPUT' || tag === 'BUTTON') return NodeFilter.FILTER_REJECT;
+        if (p.closest && p.closest('.progress-bar')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [], n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(function (node) {
+      var txt = node.nodeValue, low = txt.toLowerCase(), i = low.indexOf(lower);
+      if (i < 0) return;
+      var frag = document.createDocumentFragment(), pos = 0;
+      while (i >= 0) {
+        if (i > pos) frag.appendChild(document.createTextNode(txt.slice(pos, i)));
+        var mk = document.createElement('mark');
+        mk.className = 'hit';
+        mk.textContent = txt.slice(i, i + term.length);
+        frag.appendChild(mk);
+        pos = i + term.length;
+        i = low.indexOf(lower, pos);
+      }
+      if (pos < txt.length) frag.appendChild(document.createTextNode(txt.slice(pos)));
+      node.parentNode.replaceChild(frag, node);
+    });
+    marks = Array.prototype.slice.call(root.querySelectorAll('mark.hit'));
+    if (marks.length) setCurrent(0);
+    else { count.textContent = '0'; count.classList.add('none'); }
+  }
+
+  function setCurrent(i) {
+    if (!marks.length) return;
+    for (var j = 0; j < marks.length; j++) marks[j].classList.remove('hit-current');
+    cur = ((i % marks.length) + marks.length) % marks.length;
+    var m = marks[cur];
+    m.classList.add('hit-current');
+    var d = m.closest('details');
+    if (d && !d.open) d.open = true;
+    m.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    count.textContent = (cur + 1) + ' / ' + marks.length;
+    count.classList.remove('none');
+  }
+
+  function run() { highlight(input.value.trim()); }
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 150);
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (marks.length) setCurrent(cur + (e.shiftKey ? -1 : 1));
+    } else if (e.key === 'Escape') {
+      input.value = '';
+      run();
+    }
+  });
+  btnNext.addEventListener('click', function () { if (marks.length) setCurrent(cur + 1); });
+  btnPrev.addEventListener('click', function () { if (marks.length) setCurrent(cur - 1); });
+})();
+</script>
+</body>
+</html>

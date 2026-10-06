@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist — Test Documentation (TMS + ROI)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --cyan: #39c5cf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    padding: 2rem 1rem 4rem;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  header p { color: var(--muted); margin-top: .35rem; font-size: .95rem; }
+  .progress-bar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: .6rem .9rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; row-gap: .45rem;
+  }
+  .progress-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; min-width: 120px; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width .3s; }
+  .progress-label { font-size: .85rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .search { display: flex; align-items: center; gap: .3rem; }
+  .search input {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: .3rem .55rem; font-size: .82rem; width: 160px; outline: none;
+    transition: border-color .15s;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search input::-webkit-search-cancel-button { cursor: pointer; }
+  .search-count {
+    font-size: .74rem; color: var(--muted); min-width: 42px; text-align: center;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .search-count.none { color: var(--red); font-weight: 700; }
+  .search button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; width: 26px; height: 26px; font-size: .8rem; line-height: 1;
+    cursor: pointer; transition: background .15s;
+  }
+  .search button:hover { background: var(--border); }
+  mark.hit { background: rgba(210,153,34,.45); color: var(--text); border-radius: 3px; padding: 0 1px; }
+  mark.hit.hit-current { background: var(--accent); color: var(--bg); font-weight: 700; }
+  section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.1rem 1.3rem; margin-bottom: 1.1rem;
+  }
+  h2 {
+    font-size: 1.05rem; font-weight: 700; margin-bottom: .8rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  h2 .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .d-prep .dot { background: var(--accent); }
+  .d-sel .dot { background: var(--orange); }
+  .d-ref .dot { background: var(--purple); }
+  .d-roi .dot { background: var(--cyan); }
+  .d-hand .dot { background: var(--green); }
+  .d-done .dot { background: var(--accent); }
+  .d-no .dot { background: var(--red); }
+  ul { list-style: none; }
+  li.item { padding: .3rem 0; }
+  li.item label {
+    display: flex; align-items: flex-start; gap: .6rem;
+    cursor: pointer; padding: .35rem .5rem; border-radius: 6px;
+    transition: background .15s;
+  }
+  li.item label:hover { background: var(--surface2); }
+  input[type="checkbox"] {
+    accent-color: var(--green); width: 16px; height: 16px;
+    margin-top: .28rem; flex-shrink: 0; cursor: pointer;
+  }
+  li.item.done .txt { color: var(--muted); text-decoration: line-through; }
+  li.item.done .ex .ex-body { opacity: .65; }
+  .sub { margin-left: 1.5rem; margin-top: .15rem; border-left: 2px solid var(--border); padding-left: .7rem; }
+  .sub li.item label { padding: .22rem .4rem; font-size: .92rem; }
+  details.ex { margin: .1rem 0 .45rem 2.2rem; }
+  .sub details.ex { margin-left: 1.6rem; }
+  details.ex summary {
+    cursor: pointer; list-style: none;
+    font-size: .74rem; color: var(--muted); user-select: none;
+    padding: .1rem .45rem; border: 1px dashed var(--border);
+    border-radius: 999px; display: inline-block;
+    transition: color .15s, border-color .15s;
+  }
+  details.ex summary::-webkit-details-marker { display: none; }
+  details.ex summary::before { content: "+ "; font-weight: 700; }
+  details.ex[open] summary::before { content: "− "; }
+  details.ex summary:hover { color: var(--accent); border-color: var(--accent); }
+  details.ex[open] summary { color: var(--accent); border-color: var(--accent); border-style: solid; }
+  .ex-body {
+    margin-top: .4rem; background: var(--surface2);
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: .6rem .8rem;
+    font-size: .87rem; color: var(--muted);
+  }
+  .ex-body p + p, .ex-body p + ul, .ex-body ul + p, .ex-body p + table, .ex-body table + p, .ex-body p + ol, .ex-body ol + p { margin-top: .45rem; }
+  .ex-body ul { padding-left: 1.1rem; list-style: disc; }
+  .ex-body ol { padding-left: 1.3rem; list-style: decimal; }
+  .ex-body li { margin: .15rem 0; }
+  code {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: .05rem .35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .85em; color: var(--accent);
+  }
+  .ex-body code { background: var(--bg); }
+  strong { color: var(--text); }
+  .warn {
+    background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.4);
+    border-radius: 6px; padding: .55rem .8rem; margin: .6rem 0 .3rem;
+    font-size: .9rem; color: var(--orange);
+  }
+  table { border-collapse: collapse; width: 100%; margin: .5rem 0 .3rem; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; }
+  th { background: var(--surface2); color: var(--muted); font-weight: 600; }
+  td code { font-size: .82em; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700;
+    padding: .08rem .45rem; border-radius: 999px; vertical-align: middle;
+  }
+  .tag-field { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.4); }
+  .tag-desc { background: rgba(188,140,255,.15); color: var(--purple); border: 1px solid rgba(188,140,255,.4); }
+  .note { color: var(--muted); font-size: .88rem; margin-top: .3rem; }
+  .actions { display: flex; gap: .6rem; margin-top: 1rem; }
+  .actions button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: .45rem .9rem; font-size: .85rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .actions button:hover { background: var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Checklist — Test Documentation</h1>
+  <p>Stage 4 · documentación en TMS · Analizar → ROI → Documentar · modality jira-xray o jira-native</p>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
+  <span class="progress-label" id="label">0 / 0</span>
+  <div class="search">
+    <input type="search" id="searchInput" placeholder="Buscar…" autocomplete="off" spellcheck="false" aria-label="Buscar en el documento">
+    <span class="search-count" id="searchCount"></span>
+    <button type="button" id="searchPrev" title="Anterior (Shift+Enter)" aria-label="Anterior">↑</button>
+    <button type="button" id="searchNext" title="Siguiente (Enter)" aria-label="Siguiente">↓</button>
+  </div>
+</div>
+
+<section class="d-sel">
+  <h2><span class="dot"></span>Alcance</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="a1"><span class="txt">Elegir scope por INPUT: Story QA Approved → ticket-driven · bug cerrado → bug-driven · módulo → module-driven · salida exploratoria → ad-hoc</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Pick the scope based on the input, not the output — los 4 comparten el mismo pipeline Analizar → Priorizar → Documentar; solo cambian fuente y defaults:</p>
+        <table>
+          <thead><tr><th>Scope</th><th>Volumen típico</th><th>Labels default</th></tr></thead>
+          <tbody>
+            <tr><td>Module-driven</td><td>20-100+ escenarios</td><td><code>regression</code>, <code>e2e</code>/<code>integration</code></td></tr>
+            <tr><td>Ticket-driven</td><td>3-8 escenarios</td><td><code>regression</code> + test type</td></tr>
+            <tr><td>Bug-driven</td><td>0-2 escenarios</td><td><code>regression</code>, <code>automation-candidate</code></td></tr>
+            <tr><td>Ad-hoc / Exploratory</td><td>1-10 escenarios</td><td><code>regression</code></td></tr>
+          </tbody>
+        </table>
+        <p>La mayoría de escenarios de cualquier scope terminará Deferred.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="a2"><span class="txt">Prerequisito duro: documentar SOLO comportamiento ya validado (Story <code>qa_approved</code>, bug cerrado verificado, exploración finida) — el TMS no es herramienta de exploración</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>La exploración pertenece a <code>/sprint-testing</code>. Documentar comportamiento no validado congela supuestos en el repositorio de regresión: cada TC que cuelga de un resultado no verificado se convierte en ruido que alguien ejecutará y descartará.</p>
+        <p>Es el hard prerequisite del skill — sin él, el workflow no arranca.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="a3"><span class="txt">Bug-driven GOLDEN RULE: ¿regression candidate? NO → Deferred, sin Test nuevo · YES → ¿vino de un Test fallido? → <strong>REUSE</strong> ese Test, si no → <strong>CREATE</strong>. Nunca duplicar</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>No every bug becomes a regression Test: un typo one-time en un área estable se trata como failed test (fix ya verificado en sprint-testing) → Deferred. Pero si <strong>es</strong> regression-worthy, <strong>debe terminar con un Test que lo cubra en AMBAS modalidades</strong> — donde hay un bug importante, debe existir un test que lo atrape de nuevo.</p>
+        <ol>
+          <li>¿Es candidato a regresión? (filtro Phase 0 Q2 + ROI; el prior-bug rule sesga hacia arriba) → NO: Deferred, fin.</li>
+          <li>¿Salió de un Test ya ejecutado? → SÍ: reusar ese Test para el retest + regresión, link <code>tests / is tested by</code> al bug. NO: crear y diseñar el Test nuevo, link igual.</li>
+        </ol>
+        <p>Esta regla <strong>overridea</strong> el "the bug is the test case" de sprint-testing — esa frase cubre solo el retest in-sprint, no la regresión futura.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="a4"><span class="txt">Handoff: Candidates fluyen a <code>/test-automation</code> (re-scope: module → Module Macro, ticket → Ticket Medium, bug → Regression-driven Micro); <strong>Manual y Deferred son terminales</strong>, nunca llegan a automatización</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Los Candidates de este skill son el input de planificación de <code>/test-automation</code>, que re-scopes cada uno a su propio modelo. Los ad-hoc Candidates entran bajo el scope que mejor encaje (lote de módulo o regression-driven para un TC suelto).</p>
+        <p>Un verdict sin bucket Candidate/Manual/Deferred es un error: no hay cuarto outcome. La cadena completa es derive (sprint-testing) → document (este skill) → automate (<code>/test-automation</code>).</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-ref">
+  <h2><span class="dot"></span>Análisis (Phase 1)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="r1"><span class="txt">Reunir inputs: Story folder COMPLETO sincronizado (todos los <code>.md</code> + <code>comments.md</code>), bugs linkados, notas exploratorios, ATP/ATR <strong>modality-aware</strong>, implementation plan, <code>domain-glossary.md</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Lectura detallada vía <code>bun run jira:sync-issues get &lt;STORY&gt; --include-comments</code> — nunca <code>acli view</code> (devuelve null para custom fields). Leer <strong>todo</strong> el folder materializado, no solo un campo: ACs, scope, business rules y comentarios dan contexto que un solo campo omite.</p>
+        <p>ATP/ATR según modality: <strong>jira-native</strong> → <code>acceptance-test-plan.md</code> / <code>acceptance-test-results.md</code> (campos Story sincronizados); <strong>jira-xray</strong> → <code>test-plans/TESTPLAN-*.md</code> / <code>test-executions/TESTEXEC-*.md</code> + estado por TC via <code>/xray-cli</code>. Escenarios ya existentes → no reinventar.</p>
+        <p>El glossary fija el vocabulario de nombres, pasos y preconditions — términos canónicos, anti-glossary prohibidos.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r2"><span class="txt">Separar cross-cutting de escenarios reales: responsive / XSS / perf / a11y / contract <strong>NO son TCs</strong> — se validan dentro de otros TCs; deferral = handoff <strong>explícito</strong> (suite nombrada o gap)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <table>
+          <thead><tr><th>Cross-cutting (NO es TC)</th><th>Se valida en</th></tr></thead>
+          <tbody>
+            <tr><td>Mobile responsive</td><td>Viewport mobile en cada test</td></tr>
+            <tr><td>XSS prevention</td><td>Datos con caracteres especiales</td></tr>
+            <tr><td>Performance</td><td>Assertions de timing</td></tr>
+            <tr><td>Accessibility</td><td>A11y assertions en UI tests</td></tr>
+            <tr><td>API contract</td><td>Schema checks en API tests</td></tr>
+            <tr><td>"Error handling" genérico</td><td>Escenarios negativos concretos</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Deferral ≠ omission</strong>: cada trait debe caer en alguna parte — tejido dentro de un TC (tabla) O suite app-level con nombre. Si no existe suite para un trait que la feature sí expone → file el gap (Deferred TC o nota en el ATR); nunca evaporarlo.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r3"><span class="txt">Source-code validation <strong>obligatoria</strong> antes de crear cualquier TC: implementation plan → grep <code>data-testid=</code>, rutas, paths API, formatos de texto → comparar con supuestos del ATP → Refinement Notes</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El ATP se escribió ANTES de que existiera el código. Tres pasos: listar archivos que toca la implementation plan, grepear el código real, comparar. Discrepancias comunes: un API que el ATP asumía resulta ser SSR/direct DB; formato de texto del ATP vs realidad ("based on N reviews" vs "(N reviews)"); IDs hardcodeados vs patrón variable.</p>
+        <p>Skipping this step es <strong>la causa más común</strong> de tests automatizados inválidos después. Las correcciones quedan en una sección Refinement Notes del TC.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r4"><span class="txt">TC identity: <strong>Precondition + Action = UN TC</strong> — todas las esperas del mismo par van juntas. Anti-patrón: "check panel A / check panel B / check panel C"</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Mismo TC: credenciales válidas + submit login → redirect + token + welcome (tres aserciones, un TC).</p>
+        <p>TCs distintos: misma acción de login pero precondiciones distintas → credenciales válidas / cuenta locked / credenciales inválidas son TC separados (el precondition cambia).</p>
+        <p>Splittear un par (precondition, action) en N "check panel" TCs es el anti-patrón más diagnosticado en reviews — el merge es solo <strong>dentro</strong> de una partición, nunca entre particiones, boundaries o estados.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r5"><span class="txt">Derivación 1:N por técnica: <strong>EP</strong> siempre · <strong>BVA</strong> en rangos/límites/longitudes/ventanas de fecha · <strong>State-Transition</strong> en estados · <strong>Decision Table</strong> con 2+ condiciones · <strong>Pairwise</strong> con 3+ factores</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <table>
+          <thead><tr><th>Trigger en el AC</th><th>Técnica</th><th>TCs producidos</th></tr></thead>
+          <tbody>
+            <tr><td>Cualquier input</td><td>Equivalence Partitioning</td><td>Mismo output → 1 TC parametrizado (Scenario Outline + Examples); outputs distintos → TCs separados</td></tr>
+            <tr><td>Rango / límite / fecha</td><td>Boundary Value Analysis</td><td>min-1·min·min+1 … max-1·max·max+1 + zero/empty/null/overflow</td></tr>
+            <tr><td>Campo de estado</td><td>State-Transition</td><td>1 TC por transición válida + 1 por inválida</td></tr>
+            <tr><td>2+ condiciones</td><td>Decision Table</td><td>Enumerar combos, colapsar equivalentes, 1 TC por regla sobreviviente</td></tr>
+            <tr><td>3+ factores</td><td>Pairwise</td><td>Set all-pairs (loggear la reducción)</td></tr>
+          </tbody>
+        </table>
+        <p>Estos son <strong>candidate scenarios</strong>, no work items del TMS — persistir es ROI-gated (Phase 2). Reducir un AC a un solo TC exige justificación escrita <code>trivially atomic</code>. Derivar es gratis; documentar solo lo repetible (ver "tres capas, tres counts" en ROI).</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-roi">
+  <h2><span class="dot"></span>Priorizar — ROI (Phase 2)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="o1"><span class="txt">Tres preguntas filtro <strong>en orden</strong>: ¿protege contra regresiones FUTURAS? · ¿hubo bugs PREVIOS en el área? · ¿es concern APP-level o FEATURE-level? — falla cualquiera → Deferred</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><strong>Q1</strong>: typo one-time en área estable = no protege nada futuro → defer. <strong>Q2</strong>: prior bugs → priorizar incluso con ROI moderado ("falló una vez, puede volver a fallar"). <strong>Q3</strong>: XSS / a11y / performance / responsive son suites APP-level, no TCs por feature → defer de este scope.</p>
+        <p>Son puertas, no scoring: fallar un filtro no se compensa con ROI alto.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="o2"><span class="txt">ROI = <code>(Frequency × Impact × Stability) / (Effort × Dependencies)</code> — cada factor 1-5; <strong>Effort y Dependencies son divisores</strong> (malo arriba)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <table>
+          <thead><tr><th>Factor</th><th>1</th><th>5</th></tr></thead>
+          <tbody>
+            <tr><td>Frequency</td><td>Yearly / rarely</td><td>Every PR / commit</td></tr>
+            <tr><td>Impact (si falla)</td><td>Cosmetic</td><td>Revenue / core business</td></tr>
+            <tr><td>Stability (del flujo)</td><td>Very volatile</td><td>Unchanged for months</td></tr>
+            <tr><td>Effort (a automatizar)</td><td>Trivial</td><td>Very high (week+)</td></tr>
+            <tr><td>Dependencies</td><td>None</td><td>Complex externals</td></tr>
+          </tbody>
+        </table>
+        <p>Un "critical flow" con Effort=5 y Dependencies=5 tiene ROI bajo <strong>por diseño</strong> — es correcto, no un bug de la fórmula (gotcha del skill).</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="o3"><span class="txt">Component value bonus: TC reutilizable en N flows E2E → <code>Base ROI × (1 + 0.2 × N)</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Un atomic de ROI bajo (<code>authenticateSuccessfully</code>) puede volverse automatizable puramente por reuse: cada flow E2E que lo consume le suma un 20% al score.</p>
+        <p>Aplicar solo cuando el TC realmente se reutiliza — N inflado artificialmente sesga el veredicto igual que cualquier otro número inventado.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="o4"><span class="txt">Tres veredictos, sin cuarto: <strong>Candidate</strong> (ROI &gt; 3.0 | 1.5-3.0 + prior bug | happy path crítico) → <code>/test-automation</code> · <strong>Manual</strong> (0.5-1.5 no automatizable | manual-only) · <strong>Deferred</strong> (default: &lt; 0.5, filtro fallido, o no matcheó las otras)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <table>
+          <thead><tr><th>Outcome</th><th>Va a</th><th>TMS flow</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Candidate</strong></td><td>Alimenta <code>/test-automation</code></td><td>Draft → In Design → READY → In Review → Candidate</td></tr>
+            <tr><td><strong>Manual</strong></td><td>Suite de regresión manual (terminal)</td><td>Draft → In Design → READY → MANUAL</td></tr>
+            <tr><td><strong>Deferred</strong></td><td>Fuera de regresión (terminal, revisitable si el sistema cambia)</td><td><strong>native</strong>: no crear TC — report-only · <strong>xray</strong>: el sprint Test queda <strong>sin promover</strong> (no se borra)</td></tr>
+          </tbody>
+        </table>
+        <p><strong>Modality cambia el verbo en Phase 3, no el veredicto</strong>: los 3 verdicts son idénticos; jira-native <em>crea</em> Tests solo para Candidate+Manual, jira-xray <em>promueve</em> los regresionables al Regression Test Plan y los enriquece.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="o5"><span class="txt">Salud del lote: &gt;50% Candidate/Manual → re-aplicar Phase 0 más estricto (la mayoría debe ser Deferred); scores entre 0.5 y 3.0 → band authority = <code>tms-conventions.md</code> §9</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><strong>Tres capas, tres counts</strong>: (1) derive/analizar (sprint-testing): considerar muchos casos 1:N — vive en el análisis, aún no en el TMS; (2) documentar (este skill): TC persistente solo si vale la pena re-ejecutarlo; (3) automatizar (<code>/test-automation</code>): los Candidates. "analyzed 80 → documented 12 → automated 8" es la forma sana — <strong>nunca "document all 80"</strong>. En jira-xray el "document 12" = <em>promover 12</em>.</p>
+        <p>La banda 1.5-3.0 es "case by case: ¿prior bug? ¿critical flow? si no → defer"; 0.5-1.5 "probably defer: include only if prior bug". El prior-bug rule <strong>overridea</strong> los umbrales: un escenario atado a un bug cerrado entra a regresión aunque su ROI solo dé 1.5-3.0.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-hand">
+  <h2><span class="dot"></span>Documentar en TMS (Phase 3)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="t1"><span class="txt">Preflight Regression Epic: find-or-create <code>QA Test Repository</code> (JQL <code>type = Epic AND summary ~ "QA Test Repository"</code>, label <code>QA-Artifact</code>) — crear SOLO con ask del usuario; cachear key en <code>.agents/project.yaml</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Es el <strong>QA process epic</strong> del three-axis model: parent = "¿qué bucket QA sigue este Test" — <em>nunca</em> épica de producto/dev, <em>nunca</em> sin parent. El área de producto viaja en <code>components</code>, la cobertura de Story en los issue links — tres ejes separados.</p>
+        <p>Al crear: escribir la test-repository strategy en su description y cachear la key en <code>qa.qa_epics.test_repository_epic.key</code>. Label <code>QA-Artifact</code> es la identidad obligatoria de toda épica de proceso QA.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t2"><span class="txt">Preflight Sets: <strong>ATS obligatorio por Story</strong> (<code>ATS: {US_ID}: {story title}</code>, aunque tenga 1 TC, components heredados, parent QA Test Artifacts) + <strong>TS feature-level opcional</strong> (ask antes de crear; solo Candidate/Manual promovidos)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><strong>Coverage truth (live-verified)</strong>: SOLO el link ATS→Story <code>is tested by</code> llena el panel de cobertura Xray. Los links Story↔ATP y Story↔ATR son trazabilidad administrativa — keeperlos, pero jamás contarlos como cobertura.</p>
+        <p><strong>ATS</strong>: contiene TODOS los TCs de la Story, es el ancla de cobertura y su <code>components</code> son <strong>obligatorios</strong> (heredados de la Story — la excepción de components aplica SOLO al TS feature-level). <strong>TS</strong>: agrupación opcional 1:1 con Epic/module (<code>TS: &lt;EPIC-KEY|module&gt;: Validate &lt;feature&gt;</code>), components opcionales; solo entran Tests promovidos, los Deferred del sprint no.</p>
+        <p>Jerarquía de contenedores: Regression Epic = paraguas · ATS = cobertura por Story · TS = agrupación feature · Test Plan = scope de ejecución.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t3"><span class="txt">Set-first linking order (siempre): ATS → ATP → ATR → links Story → TCs (add al ATS PRIMERO) → listas ATP/ATR <strong>derivadas</strong> del ATS → promote</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <ol>
+          <li>Find-or-create ATS → link a Story (coverage-panel link).</li>
+          <li>Find-or-create ATP → link a Story (administrativo).</li>
+          <li>Create ATR → link a Story (administrativo).</li>
+          <li>Update ATP → link ATR (plan/results bidireccional).</li>
+          <li>Por cada TC: create → <strong>add al ATS</strong> → link ATP ("designed by") + ATR ("executed by"). Sin link directo TC→Story mientras exista ATS.</li>
+          <li>Derivar las listas de tests del ATP y ATR <strong>desde</strong> la membresía del ATS.</li>
+          <li>Promoted TCs → Regression Test Plan / TS + label + rename + transition (ver t9).</li>
+        </ol>
+        <p>Crear el primer TC antes de los contenedores deja referencias huérfanas — el único arreglo es <code>fix-traceability</code>. Esta asimetría con <code>/sprint-testing</code> Stage 1 (que crea TCs primero) es <strong>intencional</strong>: module-driven Stage 4 pre-crea targets porque el sharding paralelo los necesita existentes.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t4"><span class="txt">Crear TCs según modality matrix: <strong>Xray Manual</strong> = create SIN steps inline + <code>Add Test Step</code> por paso + <code>Update Issue</code> (Description) · <strong>Xray Cucumber</strong> = create con gherkin + Update Issue · <strong>native</strong> = <code>Create Issue</code> issueType=Test</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><strong>Xray Cloud silently droppea steps inline en el create</strong> — para un Manual Test: crearlo vacío de steps, luego <code>Add Test Step</code> uno a uno (verificar opcional con <code>Get Test</code>). Cucumber no se ve afectado (el Gherkin es un campo único).</p>
+        <p><strong>Xray requiere dos llamadas</strong>: <code>Create Test</code> (registra en Xray) + <code>Update Issue</code> (pega el Description completo). Saltarse la segunda deja un TC sin documentación legible en Jira.</p>
+        <p>Description siempre con el template completo: Related Story, Priority, ROI, Prior bugs, Test Design (gherkin/steps), Variables table, Implementation Code, Architecture, Test IDs, Preconditions, Expected Results.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t5"><span class="txt">Gherkin de calidad (Candidates): <strong>variables nunca hardcodeadas</strong> + tabla Variables · tags completos · comentarios estructurados · docstring con metadata</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <ul>
+          <li><strong>Variables</strong>: <code>{mentor_id}</code>, nunca <code>550e8400-…</code> — cada variable con query de cómo obtenerla en runtime.</li>
+          <li><strong>Tags siempre</strong>: prioridad (<code>@critical|@high|@medium|@low</code>), suite (<code>@regression</code>, <code>@smoke</code> si critical path), <code>@automation-candidate</code>, trazabilidad <code>@{US_ID}</code>.</li>
+          <li><strong>Comentarios</strong>: <code># === PRECONDITIONS ===</code>, <code># === ACTION ===</code>, <code># === VALIDATIONS ===</code>, <code># === EQUIVALENT PARTITIONS ===</code>.</li>
+          <li><strong>Docstring</strong>: Bugs covered, Related Story, ROI. Particiones en <code>Examples: Happy path</code> / <code>Examples: Edge case</code>.</li>
+        </ul>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t6"><span class="txt">Naming: <code>{US_ID}: TC#: should &lt;expected outcome&gt; [&lt;connector&gt; &lt;condition&gt;] [given &lt;precondition&gt;]</code> + <strong>rename MANDATORY al promover</strong> (títulos informales de sprint-testing se normalizan)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El prefijo es <strong>SIEMPRE</strong> la key de la User Story, en cada modalidad. <code>CORE</code> = comportamiento asserted tras <code>should</code>; <code>CONDITIONAL</code> = cláusula <code>when/if</code> opcional. Vocabulario desde <code>domain-glossary.md</code> si existe.</p>
+        <p><code>Validate &lt;feature&gt;</code> está reservado al layer de <strong>agrupación</strong> (Test Set summary / <code>describe()</code>), nunca a un caso individual. En KATA: <code>@atc('PROJ-101')</code> con la key del TC.</p>
+        <p>Anti-patróns a rechazar: <code>"Login test"</code>, <code>"Login - error"</code>, <code>"TC1: Test form"</code>. El rename usa <code>[ISSUE_TRACKER_TOOL] Update Issue --summary</code> — paso obligatorio, no opcional.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t7"><span class="txt">Workflow del TC: <strong>Draft → In Design → Ready → { Manual | In Review → Candidate }</strong>; nunca saltar estados; rework vía <code>back_from_&lt;state&gt;</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Transiciones: <code>start_design</code> · <code>ready_to_run</code> · <code>for_manual</code> (→ Manual terminal) · <code>automation_review_from_ready</code> (→ In Review) · <code>approve_to_automate</code> (→ Candidate terminal). Nombres desde <code>.agents/jira-workflows.json</code> vía <code>{{jira.status.test_case.*}}</code> / <code>{{jira.transition.test_case.*}}</code>.</p>
+        <p>In Review = "ROI under evaluation"; Candidate = "Approved for automation" — el terminal de un Candidate es <strong>Candidate, no In Review</strong>. Deferred TCs quedan en READY sin promover. Dejar promovidos en READY bloquea el regression backlog.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t8"><span class="txt">Labels baseline por TC: scope (uno+: <code>regression</code> casi siempre, <code>smoke</code> solo critical path 10-20%, <code>e2e</code>/<code>integration</code>/<code>functional</code>) + status (<code>automation-candidate</code> / <code>manual-only</code> mutuamente excluyentes)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Status se va moviendo con la vida del TC: <code>automation-candidate</code> al promover como Candidate, <code>manual-only</code> si es Manual; al automatizarse → <code>automated</code> y <strong>quitar</strong> <code>automation-candidate</code>.</p>
+        <p>Priority opcional: <code>critical</code> / <code>high</code> / <code>medium</code> / <code>low</code>. Taxonomía completa en <code>tms-conventions.md</code> §Labels.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t9"><span class="txt">Promover cada TC Candidate/Manual: <strong>jira-xray</strong> → feature TS (si aplica) + Regression Test Plan + label <code>regression-candidate</code> + rename + transition · <strong>jira-native</strong> → label feature/epic + rename + transition</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>En xray el label va vía <code>[ISSUE_TRACKER_TOOL]</code> — xray-cli no tiene update-label para Tests existentes. Transition según veredicto (ver t7): Candidate camina READY → In Review → Candidate completo porque <strong>el veredicto ES la aprobación a automatizar</strong>; Manual → <code>for_manual</code>.</p>
+        <p>El rename canónico (t6) y la transición (t7) son pasos <strong>obligatorios de la promoción</strong>, no mejoras opcionales — el regression repository hereda lo que se promueva sin normalizar.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="t10"><span class="txt">ATS VCR fields + transición <strong>Designing → Close</strong> (tras la clasificación ROI): VCR Estimation (ADF), To Be Automated (Yes=10028 / No=10029), In Regression Plan (YES=10031 / NO=10030)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El ATS queda en <code>Designing</code> hasta Stage 4 porque estos tres campos dependen de la evaluación VCR, que recién existe después del ROI. Rellenarlos con <code>[ISSUE_TRACKER_TOOL] Update Issue</code> (textarea → formato ADF), luego transicionar vía la transición <code>Done</code> (<code>--status "Close"</code>).</p>
+        <p>Saltarse este paso deja ATSs eternamente en Designing aunque sus TCs ya estén promovidos.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-done">
+  <h2><span class="dot"></span>Cierre</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="c1"><span class="txt">Caché local sincronizada: <code>bun run jira:sync-issues get &lt;STORY&gt;</code> → <code>test-cases/TEST-&lt;KEY&gt;-&lt;slug&gt;.md</code> — leer, <strong>nunca hand-author</strong> (directorio [SYNC] gitignored)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Este skill CREA los <code>Test</code> issues, los linkea a la Story, corre el sync y <strong>lee</strong> los archivos materializados — jamás escribe a mano dentro de <code>test-cases/</code>. Jira es la fuente de verdad.</p>
+        <p>Además da a <code>/test-automation</code> un handoff inmediato: los per-TC <code>.md</code> ya están materializados sin re-leer el TMS.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c2"><span class="txt">Matriz de cobertura en <code>.context/reports/</code> (committed deliverable) + reporte final de Phase 3</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>La matriz es el entregable congelado de la sesión — sobrevive al Archive del <code>.session/</code> y es lo que se commitea. El reporte final cierra la fase: qué se documentó, veredictos y trazabilidad completa.</p>
+        <p>Los <code>test-cases/*.md</code> son caché gitignored, recuperables con <code>bun run context:hydrate</code> — no son entregable.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c4"><span class="txt">Session footer contract al cerrar: lista de screenshots (paths repo-relative, verificados en disco) + footer skills / MCPs / CLIs + testing levels con "none" explícito — <strong>SOLO en chat</strong>, nunca en Jira/ATR</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Dos bloques chat-facing de <code>session-footer-contract.md</code>: (1) screenshots consolidados (bug annotations primero, y el path se surfacea en-flow en cuanto existe); (2) Session Footer con los campos <code>skills_loaded</code>, <code>mcps_used</code>, <code>clis_used</code>, <code>testing_levels_touched</code>, <code>screenshots_captured</code> — niveles esperados pero no tocados llevan "none" explícito.</p>
+        <p>Sesiones multi-subagent: cada stage report lleva los 5 campos y el orchestrator compila el footer <strong>una vez</strong> al cierre. Framing de este skill: curation. Jamás dentro de un comentario Jira ni de un cuerpo de ATR.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-no">
+  <h2><span class="dot"></span>No hacer</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="n2"><span class="txt">No crear TCs antes de los contenedores ni ATP huérfanos — Set-first: link de trazabilidad ANTES del primer TC</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Un Test Plan sin trazabilidad a Story/Epic es inauditable; TCs creados antes de ATS/ATP/ATR dejan referencias huérfanas y <code>fix-traceability</code> es el único arreglo. (Anti-pattern D2 + Gotcha "linking order is not optional".)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n3"><span class="txt">No sobre-detallar los pasos del TC — la spec / el KATA ATC es la fuente de verdad; el step list del TC es un pointer, no un duplicado</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Duplicar la especificación dentro del TC crea dos fuentes que divergen cuando el comportamiento cambia. El TC documenta identidad (precondition + action + outcome) y trazabilidad — la ejecución detallada vive en el test automatizado. (Anti-pattern D3.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n4"><span class="txt">No saltarse el ROI — todo TC termina con veredicto Candidate / Manual / Deferred antes del handoff a <code>/test-automation</code> (y Deferred = NO se crea en el TMS en jira-native)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Sin scoring, "candidato a automatizar" es una opinión, no una decisión. Y un Deferred no es un TC flojo: en jira-native no se crea; en jira-xray el sprint Test queda sin promover. (Anti-pattern D4 + Three outcomes.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n5"><span class="txt">No mezclar modalidades jira-xray y jira-native dentro del ATP de la misma Story — modality es one-shot por proyecto</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Phase 0 resuelve la modalidad una vez y queda sticky en <code>plan.md</code>. Mezclar contenedores de ambos mundos (un Test Plan item + un campo Story en la misma Story) deja trazabilidad irreconciliable. (Anti-pattern D5.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n6"><span class="txt">No fabricar Jira field IDs — <code>bun run jira:sync-fields --force</code> y resolver vía <code>{{jira.&lt;slug&gt;}}</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Un <code>customfield_NNNNN</code> hardcodeado drifta en silencio cuando la instancia cambia: la escritura "funciona" pero apunta al campo equivocado. Los catálogos <code>.agents/jira-fields.json</code> / <code>jira-required.yaml</code> son el catálogo canónico. (Anti-pattern D6.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n7"><span class="txt">No vincular un ATR a múltiples ATPs — la relación es 1:1 (varios ATRs por ATP sí, lo inverso no)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Un plan con N resultados no tiene sentido: cada corrida se registra contra SU plan. Múltiples ATRs colgando de un ATP sí es válido (corridas distintas). (Anti-pattern D7.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n8"><span class="txt">No reabrir un bug Closed para adjuntar un regression TC — crear TC nuevo + link <code>tests / is tested by</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>El historial del bug es inmutable: su cierre documenta que el fix se verificó. El vínculo con la regresión futura es una issue link desde el TC nuevo, no una reescritura del pasado. (Anti-pattern D8.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n9"><span class="txt">No contar los links Story↔ATP / Story↔ATR como cobertura — solo el link ATS→Story llena el panel</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Coverage truth live-verified (2026-08-21): los links ATP→Story y ATR→Story son trazabilidad administrativa y contribuyen <strong>zero</strong> cobertura. Se conservan para auditoría, pero reportar "la Story está cubierta" por ellos es un reporte falso — el panel solo se llena por ATS→Story.</p></div></details>
+    </li>
+  </ul>
+</section>
+
+<div class="actions">
+  <button id="reset">Reiniciar checklist</button>
+</div>
+
+</div>
+
+<script>
+(function () {
+  var KEY = 'td-checklist-v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type=checkbox]'));
+  var fill = document.getElementById('fill');
+  var label = document.getElementById('label');
+
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+
+  function refresh() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      b.checked = !!state[b.dataset.k];
+      b.closest('.item').classList.toggle('done', b.checked);
+      if (b.checked) done++;
+    });
+    var pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+    fill.style.width = pct + '%';
+    label.textContent = done + ' / ' + boxes.length + '  (' + pct + '%)';
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  function syncParents() {
+    for (var i = boxes.length - 1; i >= 0; i--) {
+      var p = boxes[i];
+      var pli = p.closest('li.item');
+      if (!pli) continue;
+      var kids = pli.querySelectorAll('.sub input[type=checkbox]');
+      if (!kids.length) continue;
+      var all = true;
+      for (var j = 0; j < kids.length; j++) {
+        if (!state[kids[j].dataset.k]) { all = false; break; }
+      }
+      state[p.dataset.k] = all;
+    }
+  }
+
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () {
+      state[b.dataset.k] = b.checked;
+      var li = b.closest('li.item');
+      if (li) {
+        Array.prototype.slice.call(li.querySelectorAll('.sub input[type=checkbox]')).forEach(function (k) {
+          state[k.dataset.k] = b.checked;
+        });
+      }
+      syncParents();
+      refresh();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    if (confirm('¿Reiniciar todo el checklist?')) {
+      state = {};
+      refresh();
+    }
+  });
+
+  refresh();
+})();
+</script>
+<script>
+(function () {
+  var input = document.getElementById('searchInput');
+  var count = document.getElementById('searchCount');
+  var btnPrev = document.getElementById('searchPrev');
+  var btnNext = document.getElementById('searchNext');
+  var root = document.querySelector('.wrap');
+  var marks = [], cur = -1, timer;
+
+  function clearMarks() {
+    var old = document.querySelectorAll('mark.hit');
+    for (var i = 0; i < old.length; i++) {
+      var m = old[i];
+      m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
+    }
+    root.normalize();
+    marks = [];
+    cur = -1;
+  }
+
+  function highlight(term) {
+    clearMarks();
+    count.textContent = '';
+    count.classList.remove('none');
+    if (!term) return;
+    var lower = term.toLowerCase();
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        var tag = p.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK' || tag === 'INPUT' || tag === 'BUTTON') return NodeFilter.FILTER_REJECT;
+        if (p.closest && p.closest('.progress-bar')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [], n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(function (node) {
+      var txt = node.nodeValue, low = txt.toLowerCase(), i = low.indexOf(lower);
+      if (i < 0) return;
+      var frag = document.createDocumentFragment(), pos = 0;
+      while (i >= 0) {
+        if (i > pos) frag.appendChild(document.createTextNode(txt.slice(pos, i)));
+        var mk = document.createElement('mark');
+        mk.className = 'hit';
+        mk.textContent = txt.slice(i, i + term.length);
+        frag.appendChild(mk);
+        pos = i + term.length;
+        i = low.indexOf(lower, pos);
+      }
+      if (pos < txt.length) frag.appendChild(document.createTextNode(txt.slice(pos)));
+      node.parentNode.replaceChild(frag, node);
+    });
+    marks = Array.prototype.slice.call(root.querySelectorAll('mark.hit'));
+    if (marks.length) setCurrent(0);
+    else { count.textContent = '0'; count.classList.add('none'); }
+  }
+
+  function setCurrent(i) {
+    if (!marks.length) return;
+    for (var j = 0; j < marks.length; j++) marks[j].classList.remove('hit-current');
+    cur = ((i % marks.length) + marks.length) % marks.length;
+    var m = marks[cur];
+    m.classList.add('hit-current');
+    var d = m.closest('details');
+    if (d && !d.open) d.open = true;
+    m.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    count.textContent = (cur + 1) + ' / ' + marks.length;
+    count.classList.remove('none');
+  }
+
+  function run() { highlight(input.value.trim()); }
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 150);
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (marks.length) setCurrent(cur + (e.shiftKey ? -1 : 1));
+    } else if (e.key === 'Escape') {
+      input.value = '';
+      run();
+    }
+  });
+  btnNext.addEventListener('click', function () { if (marks.length) setCurrent(cur + 1); });
+  btnPrev.addEventListener('click', function () { if (marks.length) setCurrent(cur - 1); });
+})();
+</script>
+</body>
+</html>

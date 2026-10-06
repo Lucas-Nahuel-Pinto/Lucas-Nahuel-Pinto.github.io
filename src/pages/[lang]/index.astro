@@ -1,6 +1,8 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import Stripe from '../../components/Stripe.astro';
 import { LANGS } from '../../lib/i18n';
+import { PROJECTS } from '../../lib/projects';
 
 export function getStaticPaths() {
   return LANGS.map((lang) => ({ params: { lang } }));
@@ -15,7 +17,9 @@ const copy = {
       'Diseño flujos de QA que evitan bugs en vez de cazarlos: trazabilidad completa, checklists navegables y automatización con agentes.',
     scroll: 'Ver proyectos ↓',
     workTitle: 'Proyectos',
-    comingSoon: 'Los casos de estudio se cargan en la próxima fase.',
+    workIntro: 'Tres proyectos con evidencia ejecutable: checklists en vivo, dashboard con datos sintéticos y código público.',
+    viewCode: 'Ver código',
+    openCase: 'Abrir caso de estudio',
   },
   en: {
     heroRole: 'QA Engineer',
@@ -23,7 +27,9 @@ const copy = {
       'I design QA flows that prevent bugs instead of hunting them: full traceability, navigable checklists and agent-driven automation.',
     scroll: 'See projects ↓',
     workTitle: 'Projects',
-    comingSoon: 'Case studies load in the next phase.',
+    workIntro: 'Three projects with runnable evidence: live checklists, a synthetic-data dashboard and public code.',
+    viewCode: 'View code',
+    openCase: 'Open case study',
   },
 }[lang];
 ---
@@ -36,10 +42,27 @@ const copy = {
     <a class="btn btn-primary" href="#work">{copy.scroll}</a>
   </section>
 
-  <section id="work">
+  <section id="work" class="work-head">
     <h2>{copy.workTitle}</h2>
-    <p class="muted">{copy.comingSoon}</p>
+    <p class="muted">{copy.workIntro}</p>
   </section>
+
+  {PROJECTS.map((project, index) => {
+    const data = project.content[lang];
+    return (
+      <Stripe
+        index={index}
+        title={data.caseStudy.title}
+        pitch={data.caseStudy.pitch}
+        slug={project.slug}
+        stripe={data.stripe}
+        lang={lang}
+        repoUrl={project.repo?.url}
+        viewCode={copy.viewCode}
+        openCase={copy.openCase}
+      />
+    );
+  })}
 </BaseLayout>
 
 <style>
@@ -64,5 +87,18 @@ const copy = {
     margin: 0 auto 1.5rem;
     color: var(--fg-muted);
     font-size: 1.1rem;
+  }
+  .work-head {
+    padding: 2rem 1.25rem 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .work-head h2 {
+    margin: 0 0 0.5rem;
+  }
+  .work-head .muted {
+    color: var(--fg-muted);
+    margin: 0;
+    max-width: 70ch;
   }
 </style>

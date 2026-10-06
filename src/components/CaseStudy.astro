@@ -1,0 +1,441 @@
+---
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { CaseCopy, Lang } from '../lib/projects';
+import MetricCallout from './MetricCallout.astro';
+
+interface Props {
+  lang: Lang;
+  copy: CaseCopy;
+  repoUrl?: string;
+  repoLabel?: string;
+}
+
+const { lang, copy, repoUrl, repoLabel } = Astro.props;
+
+const ui =
+  lang === 'es'
+    ? {
+        pain: 'El dolor en mi flujo QA',
+        usage: 'Cómo lo usa un QA',
+        demo: 'Demo navegable',
+        kit: 'En mi kit de trabajo',
+        skills: 'Qué demuestra',
+        closing: 'Cierre',
+        viewCode: 'Ver código',
+        qaQuestion: 'Pregunta QA',
+        answer: 'Dónde se responde',
+        openImage: 'Ampliar imagen',
+      }
+    : {
+        pain: 'The pain in my QA flow',
+        usage: 'How a QA uses it',
+        demo: 'Navigable demo',
+        kit: 'In my working kit',
+        skills: 'What it demonstrates',
+        closing: 'Closing',
+        viewCode: 'View code',
+        qaQuestion: 'QA question',
+        answer: 'Where it gets answered',
+        openImage: 'Enlarge image',
+      };
+
+const publicDir = join(process.cwd(), 'public');
+const gallery = copy.demo.gallery.filter((item) => existsSync(join(publicDir, item.src.replace(/^\//, ''))));
+---
+
+<header class="cs-header">
+  <p class="cs-kicker">{lang === 'es' ? 'Caso de estudio' : 'Case study'}</p>
+  <h1>{copy.title}</h1>
+  <p class="cs-pitch">{copy.pitch}</p>
+  <ul class="cs-tags">
+    {copy.tags.map((tag) => <li>{tag}</li>)}
+  </ul>
+  <div class="cs-cta">
+    {repoUrl && (
+      <a class="btn btn-primary" href={repoUrl} target="_blank" rel="noopener">
+        {ui.viewCode}{repoLabel ? ` — ${repoLabel}` : ''}
+      </a>
+    )}
+    {copy.demo.link && (
+      <a class="btn btn-ghost" href={copy.demo.link.href}>{copy.demo.link.label}</a>
+    )}
+  </div>
+</header>
+
+<section class="cs-section" id="dolor">
+  <h2>{copy.pain.title || ui.pain}</h2>
+  <div class="cs-two-col">
+    <p class="cs-body">{copy.pain.body}</p>
+    <MetricCallout metric={copy.pain.metric} />
+  </div>
+</section>
+
+<section class="cs-section alt" id="uso">
+  <h2>{copy.usage.title || ui.usage}</h2>
+  <p class="cs-intro">{copy.usage.intro}</p>
+  <div class="cs-table" role="table">
+    <div class="cs-row cs-head" role="row">
+      <span role="columnheader">{ui.qaQuestion}</span>
+      <span role="columnheader">{ui.answer}</span>
+    </div>
+    {copy.usage.items.map((item) => (
+      <div class="cs-row" role="row">
+        <span class="cs-q" role="cell">{item.q}</span>
+        <span role="cell">{item.a}</span>
+      </div>
+    ))}
+  </div>
+</section>
+
+<section class="cs-section" id="demo">
+  <h2>{copy.demo.title || ui.demo}</h2>
+  <p class="cs-intro">{copy.demo.intro}</p>
+  {gallery.length > 0 && (
+    <div class="cs-gallery">
+      {gallery.map((item) => (
+        <figure>
+          <button
+            class="cs-thumb"
+            type="button"
+            data-full={item.src}
+            data-caption={item.caption}
+            aria-label={ui.openImage}
+          >
+            <img src={item.src} alt={item.caption} loading="lazy" />
+          </button>
+          <figcaption>{item.caption}</figcaption>
+        </figure>
+      ))}
+    </div>
+  )}
+  {copy.demo.embed && (
+    <div class="cs-embed">
+      <iframe src={copy.demo.embed.src} title={copy.demo.embed.title} loading="lazy"></iframe>
+    </div>
+  )}
+  {copy.demo.note && <p class="cs-note">{copy.demo.note}</p>}
+</section>
+
+<section class="cs-section alt" id="kit">
+  <h2>{copy.kit.title || ui.kit}</h2>
+  <p class="cs-intro">{copy.kit.intro}</p>
+  {copy.kit.commands && (
+    <div class="cs-commands">
+      {copy.kit.commands.map((c) => (
+        <div class="cs-command">
+          <code>{c.cmd}</code>
+          <span>{c.desc}</span>
+        </div>
+      ))}
+    </div>
+  )}
+  <ul class="cs-points">
+    {copy.kit.points.map((point) => <li>{point}</li>)}
+  </ul>
+</section>
+
+<section class="cs-section" id="skills">
+  <h2>{copy.skills.title || ui.skills}</h2>
+  <div class="cs-cards">
+    {copy.skills.cards.map((card) => (
+      <article class="cs-card">
+        <h3>{card.name}</h3>
+        <p>{card.desc}</p>
+      </article>
+    ))}
+  </div>
+</section>
+
+<section class="cs-section alt cs-closing" id="cierre">
+  <h2>{copy.closing.title || ui.closing}</h2>
+  <p class="cs-intro">{copy.closing.body}</p>
+  <div class="cs-metrics">
+    {copy.closing.metrics.map((metric) => (
+      <MetricCallout metric={metric} align="center" />
+    ))}
+  </div>
+  <div class="cs-cta">
+    {repoUrl && (
+      <a class="btn btn-primary" href={repoUrl} target="_blank" rel="noopener">
+        {ui.viewCode}{repoLabel ? ` — ${repoLabel}` : ''}
+      </a>
+    )}
+    {copy.demo.link && (
+      <a class="btn btn-ghost" href={copy.demo.link.href}>{copy.demo.link.label}</a>
+    )}
+  </div>
+</section>
+
+<dialog class="cs-lightbox" aria-label={ui.openImage}>
+  <button class="cs-lightbox-close" type="button" aria-label="Close">×</button>
+  <img alt="" />
+  <p class="cs-lightbox-caption"></p>
+</dialog>
+
+<script>
+  const dialog = document.querySelector<HTMLDialogElement>('.cs-lightbox');
+  const dialogImg = dialog?.querySelector('img');
+  const dialogCaption = dialog?.querySelector('.cs-lightbox-caption');
+  document.querySelectorAll<HTMLButtonElement>('.cs-thumb').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (!dialog || !dialogImg || !dialogCaption) return;
+      dialogImg.src = btn.dataset.full ?? '';
+      dialogImg.alt = btn.dataset.caption ?? '';
+      dialogCaption.textContent = btn.dataset.caption ?? '';
+      dialog.showModal();
+    });
+  });
+  dialog?.querySelector('.cs-lightbox-close')?.addEventListener('click', () => dialog.close());
+  dialog?.addEventListener('click', (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+</script>
+
+<style>
+  .cs-header {
+    padding: 3.5rem 0 2rem;
+  }
+  .cs-kicker {
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.8rem;
+    margin: 0 0 0.5rem;
+  }
+  .cs-header h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+  }
+  .cs-pitch {
+    color: var(--fg-muted);
+    font-size: 1.1rem;
+    max-width: 70ch;
+    margin: 0 0 1.25rem;
+  }
+  .cs-tags {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .cs-tags li {
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+  }
+  .cs-cta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .cs-section {
+    padding: 2.75rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .cs-section.alt {
+    background: var(--bg-subtle);
+  }
+  .cs-section h2 {
+    margin: 0 0 1rem;
+    font-size: 1.5rem;
+  }
+  .cs-intro,
+  .cs-body {
+    color: var(--fg-muted);
+    max-width: 75ch;
+    margin: 0 0 1.5rem;
+  }
+  .cs-two-col {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 2rem;
+    align-items: start;
+  }
+  .cs-two-col .cs-body {
+    margin: 0;
+  }
+  .cs-table {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .cs-row {
+    display: grid;
+    grid-template-columns: minmax(220px, 2fr) 3fr;
+    gap: 1rem;
+    padding: 0.9rem 1.1rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .cs-row:first-child {
+    border-top: none;
+  }
+  .cs-head {
+    background: var(--bg-subtle);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--fg-muted);
+  }
+  .cs-q {
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .cs-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1.25rem;
+  }
+  .cs-gallery figure {
+    margin: 0;
+  }
+  .cs-thumb {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--card);
+    cursor: zoom-in;
+  }
+  .cs-thumb img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .cs-gallery figcaption {
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+    margin-top: 0.5rem;
+  }
+  .cs-embed {
+    margin-top: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .cs-embed iframe {
+    display: block;
+    width: 100%;
+    height: 620px;
+    border: none;
+  }
+  .cs-note {
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+  }
+  .cs-commands {
+    display: grid;
+    gap: 0.6rem;
+    margin-bottom: 1.5rem;
+  }
+  .cs-command {
+    display: flex;
+    gap: 1rem;
+    align-items: baseline;
+    padding: 0.7rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    flex-wrap: wrap;
+  }
+  .cs-command code {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .cs-command span {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+  }
+  .cs-points {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.6rem;
+    color: var(--fg);
+    max-width: 80ch;
+  }
+  .cs-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+  }
+  .cs-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+  }
+  .cs-card h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+    color: var(--accent);
+  }
+  .cs-card p {
+    margin: 0;
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+  }
+  .cs-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+  .cs-lightbox {
+    border: none;
+    padding: 1rem;
+    max-width: min(1100px, 94vw);
+    background: var(--bg);
+    color: var(--fg);
+  }
+  .cs-lightbox::backdrop {
+    background: rgb(0 0 0 / 0.8);
+  }
+  .cs-lightbox img {
+    display: block;
+    max-width: 100%;
+    max-height: 78vh;
+    margin: 0 auto;
+    border-radius: 8px;
+  }
+  .cs-lightbox-caption {
+    text-align: center;
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    margin: 0.75rem 0 0;
+  }
+  .cs-lightbox-close {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.6rem;
+    background: none;
+    border: none;
+    color: var(--fg);
+    font-size: 1.8rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+  @media (max-width: 800px) {
+    .cs-two-col {
+      grid-template-columns: 1fr;
+    }
+    .cs-row {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+  }
+</style>

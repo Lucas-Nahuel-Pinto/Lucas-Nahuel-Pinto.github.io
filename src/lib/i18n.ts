@@ -16,6 +16,7 @@ type Strings = {
   themeToggle: string;
   langSwitch: string;
   footerNote: string;
+  contactEmail: string;
   viewCode: string;
   liveDemo: string;
   problem: string;
@@ -34,6 +35,7 @@ export const UI: Record<Lang, Strings> = {
     themeToggle: 'Cambiar tema',
     langSwitch: 'English',
     footerNote: 'Hecho con Astro · código abierto en GitHub',
+    contactEmail: 'lucas@example.com',
     viewCode: 'Ver código',
     liveDemo: 'Demo en vivo',
     problem: 'Problema',
@@ -50,6 +52,7 @@ export const UI: Record<Lang, Strings> = {
     themeToggle: 'Toggle theme',
     langSwitch: 'Español',
     footerNote: 'Built with Astro · source code on GitHub',
+    contactEmail: 'lucas@example.com',
     viewCode: 'View code',
     liveDemo: 'Live demo',
     problem: 'Problem',
