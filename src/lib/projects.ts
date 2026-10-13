@@ -659,6 +659,228 @@ export const PROJECTS: Project[] = [
       },
     },
   },
+  {
+    slug: 'harness-manager',
+    live: {
+      href: 'https://harness-manager.lucas-pinto.workers.dev',
+      label: 'Abrir el sitio en vivo',
+    },
+    content: {
+      es: {
+        stripe: {
+          problem:
+            'Gestionar un arnés de agentes significaba editar archivos a mano: MCPs que nadie apagaba, modelos heredados por costumbre y scripts que solo el autor sabía correr, sin panorama de lo instalado.',
+          solution:
+            'Un dashboard 100% online sobre un agente local sin ventana: el sitio lee el arnés por un canal cifrado y cada acción pasa por diff, confirmación y escritura atómica.',
+          result:
+            'Cualquier arnés se administra desde el navegador: 6 pestañas de panorama, cero puertos abiertos y los valores de .env nunca se leen.',
+          metric: { value: '6 pestañas', label: 'para cualquier arnés de agentes' },
+        },
+        caseStudy: {
+          title: 'Harness Manager',
+          pitch:
+            'Un panel panorámico para cualquier arnés de agentes: veo skills, comandos, agentes, MCPs y scripts desde el navegador, y ejecuto cambios seguros sin instalar una UI local.',
+          tags: ['Agentes', 'Seguridad', 'Dashboard'],
+          pain: {
+            title: 'El dolor en mi flujo QA',
+            body: 'Cada máquina tenía su arnés a su manera: skills sin registrar, MCPs de los que nadie sabía si estaban activos, agentes con modelos heredados y scripts que solo el autor sabía correr. Para saber qué había instalado había que leer archivos de configuración a mano, máquina por máquina, y cualquier cambio era un edit sin red de seguridad.',
+            metric: { value: 'Cero panorama', label: 'de qué hay instalado en cada arnés' },
+          },
+          usage: {
+            title: 'Cómo lo usa un QA',
+            intro:
+              'Cada pestaña responde una pregunta concreta del arnés. El sitio nunca toca archivos: el agente local aplica únicamente los cambios que yo confirmo.',
+            items: [
+              {
+                q: '¿Qué tiene instalado mi arnés hoy?',
+                a: 'Resumen — KPIs de skills, comandos, agentes, MCPs, env, scripts y registros, con health cards H-J con drill-down.',
+              },
+              {
+                q: '¿Qué skills y comandos hay, y están registrados?',
+                a: 'Skills + Comandos — tabla ordenable con tier, referencias, evaluaciones y estado de registro.',
+              },
+              {
+                q: '¿Qué modelo corre cada agente?',
+                a: 'Agents & Modelos — picker del catálogo de modelos con diff y confirmación antes de aplicar.',
+              },
+              {
+                q: '¿Qué MCPs están activos y qué variables usan?',
+                a: 'MCPs + Env — toggle de MCPs sobre la config y matriz de presencia .env.example vs .env, sin leer valores.',
+              },
+              {
+                q: '¿Puedo correr los scripts del arnés desde acá?',
+                a: 'Scripts + Registros — runner con whitelist de nombres del package.json y panel de salida.',
+              },
+              {
+                q: '¿Cómo se conectan entre sí las piezas?',
+                a: 'Grafo — grafo relacional skill→refs→scripts, agent→skills, MCP→env con iluminación por selección.',
+              },
+            ],
+          },
+          demo: {
+            title: 'Demo navegable',
+            intro:
+              'El diagrama interactivo completo del sistema, embebido: las dos zonas (tu PC y la nube), el agente sin puertos entrantes, el relay cifrado y el modelo de acciones con diff + confirmación.',
+            gallery: [],
+            embed: {
+              src: '/diagrams/harness-manager/',
+              title: 'Harness Manager — diagrama de arquitectura',
+            },
+            link: { href: 'https://harness-manager.lucas-pinto.workers.dev', label: 'Abrir el sitio en vivo' },
+            note: 'El diagrama es autocontenido. El sitio en vivo espera el agente local para mostrar tu arnés.',
+          },
+          kit: {
+            title: 'En mi kit de trabajo',
+            intro:
+              'El flujo completo entra en cuatro órdenes, siempre desde el directorio del repo del manager:',
+            commands: [
+              { cmd: 'bun run agent [código]', desc: 'Agente headless: se empareja con el sitio por el relay' },
+              { cmd: 'bun run pull', desc: 'Escanea el arnés y valida el snapshot (CLI de diagnóstico)' },
+              { cmd: 'bun run build:online', desc: 'Build de la UI para el origen alojado' },
+              { cmd: 'bun run repo:check', desc: 'Gate completo: formato, lint, tipos y tests' },
+            ],
+            points: [
+              'Acciones con red de seguridad: diff a la vista, confirmación explícita, escritura atómica y rescan automático.',
+              'Conexión saliente únicamente: el agente abre una sola conexión al relay; sin puertos entrantes ni cambios de firewall.',
+              'Secretos fuera del snapshot: .env se lee por presencia, nunca por valor, y los frames viajan cifrados de extremo a extremo.',
+            ],
+          },
+          skills: {
+            title: 'Qué demuestra',
+            cards: [
+              {
+                name: 'Arquitectura con seguridad de diseño',
+                desc: 'El relay es un ciego que solo reenvía: claves, códigos y rutas nunca salen del canal cifrado.',
+              },
+              {
+                name: 'Automatización de harness',
+                desc: 'Convierto la gestión manual de cualquier arnés en un panel reproducible, con tests de por medio.',
+              },
+              {
+                name: 'DX con confirmación',
+                desc: 'Ningún cambio escribe a ciegas: toda acción muestra su diff y espera mi OK antes de tocar un archivo.',
+              },
+            ],
+          },
+          closing: {
+            title: 'Cierre',
+            body: 'Seis pestañas, un agente sin ventana y un relay que no ve nada: cualquier arnés se administra desde el navegador sin bajar la guardia.',
+            metrics: [
+              { value: '6', label: 'pestañas de panorama' },
+              { value: '0', label: 'puertos abiertos en tu PC' },
+              { value: '100%', label: 'acciones con diff + confirmación' },
+            ],
+          },
+        },
+      },
+      en: {
+        stripe: {
+          problem:
+            'Managing an agent harness meant editing files by hand: MCPs nobody ever disabled, models inherited by habit, and scripts only the author knew how to run, with no view of what was installed.',
+          solution:
+            'A 100% online dashboard on top of a windowless local agent: the site reads the harness over an encrypted channel, and every action goes through diff, confirmation and atomic write.',
+          result:
+            'Any harness gets administered from the browser: 6 panorama tabs, zero open ports, and .env values are never read.',
+          metric: { value: '6 tabs', label: 'for any agent harness' },
+        },
+        caseStudy: {
+          title: 'Harness Manager',
+          pitch:
+            'A panoramic dashboard for any agent harness: I see skills, commands, agents, MCPs and scripts from the browser, and run safe changes without installing a local UI.',
+          tags: ['Agents', 'Security', 'Dashboard'],
+          pain: {
+            title: 'The pain in my QA flow',
+            body: 'Every machine had its harness its own way: unregistered skills, MCPs nobody knew were active, agents with inherited models, and scripts only the author could run. Knowing what was installed meant reading config files by hand, machine by machine, and every change was an edit with no safety net.',
+            metric: { value: 'Zero panorama', label: 'of what is installed in each harness' },
+          },
+          usage: {
+            title: 'How a QA uses it',
+            intro:
+              'Each tab answers one concrete harness question. The site never touches files: the local agent applies only the changes I confirm.',
+            items: [
+              {
+                q: 'What does my harness have installed today?',
+                a: 'Summary — KPIs for skills, commands, agents, MCPs, env, scripts and registries, with clickable H-J health cards.',
+              },
+              {
+                q: 'Which skills and commands exist, and are they registered?',
+                a: 'Skills + Commands — sortable table with tier, references, evals and registration state.',
+              },
+              {
+                q: 'Which model runs each agent?',
+                a: 'Agents & Models — model catalog picker with diff and confirmation before applying.',
+              },
+              {
+                q: 'Which MCPs are active and which variables do they use?',
+                a: 'MCPs + Env — MCP toggles over config and a .env.example vs .env presence matrix, values never read.',
+              },
+              {
+                q: 'Can I run the harness scripts from here?',
+                a: 'Scripts + Registries — runner whitelisted to package.json names, with an output pane.',
+              },
+              {
+                q: 'How do the pieces connect to each other?',
+                a: 'Graph — relational graph of skill→refs→scripts, agent→skills, MCP→env with selection illumination.',
+              },
+            ],
+          },
+          demo: {
+            title: 'Navigable demo',
+            intro:
+              'The full interactive architecture diagram, embedded: the two zones (your PC and the cloud), the portless agent, the encrypted relay, and the diff + confirmation action model.',
+            gallery: [],
+            embed: {
+              src: '/diagrams/harness-manager/',
+              title: 'Harness Manager — architecture diagram',
+            },
+            link: { href: 'https://harness-manager.lucas-pinto.workers.dev', label: 'Open the live site' },
+            note: 'The diagram is self-contained. The live site waits for the local agent to show your harness.',
+          },
+          kit: {
+            title: 'In my working kit',
+            intro: 'The whole flow fits in four commands, always from the manager repo directory:',
+            commands: [
+              { cmd: 'bun run agent [code]', desc: 'Headless agent: pairs with the site through the relay' },
+              { cmd: 'bun run pull', desc: 'Scans the harness and validates the snapshot (diagnostic CLI)' },
+              { cmd: 'bun run build:online', desc: 'UI build for the hosted origin' },
+              { cmd: 'bun run repo:check', desc: 'Full gate: format, lint, types and tests' },
+            ],
+            points: [
+              'Actions with a safety net: diff on screen, explicit confirmation, atomic write and automatic re-scan.',
+              'Outbound-only connection: the agent opens a single connection to the relay; no inbound ports, no firewall changes.',
+              'Secrets out of the snapshot: .env is read by presence, never by value, and frames travel end-to-end encrypted.',
+            ],
+          },
+          skills: {
+            title: 'What it demonstrates',
+            cards: [
+              {
+                name: 'Security-by-design architecture',
+                desc: 'The relay is a blind courier that only forwards: keys, codes and paths never leave the encrypted channel.',
+              },
+              {
+                name: 'Harness automation',
+                desc: 'I turn manual management of any harness into a reproducible panel, with tests in the middle.',
+              },
+              {
+                name: 'Confirmation-first DX',
+                desc: 'No change writes blindly: every action shows its diff and waits for my OK before touching a file.',
+              },
+            ],
+          },
+          closing: {
+            title: 'Closing',
+            body: 'Six tabs, a windowless agent and a blind relay: any harness administered from the browser without lowering the guard.',
+            metrics: [
+              { value: '6', label: 'panorama tabs' },
+              { value: '0', label: 'open ports on your PC' },
+              { value: '100%', label: 'actions with diff + confirmation' },
+            ],
+          },
+        },
+      },
+    },
+  },
 ];
 
 export function getProject(slug: string): Project | undefined {
