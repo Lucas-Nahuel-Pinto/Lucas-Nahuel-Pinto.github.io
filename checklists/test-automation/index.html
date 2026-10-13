@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist — Test Automation (KATA + Playwright)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --cyan: #39c5cf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    padding: 2rem 1rem 4rem;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  header p { color: var(--muted); margin-top: .35rem; font-size: .95rem; }
+  .progress-bar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: .6rem .9rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; row-gap: .45rem;
+  }
+  .progress-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; min-width: 120px; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width .3s; }
+  .progress-label { font-size: .85rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .search { display: flex; align-items: center; gap: .3rem; }
+  .search input {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: .3rem .55rem; font-size: .82rem; width: 160px; outline: none;
+    transition: border-color .15s;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search input::-webkit-search-cancel-button { cursor: pointer; }
+  .search-count {
+    font-size: .74rem; color: var(--muted); min-width: 42px; text-align: center;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .search-count.none { color: var(--red); font-weight: 700; }
+  .search button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; width: 26px; height: 26px; font-size: .8rem; line-height: 1;
+    cursor: pointer; transition: background .15s;
+  }
+  .search button:hover { background: var(--border); }
+  mark.hit { background: rgba(210,153,34,.45); color: var(--text); border-radius: 3px; padding: 0 1px; }
+  mark.hit.hit-current { background: var(--accent); color: var(--bg); font-weight: 700; }
+  section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.1rem 1.3rem; margin-bottom: 1.1rem;
+  }
+  h2 {
+    font-size: 1.05rem; font-weight: 700; margin-bottom: .8rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  h2 .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .d-sel .dot { background: var(--orange); }
+  .d-prep .dot { background: var(--accent); }
+  .d-ref .dot { background: var(--purple); }
+  .d-hand .dot { background: var(--green); }
+  .d-done .dot { background: var(--cyan); }
+  .d-no .dot { background: var(--red); }
+  ul { list-style: none; }
+  li.item { padding: .3rem 0; }
+  li.item label {
+    display: flex; align-items: flex-start; gap: .6rem;
+    cursor: pointer; padding: .35rem .5rem; border-radius: 6px;
+    transition: background .15s;
+  }
+  li.item label:hover { background: var(--surface2); }
+  input[type="checkbox"] {
+    accent-color: var(--green); width: 16px; height: 16px;
+    margin-top: .28rem; flex-shrink: 0; cursor: pointer;
+  }
+  li.item.done .txt { color: var(--muted); text-decoration: line-through; }
+  li.item.done .ex .ex-body { opacity: .65; }
+  .sub { margin-left: 1.5rem; margin-top: .15rem; border-left: 2px solid var(--border); padding-left: .7rem; }
+  .sub li.item label { padding: .22rem .4rem; font-size: .92rem; }
+  details.ex { margin: .1rem 0 .45rem 2.2rem; }
+  .sub details.ex { margin-left: 1.6rem; }
+  details.ex summary {
+    cursor: pointer; list-style: none;
+    font-size: .74rem; color: var(--muted); user-select: none;
+    padding: .1rem .45rem; border: 1px dashed var(--border);
+    border-radius: 999px; display: inline-block;
+    transition: color .15s, border-color .15s;
+  }
+  details.ex summary::-webkit-details-marker { display: none; }
+  details.ex summary::before { content: "+ "; font-weight: 700; }
+  details.ex[open] summary::before { content: "− "; }
+  details.ex summary:hover { color: var(--accent); border-color: var(--accent); }
+  details.ex[open] summary { color: var(--accent); border-color: var(--accent); border-style: solid; }
+  .ex-body {
+    margin-top: .4rem; background: var(--surface2);
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: .6rem .8rem;
+    font-size: .87rem; color: var(--muted);
+  }
+  .ex-body p + p, .ex-body p + ul, .ex-body ul + p, .ex-body p + table, .ex-body table + p, .ex-body p + ol, .ex-body ol + p { margin-top: .45rem; }
+  .ex-body ul { padding-left: 1.1rem; list-style: disc; }
+  .ex-body ol { padding-left: 1.3rem; list-style: decimal; }
+  .ex-body li { margin: .15rem 0; }
+  code {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: .05rem .35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .85em; color: var(--accent);
+  }
+  .ex-body code { background: var(--bg); }
+  strong { color: var(--text); }
+  .warn {
+    background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.4);
+    border-radius: 6px; padding: .55rem .8rem; margin: .6rem 0 .3rem;
+    font-size: .9rem; color: var(--orange);
+  }
+  table { border-collapse: collapse; width: 100%; margin: .5rem 0 .3rem; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; }
+  th { background: var(--surface2); color: var(--muted); font-weight: 600; }
+  td code { font-size: .82em; }
+  .actions { display: flex; gap: .6rem; margin-top: 1rem; }
+  .actions button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: .45rem .9rem; font-size: .85rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .actions button:hover { background: var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Checklist — Test Automation</h1>
+  <p>Stage 5 · KATA + Playwright + TypeScript · Plan → Code → Review · solo verdicts Candidate</p>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
+  <span class="progress-label" id="label">0 / 0</span>
+  <div class="search">
+    <input type="search" id="searchInput" placeholder="Buscar…" autocomplete="off" spellcheck="false" aria-label="Buscar en el documento">
+    <span class="search-count" id="searchCount"></span>
+    <button type="button" id="searchPrev" title="Anterior (Shift+Enter)" aria-label="Anterior">↑</button>
+    <button type="button" id="searchNext" title="Siguiente (Enter)" aria-label="Siguiente">↓</button>
+  </div>
+</div>
+
+<section class="d-sel">
+  <h2><span class="dot"></span>Alcance e inputs</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="a1"><span class="txt">Resolver modo: <code>automate</code> (default) vs <code>explain</code> (alias <code>break-down-tests</code>, solo lectura) — si la invocación es ambigua, <strong>preguntar</strong>; nunca inferir implementación de una explicación</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><code>explain</code> es sealed read-only: carga solo <code>references/explain-tests.md</code>, produce su reporte y para — sin sesión, sin Plan → Code → Review, sin editar tests, sin tocar <code>kata-manifest.json</code>, sin Jira/TMS.</p>
+        <p><code>automate</code> corre todo el pipeline KATA. La duda sobre qué outcome se quiere se resuelve con una pregunta, no con una suposición.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="a2"><span class="txt">Elegir planning scope: <strong>Module</strong> (Macro, 10+ tests) · <strong>Ticket</strong> (Medium, default en sprint) · <strong>Regression</strong> (Micro, un TC tras fix) — ante la duda preguntar</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <table>
+          <thead><tr><th>Scope</th><th>Input</th><th>Output</th></tr></thead>
+          <tbody>
+            <tr><td>Module-driven</td><td>Módulo + lista de TCs candidatos</td><td>1 spec de módulo + N specs de ATC</td></tr>
+            <tr><td>Ticket-driven</td><td>Un ticket/story con escenarios</td><td>1 implementation plan para ese ticket</td></tr>
+            <tr><td>Regression-driven</td><td>Un TC puntual (tras bug fix)</td><td>1 ATC implementation plan</td></tr>
+          </tbody>
+        </table>
+        <p>Mapeo desde Stage 4: <code>Module ← module-driven</code>, <code>Ticket ← ticket-driven</code>, <code>Regression-driven ← bug-driven</code>; ad-hoc entra en el que encaje. Nunca asumir "module" solo porque aparecen varios TC IDs en el briefing.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="a3"><span class="txt">Automatizar SOLO verdicts <strong>Candidate</strong> de <code>/test-documentation</code> — <code>Manual</code> / <code>Deferred</code> son terminales</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El ROI de Stage 4 es el gate de entrada: saltarlo produce suites flaky y de bajo valor (anti-pattern T1). Si un TC no tiene veredicto Candidate, no existe para este skill.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-prep">
+  <h2><span class="dot"></span>Plan (Phase 1)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="p7"><span class="txt">Presentar el plan al usuario y <strong>esperar aprobación</strong> antes de escribir una línea de código de tests</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Es el gate entre Phase 1 y Phase 2 — no existe "codear primero, planear después" (anti-pattern T2: incluso un regression test simple requiere su plan antes del código).</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-ref">
+  <h2><span class="dot"></span>Code (Phase 2)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="c1"><span class="txt">Orden de implementación: <strong>1</strong> Types · <strong>2</strong> clase componente (helpers primero, ATCs con <code>@atc</code> después) · <strong>3</strong> registrar en fixture · <strong>4</strong> test file · <strong>5</strong> run + verify sin saltar pasos</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El verify es en este orden exacto y no se salta: <code>bun run test &lt;path&gt;</code> → <code>bun run types:check</code> → <code>bun run lint:check</code>. Si alguno falla, se arregla ANTES de avanzar a Review — no se llega a Phase 3 con el local roto.</p>
+        <p>Steps classes (<code>tests/components/steps/*Steps.ts</code>) <strong>no</strong> se registran en ningún fixture: los tests y setup los instancian directamente.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c2"><span class="txt">Fixture selection: API-only → <code>{ api }</code> (sin browser) · UI-only → <code>{ ui }</code> · hybrid (setup API + flujo UI) → <code>{ test }</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Solo existen esos 3 fixtures (<code>tests/components/TestFixture.ts</code>). Reglas: <code>tests/integration/**</code> casi siempre <code>{ api }</code>; <code>tests/e2e/**</code> con <code>{ ui }</code> si no hay setup vía API, si no <code>{ test }</code>.</p>
+        <p><strong>Nunca <code>{ ui }</code> en un test que no toca la UI</strong> — abre un browser para nada. Fixture equivocado = tests API lentos o contexto UI faltante.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c3"><span class="txt">ATC = mini-flujo completo y atómico — <strong>nunca llama a otro ATC</strong>; cadenas reutilizables van a un Steps module (sin <code>@atc</code>)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><code>clickLoginButton()</code> no es un ATC; <code>loginWithValidCredentials(credentials)</code> sí. Si el método es un one-line wrapper de <code>page.click()</code>, borrarlo.</p>
+        <p>Helpers vs ATCs: un GET read-only es helper (sin <code>@atc</code>, opcional <code>@step</code>); una acción que cambia estado es ATC. Un GET <strong>dentro</strong> de un ATC para verificar que la acción funcionó está bien — el GET solo no es ATC.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c4"><span class="txt">Locators <strong>inline en el ATC</strong> — sin archivos <code>locators/*.ts</code>; extraer solo con 2+ usos en la misma clase (<code>private readonly</code> arrow, nunca archivo aparte)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>La regla anti-extracción prematura es deliberada: el selector vive junto al comportamiento que lo usa. Cuando el mismo locator aparece en 2+ ATCs del componente, se promueve a función privada dentro de la clase — jamás a un módulo de locators.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c5"><span class="txt">Máximo <strong>2 parámetros posicionales</strong> — 3+ → object param <code>fn(args: Args)</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Named object parameters superan a las listas posicionales en mantenibilidad y autocomplete: firmas como <code>createUser({ email, role, plan })</code> sobreviven a agregar un cuarto dato; <code>createUser(a, b, c)</code> no.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c6"><span class="txt">Import aliases obligatorios: <code>@api/</code> · <code>@ui/</code> · <code>@utils/</code> · <code>@variables</code> · <code>@TestContext</code> · <code>@schemas/</code> · <code>@TestFixture</code> — <strong>cero imports relativos</strong></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><code>../../../</code> rompe al mover archivos y lo rechaza el lint (anti-pattern T5). Los aliases viven en la config de path mapping de TypeScript/Playwright.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c7"><span class="txt">Credenciales desde <code>.env</code> vía <code>config.testUser</code> de <code>@variables</code> — nunca hardcodear · cada test genera <strong>su propio dato</strong> (sin estado compartido)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><code>LOCAL_USER_*</code> / <code>STAGING_USER_*</code> y sus passwords viven en <code>.env</code>; nunca inline en spec, fixture ni archivo de datos (anti-pattern T6).</p>
+        <p>Datos únicos por test vía <code>TestContext.generateUserData()</code> o helpers de faker — el estado compartido entre tests es la receta para ejecuciones en orden aleatorio rotas.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c8"><span class="txt">Assertions: status code / campos requeridos / redirects <strong>dentro</strong> del ATC · outcomes de flow (nivel test) en el test file — TC identity: Precondition + Action = 1 TC</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Las mismas esperas de un mismo par (precondition, action) son aserciones del MISMO TC — no se parte un TC en "panel A / panel B / panel C" (gotcha 2, el anti-patrón más diagnosticado en reviews).</p>
+        <p>EP: mismo output esperado = un ATC parametrizado — tres ATCs que todos devuelven 401 para login inválido se fusionan en <code>loginWithInvalidCredentials(payload)</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c9"><span class="txt">Naming: <code>test('TICKET-ID: should {behavior} when {condition}', …)</code> · componentes PascalCase uno por archivo · test files con verbo <code>{verb}{Feature}.test.ts</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Componentes: <code>{Resource}Api.ts</code> / <code>{Page}Page.ts</code> — un componente por archivo, un archivo por feature. Tests: <code>applyDiscount.test.ts</code>, nunca <code>discount.test.ts</code>.</p>
+        <p>El <code>describe</code> puede llevar el ticket ID cuando el archivo pertenece a un solo ticket. El ticket ID en cada <code>test()</code> es lo que permite el trace Vía <code>@atc('TICKET-ID')</code> de vuelta al TMS.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="c10"><span class="txt">Señal en el TMS por TC (ambas, ninguna opcional): link <code>test_automation</code> (outward <code>automation test for</code>) + labels <strong>+automated / −automation-candidate</strong> — flip al llegar a <strong>AUTOMATED</strong>, no antes</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El link resuelve el slug <code>{{jira.link_types.test_automation}}</code> — nunca un literal. Labels son mutuamente excluyentes: <code>automation-candidate</code> se quita al poner <code>automated</code>.</p>
+        <p><strong>Timing</strong>: los labels cambian cuando el TC alcanza AUTOMATED — que ocurre tras el PR final de la suite en <code>main</code> con CI green, no al mergear en el integration trunk.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-hand">
+  <h2><span class="dot"></span>Review (Phase 3)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="r1"><span class="txt">Correr los 3 gates y exigir los tres en verde: <code>bun run test</code> (all green, cero retries usados) · <code>bun run types:check</code> · <code>bun run lint:check</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Pueden correr en paralelo como sub-verificaciones independientes, pero el ACCEPT requiere los 3 exit 0. Un solo rojo = REJECT.</p>
+        <p>La suite local pasa <strong>sin retries</strong>: si un test solo pasa al retry, es flaky, no passing (gotcha 11).</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r2"><span class="txt">Verifier fallido → <strong>STOP</strong>: devolver el reporte verbatim al usuario, NO auto-fixear el test, NO re-dispatchear Code sin aprobación</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Error protocol del orchestration: el fallo se reporta con su contexto completo y las opciones (retry / skip / abort) las decide el usuario. Auto-fixear en silencio oculta la causa raíz y ensucia el diff sin diagnóstico.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r3"><span class="txt">Aplicar review checklist de <code>references/review-checklists.md</code> (E2E y API, listas distintas) — <strong>cada ítem fallido es blocker</strong>; review limpio = merge gate</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El checklist se corre sobre los archivos nuevos/modificados. No es "casi verde": cualquier ítem rojo bloquea el merge hasta arreglarse.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r4"><span class="txt">Cambios de alto riesgo (fixtures nuevos, bases compartidas, refactors multi-ATC) → <strong>opt-in</strong> con <code>/judgment-day</code> antes del commit</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Gate adversarial opcional: dos judges ciegos en paralelo contra el diff, aprueba solo si ambos coinciden. Se invoca por decisión del usuario por ticket — nunca automático.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r5"><span class="txt">Verificación visual final: componente registrado en <code>ApiFixture</code>/<code>UiFixture</code> · cada <code>@atc('X')</code> = ID real del TMS · naming de archivos correcto</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Los quality gates no cubiertos por los 3 comandos: registro en fixture (Steps jamás), IDs de ATC ligados a un test case real del TMS, y el naming (PascalCase componentes / camelCase con verbo para tests).</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-no">
+  <h2><span class="dot"></span>No hacer</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="n1"><span class="txt">No automatizar TCs <code>Deferred</code> o <code>Manual</code> — solo veredictos <code>Candidate</code> (<code>to_be_automated</code>)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Saltarse el ROI verdict de Stage 4 produce suites flaky y de bajo valor: se automatiza esfuerzo donde no va a re-ejecutarse. (Anti-pattern T1.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n2"><span class="txt">No saltarse el Plan — escribir <code>spec.md</code> / <code>automation-plan.md</code> ANTES de cualquier código de test, aunque sea "un regression test simple"</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Plan → Code → Review es non-negotiable. El atajo directo a código es la vía rápida a un test que no cubre lo que creías. (Anti-pattern T2.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n3"><span class="txt">No colapsar las capas KATA (TestContext / ApiBase + UiBase / Domain Api+Page+Steps / Fixture)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Tests que aplanan las capas se rechazan en Review. La doctrina completa está en <code>references/kata-architecture.md</code>. (Anti-pattern T3.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n4"><span class="txt">No llamar a un ATC desde otro ATC — cadenas reutilizables al Steps module (sin <code>@atc</code>)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>ATCs son mini-flows atómicos; un ATC que invoca a otro acopla sus fallos y hace imposible reusar la cadena por separado. (Anti-pattern T4.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n5"><span class="txt">No usar imports relativos (<code>../../../</code>) — solo aliases; el lint los rechaza</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Los aliases del repo: <code>@api/</code>, <code>@ui/</code>, <code>@schemas/</code>, <code>@utils/</code>, <code>@TestContext</code>, <code>@variables</code>, <code>@TestFixture</code>. (Anti-pattern T5.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n6"><span class="txt">No hardcodear credenciales — passwords, tokens y API keys jamás inline en spec, fixture o test data</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Todo desde <code>.env</code> vía <code>config.testUser</code> de <code>@variables</code>. Un password en el repo es una fuga permanente, aunque sea "de tests". (Anti-pattern T6.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n7"><span class="txt">No hardcodear <code>customfield_NNNNN</code> en specs, test data ni config — resolver vía <code>{{jira.&lt;slug&gt;}}</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Los IDs numéricos de campos rotan con cada workspace; resolverlos contra <code>.agents/jira-fields.json</code> + <code>jira-required.yaml</code> hace que el test code sobreviva. (Anti-pattern T7.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n8"><span class="txt">No mezclar test code y product code en el mismo PR — test PRs en rama <code>test/*</code> con título <code>{type}({ISSUE-KEY}): {description}</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Bajo estrategia <code>sdet</code>, el trabajo no-test adyacente tampoco viaja en un ticket branch <code>test/*</code> — va por una Plus Branch (<code>docs/*</code>/<code>chore/*</code>/<code>fix/*</code> → integration trunk). (Anti-pattern T8.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n9"><span class="txt">No waits hardcodeados — nunca <code>page.waitForTimeout(3000)</code>; esperar la condición específica</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Esperas correctas: <code>waitForSelector</code>, <code>waitForResponse</code>, <code>waitForLoadState('networkidle')</code> o atributos como <code>data-loaded="true"</code>. El sleep fijo es la causa número uno de tests lentos y flaky a la vez.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n10"><span class="txt">No retries por defecto — <code>retries: 0</code> en <code>playwright.config.ts</code>; pasa al retry = flaky, no passing</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Un retry enmascara el problema en vez de diagnosticarlo: si un test solo es verde al segundo intento, hay una race o un wait mal puesto — investigar, no reintentar. (Gotcha 11.)</p></div></details>
+    </li>
+  </ul>
+</section>
+
+<div class="actions">
+  <button id="reset">Reiniciar checklist</button>
+</div>
+
+</div>
+
+<script>
+(function () {
+  var KEY = 'ta-checklist-v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type=checkbox]'));
+  var fill = document.getElementById('fill');
+  var label = document.getElementById('label');
+
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+
+  function refresh() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      b.checked = !!state[b.dataset.k];
+      b.closest('.item').classList.toggle('done', b.checked);
+      if (b.checked) done++;
+    });
+    var pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+    fill.style.width = pct + '%';
+    label.textContent = done + ' / ' + boxes.length + '  (' + pct + '%)';
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  function syncParents() {
+    for (var i = boxes.length - 1; i >= 0; i--) {
+      var p = boxes[i];
+      var pli = p.closest('li.item');
+      if (!pli) continue;
+      var kids = pli.querySelectorAll('.sub input[type=checkbox]');
+      if (!kids.length) continue;
+      var all = true;
+      for (var j = 0; j < kids.length; j++) {
+        if (!state[kids[j].dataset.k]) { all = false; break; }
+      }
+      state[p.dataset.k] = all;
+    }
+  }
+
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () {
+      state[b.dataset.k] = b.checked;
+      var li = b.closest('li.item');
+      if (li) {
+        Array.prototype.slice.call(li.querySelectorAll('.sub input[type=checkbox]')).forEach(function (k) {
+          state[k.dataset.k] = b.checked;
+        });
+      }
+      syncParents();
+      refresh();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    if (confirm('¿Reiniciar todo el checklist?')) {
+      state = {};
+      refresh();
+    }
+  });
+
+  refresh();
+})();
+</script>
+<script>
+(function () {
+  var input = document.getElementById('searchInput');
+  var count = document.getElementById('searchCount');
+  var btnPrev = document.getElementById('searchPrev');
+  var btnNext = document.getElementById('searchNext');
+  var root = document.querySelector('.wrap');
+  var marks = [], cur = -1, timer;
+
+  function clearMarks() {
+    var old = document.querySelectorAll('mark.hit');
+    for (var i = 0; i < old.length; i++) {
+      var m = old[i];
+      m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
+    }
+    root.normalize();
+    marks = [];
+    cur = -1;
+  }
+
+  function highlight(term) {
+    clearMarks();
+    count.textContent = '';
+    count.classList.remove('none');
+    if (!term) return;
+    var lower = term.toLowerCase();
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        var tag = p.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK' || tag === 'INPUT' || tag === 'BUTTON') return NodeFilter.FILTER_REJECT;
+        if (p.closest && p.closest('.progress-bar')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [], n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(function (node) {
+      var txt = node.nodeValue, low = txt.toLowerCase(), i = low.indexOf(lower);
+      if (i < 0) return;
+      var frag = document.createDocumentFragment(), pos = 0;
+      while (i >= 0) {
+        if (i > pos) frag.appendChild(document.createTextNode(txt.slice(pos, i)));
+        var mk = document.createElement('mark');
+        mk.className = 'hit';
+        mk.textContent = txt.slice(i, i + term.length);
+        frag.appendChild(mk);
+        pos = i + term.length;
+        i = low.indexOf(lower, pos);
+      }
+      if (pos < txt.length) frag.appendChild(document.createTextNode(txt.slice(pos)));
+      node.parentNode.replaceChild(frag, node);
+    });
+    marks = Array.prototype.slice.call(root.querySelectorAll('mark.hit'));
+    if (marks.length) setCurrent(0);
+    else { count.textContent = '0'; count.classList.add('none'); }
+  }
+
+  function setCurrent(i) {
+    if (!marks.length) return;
+    for (var j = 0; j < marks.length; j++) marks[j].classList.remove('hit-current');
+    cur = ((i % marks.length) + marks.length) % marks.length;
+    var m = marks[cur];
+    m.classList.add('hit-current');
+    var d = m.closest('details');
+    if (d && !d.open) d.open = true;
+    m.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    count.textContent = (cur + 1) + ' / ' + marks.length;
+    count.classList.remove('none');
+  }
+
+  function run() { highlight(input.value.trim()); }
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 150);
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (marks.length) setCurrent(cur + (e.shiftKey ? -1 : 1));
+    } else if (e.key === 'Escape') {
+      input.value = '';
+      run();
+    }
+  });
+  btnNext.addEventListener('click', function () { if (marks.length) setCurrent(cur + 1); });
+  btnPrev.addEventListener('click', function () { if (marks.length) setCurrent(cur - 1); });
+})();
+</script>
+</body>
+</html>

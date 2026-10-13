@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist — Regression Testing (CI/CD)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --cyan: #39c5cf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    padding: 2rem 1rem 4rem;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  header p { color: var(--muted); margin-top: .35rem; font-size: .95rem; }
+  .progress-bar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: .6rem .9rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; row-gap: .45rem;
+  }
+  .progress-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; min-width: 120px; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width .3s; }
+  .progress-label { font-size: .85rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .search { display: flex; align-items: center; gap: .3rem; }
+  .search input {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: .3rem .55rem; font-size: .82rem; width: 160px; outline: none;
+    transition: border-color .15s;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search input::-webkit-search-cancel-button { cursor: pointer; }
+  .search-count {
+    font-size: .74rem; color: var(--muted); min-width: 42px; text-align: center;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .search-count.none { color: var(--red); font-weight: 700; }
+  .search button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; width: 26px; height: 26px; font-size: .8rem; line-height: 1;
+    cursor: pointer; transition: background .15s;
+  }
+  .search button:hover { background: var(--border); }
+  mark.hit { background: rgba(210,153,34,.45); color: var(--text); border-radius: 3px; padding: 0 1px; }
+  mark.hit.hit-current { background: var(--accent); color: var(--bg); font-weight: 700; }
+  section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.1rem 1.3rem; margin-bottom: 1.1rem;
+  }
+  h2 {
+    font-size: 1.05rem; font-weight: 700; margin-bottom: .8rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  h2 .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .d-sel .dot { background: var(--orange); }
+  .d-prep .dot { background: var(--accent); }
+  .d-ref .dot { background: var(--purple); }
+  .d-hand .dot { background: var(--green); }
+  .d-done .dot { background: var(--cyan); }
+  .d-no .dot { background: var(--red); }
+  ul { list-style: none; }
+  li.item { padding: .3rem 0; }
+  li.item label {
+    display: flex; align-items: flex-start; gap: .6rem;
+    cursor: pointer; padding: .35rem .5rem; border-radius: 6px;
+    transition: background .15s;
+  }
+  li.item label:hover { background: var(--surface2); }
+  input[type="checkbox"] {
+    accent-color: var(--green); width: 16px; height: 16px;
+    margin-top: .28rem; flex-shrink: 0; cursor: pointer;
+  }
+  li.item.done .txt { color: var(--muted); text-decoration: line-through; }
+  li.item.done .ex .ex-body { opacity: .65; }
+  .sub { margin-left: 1.5rem; margin-top: .15rem; border-left: 2px solid var(--border); padding-left: .7rem; }
+  .sub li.item label { padding: .22rem .4rem; font-size: .92rem; }
+  details.ex { margin: .1rem 0 .45rem 2.2rem; }
+  .sub details.ex { margin-left: 1.6rem; }
+  details.ex summary {
+    cursor: pointer; list-style: none;
+    font-size: .74rem; color: var(--muted); user-select: none;
+    padding: .1rem .45rem; border: 1px dashed var(--border);
+    border-radius: 999px; display: inline-block;
+    transition: color .15s, border-color .15s;
+  }
+  details.ex summary::-webkit-details-marker { display: none; }
+  details.ex summary::before { content: "+ "; font-weight: 700; }
+  details.ex[open] summary::before { content: "− "; }
+  details.ex summary:hover { color: var(--accent); border-color: var(--accent); }
+  details.ex[open] summary { color: var(--accent); border-color: var(--accent); border-style: solid; }
+  .ex-body {
+    margin-top: .4rem; background: var(--surface2);
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: .6rem .8rem;
+    font-size: .87rem; color: var(--muted);
+  }
+  .ex-body p + p, .ex-body p + ul, .ex-body ul + p, .ex-body p + table, .ex-body table + p, .ex-body p + ol, .ex-body ol + p { margin-top: .45rem; }
+  .ex-body ul { padding-left: 1.1rem; list-style: disc; }
+  .ex-body ol { padding-left: 1.3rem; list-style: decimal; }
+  .ex-body li { margin: .15rem 0; }
+  code {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: .05rem .35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .85em; color: var(--accent);
+  }
+  .ex-body code { background: var(--bg); }
+  strong { color: var(--text); }
+  .warn {
+    background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.4);
+    border-radius: 6px; padding: .55rem .8rem; margin: .6rem 0 .3rem;
+    font-size: .9rem; color: var(--orange);
+  }
+  table { border-collapse: collapse; width: 100%; margin: .5rem 0 .3rem; font-size: .9rem; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; }
+  th { background: var(--surface2); color: var(--muted); font-weight: 600; }
+  td code { font-size: .82em; }
+  .actions { display: flex; gap: .6rem; margin-top: 1rem; }
+  .actions button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: .45rem .9rem; font-size: .85rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .actions button:hover { background: var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Checklist — Regression Testing</h1>
+  <p>Stage 6 · CI/CD (GitHub Actions + Allure) · Execute → Analyze → Report · GO / CAUTION / NO-GO</p>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
+  <span class="progress-label" id="label">0 / 0</span>
+  <div class="search">
+    <input type="search" id="searchInput" placeholder="Buscar…" autocomplete="off" spellcheck="false" aria-label="Buscar en el documento">
+    <span class="search-count" id="searchCount"></span>
+    <button type="button" id="searchPrev" title="Anterior (Shift+Enter)" aria-label="Anterior">↑</button>
+    <button type="button" id="searchNext" title="Siguiente (Enter)" aria-label="Siguiente">↓</button>
+  </div>
+</div>
+
+<section class="d-sel">
+  <h2><span class="dot"></span>Alcance e inputs</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="a1"><span class="txt">Elegir la suite correcta: <strong>regression</strong> (20-60 min, pre-release / nightly) · <strong>smoke</strong> (2-5 min, post-deploy, solo <code>@critical</code>) · <strong>sanity</strong> (1-10 min, un feature / archivo / grep) — "run regression" sin calificar = <code>regression</code> sobre el default env</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <table>
+          <thead><tr><th>Suite</th><th>Workflow</th><th>Cuándo</th></tr></thead>
+          <tbody>
+            <tr><td><code>regression</code></td><td><code>regression.yml</code></td><td>Validación pre-release, nightly completo</td></tr>
+            <tr><td><code>smoke</code></td><td><code>smoke.yml</code></td><td>Health check post-deploy</td></tr>
+            <tr><td><code>sanity</code></td><td><code>sanity.yml</code></td><td>Validar una feature / un archivo / un patrón</td></tr>
+          </tbody>
+        </table>
+        <p>"smoke" o "critical only" → <code>smoke</code>. Archivo, grep o feature puntual → <code>sanity</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="a2"><span class="txt">Leer inputs: workflows de <code>.github/workflows/</code> · SLOs y epic de regresión en <code>.context/master-test-plan.md</code> · <code>playwright.config.ts</code> (retries, sharding) · Allure del run anterior como baseline de trend · <code>kata-manifest.json</code> para cruzar IDs de ATC fallidos</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El master test plan trae la tasa de pass esperada por suite (SLO) y la clave del epic de regresión; sin ese número el score de Phase 3 pierde su umbral.</p>
+        <p>Baseline de trend: descarga local en <code>./analysis/previous/</code> o la URL del artefacto del run anterior.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="a3"><span class="txt">Sanity: <code>grep</code> O <code>test_file</code>, <strong>nunca ambos</strong> (el workflow ignora uno en silencio) · <code>video_record=true</code> solo para debug de flake o evidencia de bug, jamás en nightly</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Video infla los artefactos 5-10×. Para la nightly regression queda siempre en <code>false</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="a4"><span class="txt">Credenciales de CI en GitHub Secrets/Variables (<code>secrets.&lt;ENV&gt;_USER_EMAIL</code> / <code>_PASSWORD</code>, <code>XRAY_*</code>, <code>ATLASSIAN_*</code>) — verificar con <code>gh secret list</code> ANTES del run; nunca copiar <code>.env</code> al YAML</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Falta de secrets = la suite 401 a mitad de run (gap silencioso más común). Credenciales de test-user, token OpenAPI y browsers viven dentro del runner, no en el orchestrador.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-prep">
+  <h2><span class="dot"></span>Execute (Phase 1)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="e1"><span class="txt"><code>gh auth status</code> antes de arrancar — no autenticado → pedir <code>gh auth login</code> y <strong>parar</strong>, no continuar</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Cada stage (trigger, monitor, download) se ejecuta vía <code>gh</code>: sin auth nada del pipeline corre. Verificar también <code>gh repo view</code> y <code>gh workflow list</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="e2"><span class="txt">Trigger: <code>gh workflow run &lt;suite&gt;.yml -f environment=&lt;env&gt; [-f generate_allure=true]</code> → esperar 3-5 s → capturar <strong>RUN_ID</strong> con <code>gh run list --workflow=&lt;wf&gt; --limit=1</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Ejemplos: <code>gh workflow run regression.yml -f environment=staging -f video_record=false -f generate_allure=true</code> · sanity: <code>-f grep="@auth"</code> O <code>-f test_file="tests/e2e/auth/login.test.ts"</code>.</p>
+        <p>El RUN_ID se guarda apenas se captura — todos los pasos siguientes (watch, logs, downloads) lo usan, y es lo que permite re-engancharse si se pierde la sesión.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="e3"><span class="txt">Monitor hasta <code>status: completed</code> con <code>gh run watch &lt;RUN_ID&gt; --exit-status</code> — fallback: polling de <code>gh run view &lt;RUN_ID&gt; --json status,conclusion</code> cada 60-90 s</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><code>gh run watch</code> puede hacer timeout en suites largas; el polling es el plan B. <code>conclusion</code> solo aparece al completar: <code>success | failure | cancelled | timed_out</code>.</p>
+        <p><strong>Phase 2 no arranca hasta <code>completed</code></strong> — analizar un run en vuelo produce métricas a medias.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="e4"><span class="txt">Output de Phase 1: workflow, RUN_ID, ambiente, duración, conclusion, status por job, lista de artefactos y patrón de URL Allure <code>/{env}/{suite}/</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>La URL de GitHub Pages solo está viva si el job "Build &amp; Deploy Allure Report" terminó verde; si falló, 404 — analizar desde los artefactos descargados.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-ref">
+  <h2><span class="dot"></span>Analyze (Phase 2)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="m1"><span class="txt">Descargar los <strong>3 artefactos</strong> del run: <code>merged-allure-results-&lt;env&gt;</code> → <code>./analysis/</code> · <code>e2e-failure-evidence</code> → <code>./analysis/evidence/</code> · <code>e2e-playwright-report</code> → <code>./analysis/playwright/</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Metadata inline: <code>gh run view &lt;RUN_ID&gt; --json status,conclusion,jobs,…</code> · <code>--log-failed</code> (nunca <code>--log</code>: supera 50 MB) · listar artefactos con <code>--json artifacts</code>.</p>
+        <p><strong>Nunca saltarse esta descarga en builds rojos</strong> (anti-pattern R4): la evidencia expira con la ventana de retención.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="m2"><span class="txt">Parsear con prioridad: <strong>Allure JSON &gt; Playwright <code>report.json</code> &gt; logs crudos</strong> — leer <code>status</code>, <code>statusDetails</code>, y labels <code>testId</code> (ATC ID), <code>suite</code>, <code>severity</code></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El label <code>suite</code> de Allure <strong>deriva del tag de Playwright</strong> (<code>@smoke</code>/<code>@regression</code>/<code>@integration</code>…) que también define el scope de CI — single source of truth, nunca reconciliar contra otro set de labels.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="m3"><span class="txt">Métricas: Total · Passed/Failed/Skipped/Broken · Pass Rate = <code>Passed/Total*100</code> · Duration · Trend = run actual − run anterior (artefactos previos en <code>./analysis/previous/</code>)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><strong>Excluir KNOWN-BLOCKED del pass-rate de gating</strong>: computar sobre <code>Total − KNOWN-BLOCKED</code> y reportar el conteo de blocked aparte con cada <code>{BUG-KEY}</code> — ni infla ni deprime el score.</p>
+        <p>Run anterior: <code>gh run list --workflow=… --limit=2</code> → <code>.[1].databaseId</code> → download a <code>./analysis/previous/</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="m4"><span class="txt">Clasificar <strong>CADA</strong> fallo con el decision tree: <code>@blocked:{BUG-KEY}</code> → KNOWN-BLOCKED · ticket conocido → KNOWN ISSUE · patrón de red/infra → ENVIRONMENT · sin historia → NEW TEST · &gt;20% en últimos 10 runs → FLAKY · pasó en los últimos ≤5 runs → <strong>REGRESSION</strong></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><strong>Nunca marcar REGRESSION sin mirar la historia primero</strong> — es la clasificación errónea más común.</p>
+        <p>Patrones ENVIRONMENT: <code>ECONNREFUSED</code>, <code>ETIMEDOUT</code>, <code>net::ERR_</code>, navigation timeout, <code>browserType.launch</code>, 502/503, context deadline. Ojo: ECONNREFUSED a la API propia probablemente = app caída, no "infra"; ENVIRONMENT solo si muchos tests no relacionados fallan en el mismo host.</p>
+        <p>Impacto: REGRESSION bloquea release · FLAKY/ENVIRONMENT/KNOWN no bloquean · KNOWN-BLOCKED excluido del pass-rate · NEW TEST requiere verificación manual antes de creerlo.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="m5"><span class="txt">Señales de flake sin historia suficiente: &lt;10 runs → "insufficient history" y re-evaluar el próximo sprint — <strong>no adivinar</strong> · FLAKY declarado exige re-run aislado previo</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Este repo corre con <code>retries: 0</code>: un test flaky aparece como failure intermitente (regla &gt;20% historia), nunca como "pasó al retry". (Anti-patterns R1.)</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="m6"><span class="txt">Severidad <strong>independiente</strong> de la clasificación: CRITICAL (journey core / <code>@critical</code>) · HIGH (feature mayor) · MEDIUM (secundaria) · LOW (edge/admin) — un test FLAKY de checkout sigue siendo CRITICAL</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Clasificación = <em>qué pasó</em> · Severidad = <em>cuánto importa</em>. Ambas ejes se reportan por fallo.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-done">
+  <h2><span class="dot"></span>Report &amp; Decide (Phase 3)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="d1"><span class="txt">Score ponderado /9: Pass Rate (≥95% = +3 · 90-95% = +1 · &lt;90% = −2) · Regresiones (0 = +3 · High/Critical = −3) · Critical tests · Flaky (≤3 = +1 · &gt;5 = −1) → <strong>≥7 GO</strong> · 4-6 CAUTION · &lt;4 NO-GO</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <table>
+          <thead><tr><th>Factor</th><th>+3</th><th>+1</th><th>0</th><th>−1</th><th>−2</th><th>−3</th></tr></thead>
+          <tbody>
+            <tr><td>Pass Rate</td><td>≥ 95%</td><td>90–95%</td><td></td><td></td><td>&lt; 90%</td><td></td></tr>
+            <tr><td>Regressions</td><td>0</td><td>1-2 Low</td><td></td><td>1+ Medium</td><td></td><td>Any High/Critical</td></tr>
+            <tr><td>Critical tests</td><td>All pass</td><td></td><td></td><td></td><td></td><td>Any fail</td></tr>
+            <tr><td>Flaky tests</td><td></td><td>≤ 3</td><td>4-5</td><td>&gt; 5</td><td></td><td></td></tr>
+          </tbody>
+        </table>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="d2"><span class="txt"><strong>Vetos duros</strong> — nunca auto-GO sin importar el score: cualquier <code>@critical</code> fallando · cualquier REGRESSION con severidad High/Critical · pass rate &lt; 90%</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Y la regla binaria: <strong>cero GO con REGRESSION clase &gt; 0</strong> (anti-pattern R2) — el quality gate no es negociable por score alto en otros factores.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="d3"><span class="txt">Filing en Jira solo con triage que lo respalde: <strong>REGRESSION</strong> y <strong>NEW TEST</strong> confirmado manualmente como defecto real → Bug o Defect por lifecycle del feature (live sobre Staging = Bug · pre-release = Defect) — FLAKY / ENVIRONMENT / KNOWN = <strong>sin bug</strong></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Issue en Jira, nunca GitHub issue. Field matrix completa del defect-management-doctrine: <code>severity</code> → <code>priority</code> derivada, <code>components</code> obligatorias, <code>qa_assignee</code> = usuario de la sesión (read-before-write), <code>evidence</code> = link Allure + screenshots/traces de <code>./analysis/evidence/</code>.</p>
+        <p>Parent = epic <strong>QA Defect Management</strong> (nunca epic de producto) · link causal a la Story que cubre el ATC regresado · gate de filing del doctrine antes de cada submit.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="d4"><span class="txt">Reporte en <code>.context/reports/regression-&lt;env&gt;-&lt;date&gt;.md</code>: verdict + score, métricas vs umbral, release blockers, detalle por categoría (Regressions primero), trend de últimos 5 runs, links, recomendaciones inmediato/corto/largo</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>KNOWN-BLOCKED va en su propia sección con cada <code>[BUG-KEY]</code>, fuera del pass-rate de gating. El reporte es el entregable commiteable; los artefactos descargados viven en <code>./analysis/</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="d5"><span class="txt">Acción post-verdict: <strong>GO</strong> → candidato a release aprobado + smoke post-deploy · <strong>CAUTION</strong> → revisión con lead y riesgos aceptados documentados · <strong>NO-GO</strong> → bloquear release, asignar issues de regresión, planificar fix + re-run</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>TMS sync opcional (si <code>testing.tms_cli</code> está seteado): crear/completar la <strong>STR</strong> (Test Execution) con <code>Test Environment</code> obligatorio y resultados por-ATC; nunca inventar el número de sprint — si no se conoce, preguntar.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="d-no">
+  <h2><span class="dot"></span>No hacer</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="x1"><span class="txt">No declarar FLAKY sin re-run aislado del test — enmascara regresiones reales</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>(Anti-pattern R1.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x2"><span class="txt">No emitir GO con clase REGRESSION &gt; 0 — el gate de calidad es binario</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>(Anti-pattern R2.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x3"><span class="txt">No auto-reintentar tests fallidos en CI sin mostrar el retry count en el reporte</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>(Anti-pattern R3.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x4"><span class="txt">No saltarse la descarga de artefactos Allure en builds rojos — la evidencia expira con la retención</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>(Anti-pattern R4.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x5"><span class="txt">No disparar una suite sin pin de commit — distinto commit = distinto baseline; validar <code>--ref</code> al ejecutar</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>(Anti-pattern R5.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x6"><span class="txt">No mezclar resultados de smoke + regression en un solo número de pass-rate — SLOs distintos</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>(Anti-pattern R6.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x7"><span class="txt">No marcar un test KNOWN-failure sin ticket Jira que vincule la supresión a un issue trackeable</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>(Anti-pattern R7.)</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x8"><span class="txt">No usar ENVIRONMENT como scapegoat — 1 test con error de red en un endpoint que otros usan bien = probable REGRESSION</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p><code>ECONNREFUSED</code> a la API propia suele ser la app caída, no "infra glitch". La señal real de ambiente: muchos tests no relacionados fallando en el mismo host.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x9"><span class="txt">No marcar NEW TEST como REGRESSION — un primer fallo sin historia es "sin verificar", confirmar manualmente una vez</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Si tras la verificación manual es defecto real del producto → se archiva Jira; si no → aceptar o arreglar el test.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x10"><span class="txt">No usar <code>gh run view --log</code> completo (&gt;50 MB) — solo <code>--log-failed</code>, o <code>--job=&lt;JOB_ID&gt; --log</code> para drilldown puntual</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><p>El volcado de todos los steps satura el contexto y no aporta sobre el fallo real.</p></div></details>
+    </li>
+  </ul>
+</section>
+
+<div class="actions">
+  <button id="reset">Reiniciar checklist</button>
+</div>
+
+</div>
+
+<script>
+(function () {
+  var KEY = 'rt-checklist-v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type=checkbox]'));
+  var fill = document.getElementById('fill');
+  var label = document.getElementById('label');
+
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+
+  function refresh() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      b.checked = !!state[b.dataset.k];
+      b.closest('.item').classList.toggle('done', b.checked);
+      if (b.checked) done++;
+    });
+    var pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+    fill.style.width = pct + '%';
+    label.textContent = done + ' / ' + boxes.length + '  (' + pct + '%)';
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  function syncParents() {
+    for (var i = boxes.length - 1; i >= 0; i--) {
+      var p = boxes[i];
+      var pli = p.closest('li.item');
+      if (!pli) continue;
+      var kids = pli.querySelectorAll('.sub input[type=checkbox]');
+      if (!kids.length) continue;
+      var all = true;
+      for (var j = 0; j < kids.length; j++) {
+        if (!state[kids[j].dataset.k]) { all = false; break; }
+      }
+      state[p.dataset.k] = all;
+    }
+  }
+
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () {
+      state[b.dataset.k] = b.checked;
+      var li = b.closest('li.item');
+      if (li) {
+        Array.prototype.slice.call(li.querySelectorAll('.sub input[type=checkbox]')).forEach(function (k) {
+          state[k.dataset.k] = b.checked;
+        });
+      }
+      syncParents();
+      refresh();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    if (confirm('¿Reiniciar todo el checklist?')) {
+      state = {};
+      refresh();
+    }
+  });
+
+  refresh();
+})();
+</script>
+<script>
+(function () {
+  var input = document.getElementById('searchInput');
+  var count = document.getElementById('searchCount');
+  var btnPrev = document.getElementById('searchPrev');
+  var btnNext = document.getElementById('searchNext');
+  var root = document.querySelector('.wrap');
+  var marks = [], cur = -1, timer;
+
+  function clearMarks() {
+    var old = document.querySelectorAll('mark.hit');
+    for (var i = 0; i < old.length; i++) {
+      var m = old[i];
+      m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
+    }
+    root.normalize();
+    marks = [];
+    cur = -1;
+  }
+
+  function highlight(term) {
+    clearMarks();
+    count.textContent = '';
+    count.classList.remove('none');
+    if (!term) return;
+    var lower = term.toLowerCase();
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        var tag = p.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK' || tag === 'INPUT' || tag === 'BUTTON') return NodeFilter.FILTER_REJECT;
+        if (p.closest && p.closest('.progress-bar')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [], n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(function (node) {
+      var txt = node.nodeValue, low = txt.toLowerCase(), i = low.indexOf(lower);
+      if (i < 0) return;
+      var frag = document.createDocumentFragment(), pos = 0;
+      while (i >= 0) {
+        if (i > pos) frag.appendChild(document.createTextNode(txt.slice(pos, i)));
+        var mk = document.createElement('mark');
+        mk.className = 'hit';
+        mk.textContent = txt.slice(i, i + term.length);
+        frag.appendChild(mk);
+        pos = i + term.length;
+        i = low.indexOf(lower, pos);
+      }
+      if (pos < txt.length) frag.appendChild(document.createTextNode(txt.slice(pos)));
+      node.parentNode.replaceChild(frag, node);
+    });
+    marks = Array.prototype.slice.call(root.querySelectorAll('mark.hit'));
+    if (marks.length) setCurrent(0);
+    else { count.textContent = '0'; count.classList.add('none'); }
+  }
+
+  function setCurrent(i) {
+    if (!marks.length) return;
+    for (var j = 0; j < marks.length; j++) marks[j].classList.remove('hit-current');
+    cur = ((i % marks.length) + marks.length) % marks.length;
+    var m = marks[cur];
+    m.classList.add('hit-current');
+    var d = m.closest('details');
+    if (d && !d.open) d.open = true;
+    m.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    count.textContent = (cur + 1) + ' / ' + marks.length;
+    count.classList.remove('none');
+  }
+
+  function run() { highlight(input.value.trim()); }
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 150);
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (marks.length) setCurrent(cur + (e.shiftKey ? -1 : 1));
+    } else if (e.key === 'Escape') {
+      input.value = '';
+      run();
+    }
+  });
+  btnNext.addEventListener('click', function () { if (marks.length) setCurrent(cur + 1); });
+  btnPrev.addEventListener('click', function () { if (marks.length) setCurrent(cur - 1); });
+})();
+</script>
+</body>
+</html>
