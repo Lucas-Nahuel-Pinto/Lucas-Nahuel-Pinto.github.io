@@ -661,6 +661,10 @@ export const PROJECTS: Project[] = [
   },
   {
     slug: 'harness-manager',
+    repo: {
+      url: 'https://github.com/Lucas-Nahuel-Pinto/harness-manager',
+      label: 'harness-manager',
+    },
     live: {
       href: 'https://harness-manager.lucas-pinto.workers.dev',
       label: 'Abrir el sitio en vivo',
