@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Stripe from '../../components/Stripe.astro';
+import Walkthrough from '../../components/Walkthrough.astro';
 import { LANGS } from '../../lib/i18n';
 import { PROJECTS } from '../../lib/projects';
 
@@ -35,6 +36,17 @@ const copy = {
 ---
 
 <BaseLayout lang={lang} path="">
+  <noscript>
+    <style>
+      #wt,
+      .wt-restore {
+        display: none !important;
+      }
+    </style>
+  </noscript>
+
+  <Walkthrough lang={lang} />
+
   <section class="hero">
     <p class="role">{copy.heroRole}</p>
     <h1>Lucas Pinto</h1>

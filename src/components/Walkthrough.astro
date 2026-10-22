@@ -1,0 +1,498 @@
+---
+import type { Lang } from '../lib/i18n';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+---
+
+<div id="wt" class="wt" data-state="menu" data-lang={lang}>
+  <!-- ESCENA 1 · Menú principal estilo videojuego -->
+  <section class="screen screen-menu" data-screen="menu" aria-label="Menú principal">
+    <p class="role" data-i18n="role">QA Engineer</p>
+    <h1 class="title">Lucas Pinto</h1>
+
+    <div class="options">
+      <div class="opt">
+        <span class="opt-label" data-i18n="language">Idioma</span>
+        <div class="seg" role="group" data-i18n-aria="language">
+          <button type="button" class="seg-btn" data-lang-opt="es" aria-pressed="true">ES</button>
+          <button type="button" class="seg-btn" data-lang-opt="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+
+      <div class="opt">
+        <span class="opt-label" data-i18n="sound">Sonido</span>
+        <button type="button" class="seg-btn seg-sound" id="wt-sound" aria-pressed="true">
+          <span id="wt-sound-label">Encendido</span>
+        </button>
+      </div>
+    </div>
+
+    <button type="button" class="start" id="wt-start" disabled>
+      <span data-i18n="start">Comenzar</span>
+    </button>
+    <p class="loading" id="wt-loading" role="status" data-i18n="loading">Cargando introducción…</p>
+
+    <a class="classic-link" id="wt-classic" href="#work" data-i18n="classic">Ver proyectos sin 3D ↓</a>
+  </section>
+
+  <!-- ESCENA 2 · Cinemática (placeholder hasta la Fase 3) -->
+  <section class="screen screen-cutscene" data-screen="cutscene" aria-label="Cinemática" hidden>
+    <div class="placeholder" data-i18n="cutsceneSoon">Cinemática — próximamente</div>
+    <div class="subs" id="wt-subs" aria-live="polite"></div>
+    <button type="button" class="skip" id="wt-skip" data-i18n="skip">Saltar ▸</button>
+  </section>
+
+  <!-- ESCENA 3 · Primera persona (placeholder hasta la Fase 4) -->
+  <section class="screen screen-fp" data-screen="fp" aria-label="Primera persona" hidden>
+    <div class="placeholder" data-i18n="fpSoon">Primera persona — próximamente</div>
+    <button type="button" class="ghost-menu" data-goto-menu data-i18n="backToMenu">◀ Volver al menú</button>
+  </section>
+
+  <!-- ESCENA 4 · Panel AR (placeholder hasta la Fase 5) -->
+  <section class="screen screen-panel" data-screen="panel" aria-label="Panel AR" hidden>
+    <div class="placeholder" data-i18n="panelSoon">Panel AR — próximamente</div>
+    <button type="button" class="ghost-menu" data-goto-menu data-i18n="backToMenu">◀ Volver al menú</button>
+  </section>
+</div>
+
+<button type="button" class="wt-restore" id="wt-restore" data-i18n="backToMenu" hidden>
+  ◀ Volver al menú
+</button>
+
+<style>
+  .wt {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #14213d 0%, #0a1020 55%, #05070d 100%);
+    color: #e8eefc;
+  }
+  .wt[data-state='classic'] {
+    display: none;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .screen:not([hidden]) {
+    display: flex;
+  }
+
+  /* · Menú */
+  .screen-menu .role {
+    color: #c6ff4a;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    font-size: clamp(0.7rem, 2vw, 0.9rem);
+    margin: 0;
+  }
+  .title {
+    font-size: clamp(2.4rem, 9vw, 5rem);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    text-shadow:
+      0 0 24px rgba(74, 217, 255, 0.45),
+      0 0 60px rgba(74, 217, 255, 0.2);
+  }
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 2.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  .opt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .opt-label {
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #8fb6ff;
+  }
+  .seg {
+    display: inline-flex;
+    border: 1px solid #3d5aa0;
+    border-radius: 6px;
+    overflow: hidden;
+    background: rgba(21, 42, 77, 0.6);
+  }
+  .seg-btn {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    color: #cfe0ff;
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    padding: 0.55rem 1.1rem;
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+  .seg-btn + .seg-btn {
+    border-left: 1px solid #3d5aa0;
+  }
+  .seg-btn:hover {
+    background: rgba(74, 217, 255, 0.12);
+  }
+  .seg-btn[aria-pressed='true'] {
+    background: #c6ff4a;
+    color: #0a1020;
+  }
+  .seg-sound[aria-pressed='false'] {
+    color: #8fa3c8;
+  }
+
+  .start {
+    appearance: none;
+    border: 0;
+    margin-top: 1rem;
+    padding: 0.9rem 3rem;
+    font: inherit;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #0a1020;
+    background: linear-gradient(180deg, #d8ff6e, #a8e63a);
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 32px rgba(198, 255, 74, 0.35);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      filter 0.12s ease;
+  }
+  .start:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 48px rgba(198, 255, 74, 0.55);
+    filter: brightness(1.05);
+  }
+  .start:disabled {
+    cursor: wait;
+    filter: grayscale(0.7) brightness(0.7);
+    box-shadow: none;
+  }
+  .loading {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #8fa3c8;
+    min-height: 1.2em;
+  }
+  .loading[data-done] {
+    visibility: hidden;
+  }
+  .classic-link {
+    margin-top: 1.5rem;
+    color: #8fb6ff;
+    font-size: 0.9rem;
+    opacity: 0.85;
+  }
+
+  /* · Placeholders de escenas */
+  .screen-cutscene {
+    background: #000;
+  }
+  .screen-fp,
+  .screen-panel {
+    background: #05070d;
+  }
+  .placeholder {
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    color: #8fa3c8;
+    letter-spacing: 0.1em;
+  }
+  .skip {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    font: inherit;
+    font-size: 0.9rem;
+    letter-spacing: 0.15em;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .skip:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .subs {
+    position: absolute;
+    left: 50%;
+    bottom: 3rem;
+    transform: translateX(-50%);
+    width: min(90%, 46rem);
+    text-align: center;
+    font-size: clamp(1rem, 2.5vw, 1.25rem);
+    color: #fff;
+    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
+    min-height: 1.4em;
+  }
+  .ghost-menu {
+    appearance: none;
+    background: transparent;
+    border: 1px solid #3d5aa0;
+    color: #cfe0ff;
+    font: inherit;
+    font-size: 0.9rem;
+    padding: 0.5rem 1.1rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .ghost-menu:hover {
+    border-color: #4ad9ff;
+  }
+
+  /* · Botón de retorno en modo clásico */
+  .wt-restore {
+    position: fixed;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 61;
+    appearance: none;
+    background: #0a1020;
+    border: 1px solid #3d5aa0;
+    color: #cfe0ff;
+    font: inherit;
+    font-size: 0.9rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
+  .wt-restore:hover {
+    border-color: #4ad9ff;
+  }
+  .wt-restore[hidden] {
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .start,
+    .seg-btn {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { StateMachine } from '../walkthrough/state';
+  import { AudioManager } from '../walkthrough/audio';
+  import { STRINGS } from '../walkthrough/strings';
+  import { UI, LANGS, localizePath, type Lang } from '../lib/i18n';
+
+  const root = document.getElementById('wt');
+  const restoreBtn = document.getElementById('wt-restore');
+
+  if (root && restoreBtn) {
+    const sm = new StateMachine();
+    const screens = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-screen]'),
+    );
+
+    const read = (key: string): string | null => {
+      try {
+        return localStorage.getItem(key);
+      } catch {
+        return null;
+      }
+    };
+    const write = (key: string, value: string): void => {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        /* preferences are optional */
+      }
+    };
+
+    const routeLang = (root.dataset.lang ?? 'es') as Lang;
+    const storedLang = read('wt:lang');
+    let lang: Lang =
+      storedLang && (LANGS as readonly string[]).includes(storedLang)
+        ? (storedLang as Lang)
+        : routeLang;
+    let muted = read('wt:muted') === '1';
+
+    const audio = new AudioManager(lang, muted);
+
+    const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
+      const el = document.getElementById(id);
+      if (!el) throw new Error(`[walkthrough] missing #${id}`);
+      return el as T;
+    };
+    const startBtn = $<HTMLButtonElement>('wt-start');
+    const loadingEl = $('wt-loading');
+    const soundBtn = $<HTMLButtonElement>('wt-sound');
+    const soundLabel = $('wt-sound-label');
+    const classicLink = $<HTMLAnchorElement>('wt-classic');
+    const skipBtn = $<HTMLButtonElement>('wt-skip');
+
+    let voiceReady = false;
+
+    /* · Render de estado · */
+    const render = (state: string): void => {
+      root!.dataset.state = state;
+      restoreBtn.hidden = state !== 'classic';
+      if (state === 'menu') {
+        // Re-enabling START whenever we come back to the menu; the voice
+        // track is already cached after the first preload.
+        startBtn.disabled = !voiceReady;
+        if (voiceReady) loadingEl.setAttribute('data-done', '');
+      }
+      for (const screen of screens) {
+        const active = screen.dataset.screen === state;
+        screen.hidden = !active;
+        if (active) screen.removeAttribute('inert');
+        else screen.setAttribute('inert', '');
+      }
+    };
+    sm.on(render);
+    render(sm.state);
+
+    /* · i18n en caliente · */
+    const applyLang = (next: Lang): void => {
+      lang = next;
+      root!.dataset.lang = next;
+      document.documentElement.lang = next;
+      document.title = UI[next].siteTitle;
+      write('wt:lang', next);
+
+      for (const el of root!.querySelectorAll<HTMLElement>('[data-i18n]')) {
+        const key = el.dataset.i18n as keyof (typeof STRINGS)['es'];
+        el.textContent = STRINGS[next][key];
+      }
+      for (const el of root!.querySelectorAll<HTMLElement>('[data-i18n-aria]')) {
+        const key = el.dataset.i18nAria as keyof (typeof STRINGS)['es'];
+        el.setAttribute('aria-label', STRINGS[next][key]);
+      }
+      for (const btn of root!.querySelectorAll<HTMLButtonElement>('[data-lang-opt]')) {
+        btn.setAttribute('aria-pressed', String(btn.dataset.langOpt === next));
+      }
+      updateSoundLabel();
+      audio.setLang(next);
+
+      const target = localizePath(location.pathname, next);
+      if (location.pathname !== target) {
+        history.replaceState(null, '', target);
+      }
+    };
+
+    const updateSoundLabel = (): void => {
+      soundLabel.textContent = muted
+        ? STRINGS[lang].soundOff
+        : STRINGS[lang].soundOn;
+      soundBtn.setAttribute('aria-pressed', String(!muted));
+    };
+
+    /* · Preparación del audio (nunca deja el START bloqueado) · */
+    let readyPromise: Promise<boolean> | null = null;
+    const ensureVoice = (): Promise<boolean> => {
+      readyPromise ??= audio.preload().then((ready) => {
+        // Never leave START blocked: preload resolves or times out, and we
+        // enable the button either way (degradation rule: no dead screens).
+        voiceReady = true;
+        if (sm.state === 'menu') {
+          startBtn.disabled = false;
+          loadingEl.setAttribute('data-done', '');
+        }
+        if (!ready) console.warn('[walkthrough] voice not fully buffered');
+        return ready;
+      });
+      return readyPromise;
+    };
+
+    /* · Eventos del menú · */
+    for (const btn of root!.querySelectorAll<HTMLButtonElement>('[data-lang-opt]')) {
+      btn.addEventListener('click', () => {
+        audio.blip(760);
+        applyLang(btn.dataset.langOpt as Lang);
+      });
+    }
+
+    soundBtn.addEventListener('click', () => {
+      muted = !muted;
+      write('wt:muted', muted ? '1' : '0');
+      audio.setMuted(muted);
+      updateSoundLabel();
+      if (!muted) audio.blip(520);
+    });
+
+    startBtn.addEventListener('click', () => {
+      audio.blip(980);
+      startBtn.disabled = true;
+      loadingEl.removeAttribute('data-done');
+      loadingEl.textContent = STRINGS[lang].loading;
+      void ensureVoice().then(() => {
+        if (sm.set('cutscene')) {
+          audio.play();
+        } else {
+          startBtn.disabled = false;
+        }
+        loadingEl.setAttribute('data-done', '');
+      });
+    });
+
+    audio.onEnded = () => {
+      if (sm.state === 'cutscene') sm.set('fp');
+    };
+
+    skipBtn.addEventListener('click', () => {
+      audio.blip(640);
+      audio.stop();
+      sm.set('fp');
+    });
+
+    classicLink.addEventListener('click', (event) => {
+      event.preventDefault();
+      audio.blip(560);
+      if (sm.set('classic')) {
+        document
+          .getElementById('work')
+          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    restoreBtn.addEventListener('click', () => {
+      audio.blip(700);
+      sm.set('menu');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    for (const btn of root!.querySelectorAll<HTMLButtonElement>('[data-goto-menu]')) {
+      btn.addEventListener('click', () => {
+        audio.stop();
+        sm.set('menu');
+      });
+    }
+
+    /* · Init · */
+    applyLang(lang);
+    audio.setMuted(muted);
+    void ensureVoice();
+  }
+</script>
