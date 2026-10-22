@@ -102,18 +102,37 @@ const { lang } = Astro.props;
     position: fixed;
     inset: 0;
     z-index: 60;
-    color-scheme: dark;
+    color-scheme: light;
     --me-red: #dd2c24;
+    --me-red-dark: #b81f18;
     --me-red-hot: #f0362e;
-    --me-line: rgba(255, 255, 255, 0.12);
-    --me-edge: #3a4148;
+    --me-ink: #161c22;
+    --me-ink-strong: #1f2830;
+    --me-ink-soft: #55616e;
+    --me-line: rgba(22, 28, 34, 0.16);
+    --me-edge: #9fabb7;
+    --glass: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(255, 255, 255, 0.9);
     --wt-display: 'Barlow Condensed', 'Segoe UI', system-ui, sans-serif;
     font-family: var(--wt-display);
-    color: #e7eaee;
+    color: var(--me-ink);
+    /* Soft gray-blue daylight with glass facets — never blinding white. */
     background:
-      radial-gradient(150% 110% at 78% -20%, #1b2127 0%, #12161b 48%, #0b0e12 100%);
+      linear-gradient(
+        115deg,
+        transparent 0 58%,
+        rgba(255, 255, 255, 0.4) 58% 61%,
+        transparent 61%
+      ),
+      linear-gradient(
+        295deg,
+        transparent 0 72%,
+        rgba(160, 180, 200, 0.14) 72% 78%,
+        transparent 78%
+      ),
+      radial-gradient(130% 100% at 20% 0%, #f7fafc 0%, #e7edf3 55%, #d8e1e9 100%);
   }
-  /* One authored motion moment: a slow light sweep, like sun off glass. */
+  /* One authored motion moment: a slow sheen, like sun off glass. */
   .wt::after {
     content: '';
     position: absolute;
@@ -123,7 +142,7 @@ const { lang } = Astro.props;
     background: linear-gradient(
       100deg,
       transparent 35%,
-      rgba(255, 255, 255, 0.045) 50%,
+      rgba(255, 255, 255, 0.5) 50%,
       transparent 65%
     );
     transform: translateX(-40%);
@@ -155,11 +174,11 @@ const { lang } = Astro.props;
   }
 
   .wt :where(button, a):focus-visible {
-    outline: 2px solid #ff5a4d;
+    outline: 2px solid var(--me-red-dark);
     outline-offset: 3px;
   }
 
-  /* · Menú — Mirror's Edge (dark) */
+  /* · Menú — Mirror's Edge (light glass) */
   .screen-menu {
     text-align: left;
     /* Short windows / high zoom: never clip the header or the link. */
@@ -171,7 +190,8 @@ const { lang } = Astro.props;
     width: min(100%, 38rem);
     display: flex;
     flex-direction: column;
-    gap: 2.1rem;
+    /* vh-based rhythm: the menu fits a 588×478 viewport without scrolling. */
+    gap: clamp(0.9rem, 3.5vh, 2.1rem);
   }
   .me-head {
     display: flex;
@@ -183,7 +203,7 @@ const { lang } = Astro.props;
     font-size: 0.78rem;
     letter-spacing: 0.42em;
     text-transform: uppercase;
-    color: #8b959e;
+    color: var(--me-ink-soft);
   }
   .me-head-line {
     flex: 1;
@@ -203,9 +223,9 @@ const { lang } = Astro.props;
   .me-slash {
     position: absolute;
     left: -4%;
-    bottom: 2.9rem;
+    bottom: 2.5rem;
     width: 72%;
-    height: 14px;
+    height: 12px;
     background: linear-gradient(90deg, var(--me-red) 60%, rgba(221, 44, 36, 0));
     transform: skewX(-24deg);
     opacity: 0.9;
@@ -213,29 +233,31 @@ const { lang } = Astro.props;
   .title {
     position: relative;
     font-weight: 700;
-    font-size: clamp(3rem, 11vw, 6rem);
+    font-size: clamp(2.2rem, min(11vw, 12vh), 6rem);
     line-height: 0.92;
     letter-spacing: -0.02em;
     text-transform: uppercase;
     margin: 0;
-    color: #f2f4f6;
+    color: var(--me-ink);
   }
   .role {
     position: relative;
-    margin: 0.7rem 0 0;
+    margin: 0.5rem 0 0;
     font-weight: 600;
-    font-size: 1.25rem;
+    font-size: clamp(1rem, 2.6vh, 1.25rem);
     letter-spacing: 0.34em;
     text-transform: uppercase;
-    color: #aab4be;
+    color: var(--me-ink-soft);
   }
 
   .panel {
     position: relative;
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid var(--me-line);
-    backdrop-filter: blur(6px);
-    padding: 0.35rem 1.4rem 1.4rem;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(14px) saturate(1.1);
+    border-radius: 2px;
+    box-shadow: 0 12px 32px rgba(23, 32, 42, 0.14);
+    padding: 0.35rem 1.4rem clamp(0.9rem, 2.5vh, 1.4rem);
   }
   .panel::before {
     content: '';
@@ -251,33 +273,33 @@ const { lang } = Astro.props;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1.05rem 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: clamp(0.6rem, 2vh, 1.05rem) 0;
+    border-bottom: 1px solid rgba(22, 28, 34, 0.1);
   }
   .opt-label {
     font-weight: 600;
     font-size: 0.95rem;
     letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: #8b959e;
+    color: var(--me-ink-soft);
   }
   .seg {
     display: inline-flex;
     border: 1px solid var(--me-edge);
     border-radius: 2px;
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(255, 255, 255, 0.55);
   }
   .seg-btn {
     appearance: none;
     border: 0;
     background: transparent;
-    color: #dfe3e7;
+    color: var(--me-ink-strong);
     font-family: inherit;
     font-weight: 600;
     font-size: 0.95rem;
     letter-spacing: 0.1em;
-    padding: 0.5rem 1.05rem;
+    padding: 0.45rem 1.05rem;
     cursor: pointer;
     transition:
       background 0.15s ease,
@@ -287,7 +309,7 @@ const { lang } = Astro.props;
     border-left: 1px solid var(--me-edge);
   }
   .seg-btn:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(22, 28, 34, 0.06);
   }
   .seg-btn[aria-pressed='true'] {
     background: var(--me-red);
@@ -301,23 +323,23 @@ const { lang } = Astro.props;
     gap: 0.55rem;
     border: 1px solid var(--me-edge);
     border-radius: 2px;
-    background: rgba(0, 0, 0, 0.25);
-    color: #dfe3e7;
+    background: rgba(255, 255, 255, 0.55);
+    color: var(--me-ink-strong);
     font-family: inherit;
     font-weight: 600;
     font-size: 0.95rem;
     letter-spacing: 0.1em;
-    padding: 0.5rem 1.05rem;
+    padding: 0.45rem 1.05rem;
     cursor: pointer;
     transition:
       background 0.15s ease,
       color 0.15s ease;
   }
   .sound-toggle:hover {
-    background: rgba(255, 255, 255, 0.07);
+    background: rgba(22, 28, 34, 0.06);
   }
   .sound-toggle[aria-pressed='false'] {
-    color: #8b959e;
+    color: var(--me-ink-soft);
   }
   .sound-toggle .icon-off {
     display: none;
@@ -333,15 +355,15 @@ const { lang } = Astro.props;
     appearance: none;
     border: 0;
     width: 100%;
-    margin-top: 1.35rem;
+    margin-top: clamp(0.8rem, 2.5vh, 1.35rem);
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem 1.4rem;
+    padding: clamp(0.7rem, 2.2vh, 1rem) 1.4rem;
     font-family: inherit;
     font-weight: 700;
-    font-size: 1.35rem;
+    font-size: clamp(1.1rem, 3vh, 1.35rem);
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: #fff;
@@ -367,14 +389,14 @@ const { lang } = Astro.props;
     transform: translateX(6px);
   }
   .start:disabled {
-    background: #1b2026;
-    color: #6d7680;
+    background: rgba(255, 255, 255, 0.65);
+    color: var(--me-ink-soft);
     cursor: wait;
     box-shadow: inset 0 0 0 1px var(--me-edge);
   }
 
   .status {
-    margin: 0.95rem 0 0;
+    margin: clamp(0.5rem, 1.6vh, 0.95rem) 0 0;
     display: flex;
     align-items: center;
     gap: 0.55rem;
@@ -382,7 +404,7 @@ const { lang } = Astro.props;
     font-size: 0.8rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: #8b959e;
+    color: var(--me-ink-soft);
     min-height: 1.2em;
   }
   .status::before {
@@ -394,7 +416,7 @@ const { lang } = Astro.props;
     animation: me-pulse 1.4s ease-in-out infinite;
   }
   .status[data-done] {
-    visibility: hidden;
+    display: none;
   }
   @keyframes me-pulse {
     50% {
@@ -407,15 +429,15 @@ const { lang } = Astro.props;
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    color: #dfe3e7;
+    color: var(--me-ink-strong);
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: clamp(0.85rem, 2.2vh, 0.95rem);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     text-decoration: none;
   }
   .classic-link:hover {
-    color: #fff;
+    color: var(--me-red-dark);
     text-decoration: none;
   }
   .classic-link svg {
@@ -424,15 +446,6 @@ const { lang } = Astro.props;
   .classic-link:hover svg {
     transform: translateY(3px);
   }
-  @media (max-width: 480px) {
-    .menu-shell {
-      gap: 1.5rem;
-    }
-    .start {
-      font-size: 1.15rem;
-      letter-spacing: 0.16em;
-    }
-  }
 
   /* · Placeholders de escenas */
   .screen-cutscene {
@@ -440,11 +453,11 @@ const { lang } = Astro.props;
   }
   .screen-fp,
   .screen-panel {
-    background: #05070d;
+    background: transparent;
   }
   .placeholder {
     font-size: clamp(1.1rem, 3vw, 1.5rem);
-    color: #8b959e;
+    color: #47515c;
     letter-spacing: 0.1em;
   }
   .skip {
@@ -479,9 +492,11 @@ const { lang } = Astro.props;
   }
   .ghost-menu {
     appearance: none;
-    background: transparent;
-    border: 1px solid var(--me-edge);
-    color: #dfe3e7;
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 6px 18px rgba(23, 32, 42, 0.12);
+    color: var(--me-ink-strong);
     font: inherit;
     font-size: 0.9rem;
     padding: 0.5rem 1.1rem;
@@ -500,22 +515,23 @@ const { lang } = Astro.props;
     bottom: 1rem;
     z-index: 61;
     appearance: none;
-    background: #12161b;
-    border: 1px solid #3a4148;
-    color: #dfe3e7;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--me-edge);
+    color: var(--me-ink-strong);
     font: inherit;
     font-size: 0.9rem;
     padding: 0.6rem 1.1rem;
     border-radius: 2px;
     cursor: pointer;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 18px rgba(23, 32, 42, 0.16);
     transition: border-color 0.15s ease;
   }
   .wt-restore:hover {
-    border-color: #dd2c24;
+    border-color: var(--me-red);
   }
   .wt-restore:focus-visible {
-    outline: 2px solid #ff5a4d;
+    outline: 2px solid var(--me-red-dark);
     outline-offset: 3px;
   }
   .wt-restore[hidden] {
