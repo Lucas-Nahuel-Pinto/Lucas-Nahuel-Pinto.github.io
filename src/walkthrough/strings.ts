@@ -34,7 +34,7 @@ export const STRINGS: Record<Lang, WalkthroughStrings> = {
     cutsceneSoon: 'Cinemática — próximamente',
     fpSoon: 'Primera persona — próximamente',
     panelSoon: 'Panel AR — próximamente',
-    classic: 'Ver proyectos sin 3D ↓',
+    classic: 'Ver proyectos sin 3D',
     backToMenu: '◀ Volver al menú',
   },
   en: {
@@ -49,7 +49,7 @@ export const STRINGS: Record<Lang, WalkthroughStrings> = {
     cutsceneSoon: 'Cutscene — coming soon',
     fpSoon: 'First person — coming soon',
     panelSoon: 'AR panel — coming soon',
-    classic: 'View projects without 3D ↓',
+    classic: 'View projects without 3D',
     backToMenu: '◀ Back to menu',
   },
 };
