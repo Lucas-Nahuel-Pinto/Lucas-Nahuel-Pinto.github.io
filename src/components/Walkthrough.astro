@@ -158,29 +158,6 @@ const { lang } = Astro.props;
       transform: translate3d(8%, 0, 0);
     }
   }
-  /* A reflection streak crossing the glass, like sun off a facade. */
-  .wt::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background: linear-gradient(
-      100deg,
-      transparent 30%,
-      rgba(255, 255, 255, 0.95) 46%,
-      rgba(255, 255, 255, 0.25) 50%,
-      rgba(130, 150, 170, 0.12) 52.5%,
-      transparent 62%
-    );
-    transform: translateX(-60%);
-    animation: me-sweep 9s ease-in-out infinite alternate;
-  }
-  @keyframes me-sweep {
-    to {
-      transform: translateX(60%);
-    }
-  }
   .wt[data-state='classic'] {
     display: none;
   }
@@ -281,7 +258,7 @@ const { lang } = Astro.props;
   .panel {
     position: relative;
     background: var(--glass);
-    border: 1px solid var(--glass-border);
+    border: 1px solid rgba(22, 28, 34, 0.14);
     backdrop-filter: blur(14px) saturate(1.1);
     border-radius: 2px;
     box-shadow: 0 12px 32px rgba(23, 32, 42, 0.14);
@@ -295,6 +272,43 @@ const { lang } = Astro.props;
     width: 56px;
     height: 3px;
     background: var(--me-red);
+  }
+  /* Sun glint: a warm highlight slowly travelling the glass edge. */
+  @property --me-glint {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
+  .panel::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 2px;
+    padding: 2px;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--me-glint),
+      transparent 0 62%,
+      rgba(255, 244, 218, 0) 66%,
+      rgba(255, 246, 226, 1) 74%,
+      rgba(255, 255, 255, 1) 78%,
+      rgba(255, 246, 226, 0) 86%,
+      transparent 100%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation: me-glint 7s linear infinite;
+  }
+  @keyframes me-glint {
+    to {
+      --me-glint: 360deg;
+    }
   }
   .opt-row {
     display: flex;
@@ -568,7 +582,7 @@ const { lang } = Astro.props;
 
   @media (prefers-reduced-motion: reduce) {
     .wt::before,
-    .wt::after,
+    .panel::after,
     .status::before {
       animation: none;
     }
