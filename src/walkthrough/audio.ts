@@ -10,6 +10,7 @@ export class AudioManager {
   private lang: Lang;
   private muted: boolean;
   private blipContext: AudioContext | null = null;
+  private noiseCache: AudioBuffer | null = null;
 
   onEnded: (() => void) | null = null;
 
@@ -81,7 +82,11 @@ export class AudioManager {
     this.audio.currentTime = 0;
   }
 
-  /** Short UI blip for menu interactions (respects mute). */
+  /** Short, soft UI tick for menu interactions (respects mute).
+   *
+   * A "glass plink", not an 8-bit blip: a sine with a gentle pitch drop and
+   * soft attack through a lowpass, plus a tiny band-passed air transient —
+   * the sound of light touch on a glass pane. */
   blip(frequency = 660): void {
     if (this.muted) return;
     try {
@@ -93,18 +98,56 @@ export class AudioManager {
       const ctx = this.blipContext;
       if (ctx.state === 'suspended') void ctx.resume();
 
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
-      oscillator.type = 'square';
-      oscillator.frequency.value = frequency;
-      gain.gain.setValueAtTime(0.05, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.09);
-      oscillator.connect(gain).connect(ctx.destination);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.1);
+      const now = ctx.currentTime;
+      const out = ctx.createGain();
+      out.gain.value = 1;
+      out.connect(ctx.destination);
+
+      // · Tone: sine that settles from a slightly higher pitch (soft plink)
+      const tone = ctx.createOscillator();
+      tone.type = 'sine';
+      tone.frequency.setValueAtTime(frequency * 1.14, now);
+      tone.frequency.exponentialRampToValueAtTime(frequency, now + 0.07);
+      const toneFilter = ctx.createBiquadFilter();
+      toneFilter.type = 'lowpass';
+      toneFilter.frequency.value = 4800;
+      const toneGain = ctx.createGain();
+      toneGain.gain.setValueAtTime(0.0001, now);
+      toneGain.gain.linearRampToValueAtTime(0.07, now + 0.006);
+      toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+      tone.connect(toneFilter).connect(toneGain).connect(out);
+      tone.start(now);
+      tone.stop(now + 0.24);
+
+      // · Air: tiny band-passed noise transient (finger on glass)
+      const air = ctx.createBufferSource();
+      air.buffer = this.noiseBuffer(ctx);
+      const bandpass = ctx.createBiquadFilter();
+      bandpass.type = 'bandpass';
+      bandpass.frequency.value = Math.min(frequency * 3.4, 6000);
+      bandpass.Q.value = 1.1;
+      const airGain = ctx.createGain();
+      airGain.gain.setValueAtTime(0.03, now);
+      airGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+      air.connect(bandpass).connect(airGain).connect(out);
+      air.start(now);
+      air.stop(now + 0.08);
     } catch {
       /* audio effects are decorative — never break the UI */
     }
+  }
+
+  /** Small cached white-noise buffer for the air layer of the UI ticks. */
+  private noiseBuffer(ctx: AudioContext): AudioBuffer {
+    if (!this.noiseCache) {
+      const buffer = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.1), ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < data.length; i += 1) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      this.noiseCache = buffer;
+    }
+    return this.noiseCache;
   }
 
   dispose(): void {
@@ -112,5 +155,6 @@ export class AudioManager {
     this.audio = null;
     void this.blipContext?.close().catch(() => {});
     this.blipContext = null;
+    this.noiseCache = null;
   }
 }
