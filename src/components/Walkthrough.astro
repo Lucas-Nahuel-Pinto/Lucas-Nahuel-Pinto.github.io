@@ -162,6 +162,9 @@ const { lang } = Astro.props;
   /* · Menú — Mirror's Edge (dark) */
   .screen-menu {
     text-align: left;
+    /* Short windows / high zoom: never clip the header or the link. */
+    overflow-y: auto;
+    justify-content: safe center;
   }
   .menu-shell {
     position: relative;
@@ -594,6 +597,10 @@ const { lang } = Astro.props;
     const render = (state: string): void => {
       root!.dataset.state = state;
       restoreBtn.hidden = state !== 'classic';
+      // Lock the page behind the overlay so the scrollbar can't show up
+      // doing nothing; classic mode is the only state where we scroll.
+      document.documentElement.style.overflow =
+        state === 'classic' ? '' : 'hidden';
       if (state === 'menu') {
         // Re-enabling START whenever we come back to the menu; the voice
         // track is already cached after the first preload.
