@@ -21,8 +21,8 @@ const { lang } = Astro.props;
       </header>
 
       <div class="title-block">
-        <span class="me-slash" aria-hidden="true"></span>
         <h1 class="title">Lucas Pinto</h1>
+        <span class="me-slash" aria-hidden="true"></span>
         <p class="role" data-i18n="role">QA Engineer</p>
       </div>
 
@@ -102,6 +102,7 @@ const { lang } = Astro.props;
     position: fixed;
     inset: 0;
     z-index: 60;
+    overflow: hidden;
     color-scheme: light;
     --me-red: #dd2c24;
     --me-red-dark: #b81f18;
@@ -132,7 +133,32 @@ const { lang } = Astro.props;
       ),
       radial-gradient(130% 100% at 20% 0%, #f7fafc 0%, #e7edf3 55%, #d8e1e9 100%);
   }
-  /* One authored motion moment: a slow sheen, like sun off glass. */
+  /* Animated glass: facets drifting slowly behind everything. */
+  .wt::before {
+    content: '';
+    position: absolute;
+    inset: -25%;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      112deg,
+      transparent 0 42%,
+      rgba(255, 255, 255, 0.5) 42% 49%,
+      transparent 49% 56%,
+      rgba(255, 255, 255, 0.28) 56% 61%,
+      transparent 61%
+    );
+    animation: me-facets 24s ease-in-out infinite alternate;
+  }
+  @keyframes me-facets {
+    from {
+      transform: translate3d(-8%, 0, 0);
+    }
+    to {
+      transform: translate3d(8%, 0, 0);
+    }
+  }
+  /* A reflection streak crossing the glass, like sun off a facade. */
   .wt::after {
     content: '';
     position: absolute;
@@ -141,16 +167,18 @@ const { lang } = Astro.props;
     pointer-events: none;
     background: linear-gradient(
       100deg,
-      transparent 35%,
-      rgba(255, 255, 255, 0.5) 50%,
-      transparent 65%
+      transparent 30%,
+      rgba(255, 255, 255, 0.95) 46%,
+      rgba(255, 255, 255, 0.25) 50%,
+      rgba(130, 150, 170, 0.12) 52.5%,
+      transparent 62%
     );
-    transform: translateX(-40%);
-    animation: me-sweep 14s ease-in-out infinite alternate;
+    transform: translateX(-60%);
+    animation: me-sweep 9s ease-in-out infinite alternate;
   }
   @keyframes me-sweep {
     to {
-      transform: translateX(40%);
+      transform: translateX(60%);
     }
   }
   .wt[data-state='classic'] {
@@ -221,11 +249,11 @@ const { lang } = Astro.props;
     position: relative;
   }
   .me-slash {
-    position: absolute;
-    left: -4%;
-    bottom: 2.5rem;
+    /* True underline: flows below the title, never behind the glyphs. */
+    display: block;
     width: 72%;
     height: 12px;
+    margin: 0.55rem 0 0 -0.15rem;
     background: linear-gradient(90deg, var(--me-red) 60%, rgba(221, 44, 36, 0));
     transform: skewX(-24deg);
     opacity: 0.9;
@@ -539,6 +567,7 @@ const { lang } = Astro.props;
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .wt::before,
     .wt::after,
     .status::before {
       animation: none;
