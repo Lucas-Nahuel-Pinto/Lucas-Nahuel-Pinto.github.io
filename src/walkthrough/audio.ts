@@ -82,11 +82,11 @@ export class AudioManager {
     this.audio.currentTime = 0;
   }
 
-  /** Short, soft UI tick for menu interactions (respects mute).
+  /** Short, deep UI tick for menu interactions (respects mute).
    *
-   * A "glass plink", not an 8-bit blip: a sine with a gentle pitch drop and
-   * soft attack through a lowpass, plus a tiny band-passed air transient —
-   * the sound of light touch on a glass pane. */
+   * A low "glass plink", not an 8-bit blip: a sub layer an octave down gives
+   * body and depth, the mid sine settles from a slightly higher pitch with a
+   * soft attack, and a quiet band-passed air transient keeps the touch. */
   blip(frequency = 660): void {
     if (this.muted) return;
     try {
@@ -103,6 +103,22 @@ export class AudioManager {
       out.gain.value = 1;
       out.connect(ctx.destination);
 
+      // · Sub: octave down — the depth of the sound
+      const sub = ctx.createOscillator();
+      sub.type = 'sine';
+      sub.frequency.setValueAtTime(frequency * 0.5 * 1.1, now);
+      sub.frequency.exponentialRampToValueAtTime(frequency * 0.5, now + 0.12);
+      const subFilter = ctx.createBiquadFilter();
+      subFilter.type = 'lowpass';
+      subFilter.frequency.value = 1400;
+      const subGain = ctx.createGain();
+      subGain.gain.setValueAtTime(0.0001, now);
+      subGain.gain.linearRampToValueAtTime(0.085, now + 0.008);
+      subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+      sub.connect(subFilter).connect(subGain).connect(out);
+      sub.start(now);
+      sub.stop(now + 0.4);
+
       // · Tone: sine that settles from a slightly higher pitch (soft plink)
       const tone = ctx.createOscillator();
       tone.type = 'sine';
@@ -110,28 +126,28 @@ export class AudioManager {
       tone.frequency.exponentialRampToValueAtTime(frequency, now + 0.07);
       const toneFilter = ctx.createBiquadFilter();
       toneFilter.type = 'lowpass';
-      toneFilter.frequency.value = 4800;
+      toneFilter.frequency.value = 4200;
       const toneGain = ctx.createGain();
       toneGain.gain.setValueAtTime(0.0001, now);
-      toneGain.gain.linearRampToValueAtTime(0.07, now + 0.006);
-      toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+      toneGain.gain.linearRampToValueAtTime(0.05, now + 0.006);
+      toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
       tone.connect(toneFilter).connect(toneGain).connect(out);
       tone.start(now);
-      tone.stop(now + 0.24);
+      tone.stop(now + 0.27);
 
-      // · Air: tiny band-passed noise transient (finger on glass)
+      // · Air: quiet band-passed noise transient (finger on glass)
       const air = ctx.createBufferSource();
       air.buffer = this.noiseBuffer(ctx);
       const bandpass = ctx.createBiquadFilter();
       bandpass.type = 'bandpass';
-      bandpass.frequency.value = Math.min(frequency * 3.4, 6000);
+      bandpass.frequency.value = Math.min(frequency * 3, 5000);
       bandpass.Q.value = 1.1;
       const airGain = ctx.createGain();
-      airGain.gain.setValueAtTime(0.03, now);
-      airGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+      airGain.gain.setValueAtTime(0.018, now);
+      airGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
       air.connect(bandpass).connect(airGain).connect(out);
       air.start(now);
-      air.stop(now + 0.08);
+      air.stop(now + 0.07);
     } catch {
       /* audio effects are decorative — never break the UI */
     }
