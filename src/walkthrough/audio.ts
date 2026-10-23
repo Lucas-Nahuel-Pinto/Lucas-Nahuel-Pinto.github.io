@@ -84,6 +84,48 @@ export class AudioManager {
       });
   }
 
+  /** Resume from the current position (play() always rewinds to 0). */
+  resume(): void {
+    const audio = this.audio;
+    if (!audio || !audio.paused) return;
+    this.cancelFade();
+    audio.muted = this.muted;
+    void audio
+      .play()
+      .then(() => this.fadeIn(audio))
+      .catch((err) => {
+        console.warn('[walkthrough] voice resume blocked:', err);
+      });
+  }
+
+  pause(): void {
+    this.cancelFade();
+    this.audio?.pause();
+  }
+
+  /** Move the playhead (clamped to the loaded duration). */
+  seek(seconds: number): void {
+    const audio = this.audio;
+    if (!audio) return;
+    const duration = Number.isFinite(audio.duration) ? audio.duration : seconds;
+    audio.currentTime = Math.max(0, Math.min(seconds, duration));
+  }
+
+  /** Current playhead in seconds (0 before a track is loaded). */
+  get currentTime(): number {
+    return this.audio?.currentTime ?? 0;
+  }
+
+  /** Track duration in seconds (0 until metadata is available). */
+  get duration(): number {
+    const value = this.audio?.duration ?? 0;
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  get paused(): boolean {
+    return this.audio?.paused ?? true;
+  }
+
   stop(): void {
     this.cancelFade();
     if (!this.audio) return;

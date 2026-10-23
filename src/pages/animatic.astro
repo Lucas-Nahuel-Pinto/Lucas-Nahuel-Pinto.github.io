@@ -1,0 +1,589 @@
+---
+/**
+ * ANIMATIC REVIEW PLAYER — internal tool (plan Fase 2, tasks 2.1–2.4).
+ *
+ * Plays the 7-shot storyboard shot by shot with the real voice track so
+ * timings and dialogue can be approved BEFORE any Blender work — cheap to
+ * change here, expensive after rendering.
+ *
+ * NOT public: <meta name="robots" content="noindex"> plus the sitemap
+ * exclusion in astro.config.mjs. DELETE THIS ROUTE BEFORE DEPLOY (Fase 6).
+ */
+import { SHOTS } from '../walkthrough/animatic';
+
+const fmt = (t: number): string => {
+  const m = Math.floor(t / 60);
+  const s = t - m * 60;
+  return `${m}:${s.toFixed(1).padStart(4, '0')}`;
+};
+const total = SHOTS[SHOTS.length - 1].end;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Animatic — Walkthrough Fase 2</title>
+  </head>
+  <body>
+    <div class="app" id="an">
+      <header class="bar">
+        <span class="tag">ANIMATIC · FASE 2</span>
+        <div class="transport">
+          <button id="an-play" type="button" aria-label="Reproducir o pausar">▶</button>
+          <span class="clock" id="an-time">0:00.0 / {fmt(total)}</span>
+        </div>
+        <div class="opts">
+          <button id="an-lang" type="button" aria-pressed="false" aria-label="Idioma del audio">ES</button>
+          <button id="an-mute" type="button" aria-pressed="false">SONIDO</button>
+          <button id="an-loop" type="button" aria-pressed="false">LOOP</button>
+          <button id="an-skip" type="button">SALTAR</button>
+        </div>
+      </header>
+
+      <main class="stage">
+        <article class="board" id="an-board" data-shot="1">
+          <header class="board-head">
+            <span class="board-n" id="an-board-n">PLANO 1 / {SHOTS.length}</span>
+            <span class="board-range" id="an-board-range">0:00.0–{fmt(SHOTS[0].end)}</span>
+          </header>
+          <p class="board-text" id="an-board-text">{SHOTS[0].es}</p>
+          <p class="board-note" id="an-board-note">{SHOTS[0].note}</p>
+        </article>
+
+        <p class="subs empty" id="an-subs" aria-live="polite"></p>
+
+        <p class="cut" id="an-cut" hidden>MATCH-CUT → FP · FASE 4</p>
+      </main>
+
+      <footer class="tl">
+        <div
+          class="track"
+          id="an-track"
+          role="slider"
+          aria-label="Línea de tiempo"
+          aria-valuemin="0"
+          aria-valuemax={String(total)}
+          aria-valuenow="0"
+          tabindex="0"
+        >
+          <div class="fill" id="an-fill"></div>
+        </div>
+        <ol class="film" id="an-film">
+          {
+            SHOTS.map((shot) => (
+              <li>
+                <button type="button" data-shot-start={String(shot.start)} data-shot-n={String(shot.n)}>
+                  <b>{shot.n}</b> {fmt(shot.start)}
+                </button>
+              </li>
+            ))
+          }
+        </ol>
+        <p class="help">SPACE play/pausa · ←/→ ±1 s · S saltar · L loop · clic en timeline/plano = buscar</p>
+      </footer>
+    </div>
+
+    <script>
+      import { AudioManager } from '../walkthrough/audio';
+      import type { Lang } from '../lib/i18n';
+      import { CUES, SHOTS, type Shot } from '../walkthrough/animatic';
+
+      const fmt = (t: number): string => {
+        const m = Math.floor(t / 60);
+        const s = t - m * 60;
+        return `${m}:${s.toFixed(1).padStart(4, '0')}`;
+      };
+
+      const END = SHOTS[SHOTS.length - 1].end;
+
+      const shell = document.querySelector<HTMLElement>('#an');
+      if (shell) {
+        const $ = <T extends HTMLElement>(selector: string): T => {
+          const el = shell.querySelector<T>(selector);
+          if (!el) throw new Error(`[animatic] missing ${selector}`);
+          return el;
+        };
+
+        const playBtn = $<HTMLButtonElement>('#an-play');
+        const timeEl = $('#an-time');
+        const langBtn = $<HTMLButtonElement>('#an-lang');
+        const muteBtn = $<HTMLButtonElement>('#an-mute');
+        const loopBtn = $<HTMLButtonElement>('#an-loop');
+        const skipBtn = $<HTMLButtonElement>('#an-skip');
+        const boardEl = $('#an-board');
+        const boardN = $('#an-board-n');
+        const boardRange = $('#an-board-range');
+        const boardText = $('#an-board-text');
+        const boardNote = $('#an-board-note');
+        const subsEl = $('#an-subs');
+        const cutEl = $('#an-cut');
+        const trackEl = $('#an-track');
+        const fillEl = $('#an-fill');
+        const filmChips = Array.from(shell.querySelectorAll<HTMLButtonElement>('#an-film button'));
+
+        let lang: Lang = 'es';
+        let muted = false;
+        let loop = false;
+        let ended = false;
+        let lastShot = -1; // forces the first board render
+        let frame = 0;
+
+        const audio = new AudioManager(lang, muted);
+        audio.onEnded = () => {
+          if (loop) {
+            ended = false;
+            audio.seek(0);
+            audio.resume();
+            if (!frame) frame = requestAnimationFrame(tick);
+          } else {
+            ended = true;
+          }
+          paint();
+        };
+
+        const renderBoard = (shot: Shot): void => {
+          lastShot = shot.n;
+          boardEl.dataset.shot = String(shot.n);
+          boardN.textContent = `PLANO ${shot.n} / ${SHOTS.length}`;
+          boardRange.textContent = `${fmt(shot.start)}–${fmt(shot.end)}`;
+          boardText.textContent = lang === 'es' ? shot.es : shot.en;
+          boardNote.textContent = shot.note;
+          // Restart the board swap animation.
+          boardEl.classList.remove('swap');
+          void boardEl.offsetWidth;
+          boardEl.classList.add('swap');
+          for (const chip of filmChips) {
+            if (Number(chip.dataset.shotN) === shot.n) {
+              chip.setAttribute('aria-current', 'true');
+            } else {
+              chip.removeAttribute('aria-current');
+            }
+          }
+        };
+
+        const paint = (): void => {
+          const t = audio.currentTime;
+          const dur = audio.duration || END;
+
+          timeEl.textContent = `${fmt(t)} / ${fmt(dur)}`;
+          trackEl.setAttribute('aria-valuenow', t.toFixed(1));
+          fillEl.style.width = `${Math.min(100, (t / dur) * 100)}%`;
+          playBtn.textContent = audio.paused ? '▶' : '⏸';
+
+          let shot = SHOTS[0];
+          for (const candidate of SHOTS) {
+            if (t >= candidate.start) shot = candidate;
+          }
+          if (shot.n !== lastShot) renderBoard(shot);
+
+          const cue = CUES.find((c) => t >= c.start && t < c.end);
+          subsEl.textContent = cue ? cue[lang] : '';
+          subsEl.classList.toggle('empty', !cue);
+
+          cutEl.hidden = !(ended || t >= END - 0.05);
+        };
+
+        const tick = (): void => {
+          paint();
+          frame = audio.paused ? 0 : requestAnimationFrame(tick);
+        };
+
+        const seekTo = (time: number): void => {
+          ended = false;
+          audio.seek(time);
+          paint();
+        };
+
+        const togglePlay = (): void => {
+          if (!audio.paused) {
+            audio.pause();
+            paint();
+            return;
+          }
+          const dur = audio.duration || END;
+          if (ended || audio.currentTime >= dur - 0.05) {
+            ended = false;
+            audio.seek(0);
+          }
+          if (audio.currentTime > 0) audio.resume();
+          else audio.play();
+          if (frame) cancelAnimationFrame(frame);
+          frame = requestAnimationFrame(tick);
+          paint();
+        };
+
+        playBtn.addEventListener('click', togglePlay);
+
+        skipBtn.addEventListener('click', () => {
+          audio.pause();
+          audio.seek(END);
+          ended = true;
+          paint();
+        });
+
+        langBtn.addEventListener('click', () => {
+          lang = lang === 'es' ? 'en' : 'es';
+          langBtn.textContent = lang.toUpperCase();
+          langBtn.setAttribute('aria-pressed', String(lang === 'en'));
+          audio.setLang(lang);
+          lastShot = -1; // re-render the board copy in the new language
+          paint();
+          // The swapped-in track reports its duration asynchronously.
+          const untilLoaded = performance.now() + 10_000;
+          const poll = (): void => {
+            paint();
+            if (!audio.duration && performance.now() < untilLoaded) requestAnimationFrame(poll);
+          };
+          requestAnimationFrame(poll);
+        });
+
+        muteBtn.addEventListener('click', () => {
+          muted = !muted;
+          audio.setMuted(muted);
+          muteBtn.textContent = muted ? 'SILENCIO' : 'SONIDO';
+          muteBtn.setAttribute('aria-pressed', String(muted));
+        });
+
+        loopBtn.addEventListener('click', () => {
+          loop = !loop;
+          loopBtn.setAttribute('aria-pressed', String(loop));
+        });
+
+        trackEl.addEventListener('click', (event) => {
+          const rect = trackEl.getBoundingClientRect();
+          const ratio = (event.clientX - rect.left) / rect.width;
+          seekTo(ratio * (audio.duration || END));
+        });
+
+        for (const chip of filmChips) {
+          chip.addEventListener('click', () => {
+            const shot = SHOTS.find((s) => s.n === Number(chip.dataset.shotN)) ?? SHOTS[0];
+            seekTo(shot.start);
+            // Preview the board even when the seek clamps to the audio end
+            // (the spec timeline is longer than the current voice take).
+            renderBoard(shot);
+          });
+        }
+
+        window.addEventListener('keydown', (event) => {
+          switch (event.code) {
+            case 'Space':
+              event.preventDefault();
+              togglePlay();
+              break;
+            case 'ArrowLeft':
+              event.preventDefault();
+              seekTo(audio.currentTime - 1);
+              break;
+            case 'ArrowRight':
+              event.preventDefault();
+              seekTo(audio.currentTime + 1);
+              break;
+            case 'KeyS':
+              skipBtn.click();
+              break;
+            case 'KeyL':
+              loopBtn.click();
+              break;
+            default:
+              return;
+          }
+        });
+
+        // Preload is allowed without a user gesture; refresh the real duration
+        // as soon as the metadata lands.
+        void audio.preload().then(() => {
+          trackEl.setAttribute('aria-valuemax', String(audio.duration || END));
+          paint();
+        });
+        paint();
+      }
+    </script>
+
+    <style is:global>
+      /* Internal review tool: cinema-suite chrome; the stage stands in for
+         the (dark) cutscene. */
+      :root {
+        color-scheme: dark;
+        --tool-bg: #0e1116;
+        --tool-panel: #151a21;
+        --tool-line: rgba(255, 255, 255, 0.14);
+        --tool-ink: #c9d2dc;
+        --tool-ink-soft: #8b96a3;
+        --tool-red: #dd2c24;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+      body {
+        background: var(--tool-bg);
+        color: var(--tool-ink);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      #an {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 100vh;
+        min-height: 100dvh;
+      }
+
+      .bar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem 1.25rem;
+        padding: 0.65rem 1rem;
+        background: var(--tool-panel);
+        border-bottom: 1px solid var(--tool-line);
+      }
+      .tag {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.26em;
+        color: var(--tool-red);
+      }
+      .transport {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+      .clock {
+        font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+        font-size: 0.9rem;
+        color: var(--tool-ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .opts {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+        flex-wrap: wrap;
+      }
+      #an button {
+        appearance: none;
+        border: 1px solid var(--tool-line);
+        background: #1b222b;
+        color: var(--tool-ink);
+        font: inherit;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        padding: 0.45rem 0.85rem;
+        border-radius: 3px;
+        cursor: pointer;
+        transition:
+          border-color 0.15s ease,
+          background 0.15s ease;
+      }
+      #an button:hover {
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+      #an button:focus-visible {
+        outline: 2px solid var(--tool-red);
+        outline-offset: 2px;
+      }
+      #an button[aria-pressed='true'] {
+        background: var(--tool-red);
+        border-color: var(--tool-red);
+        color: #fff;
+      }
+      #an-play {
+        min-width: 2.6rem;
+        font-size: 1rem;
+      }
+      #an-skip {
+        background: var(--tool-red);
+        border-color: var(--tool-red);
+        color: #fff;
+      }
+      #an-skip:hover {
+        background: #f04239;
+        border-color: #f04239;
+      }
+
+      .stage {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.4rem;
+        padding: clamp(1rem, 4vh, 2.5rem);
+        background:
+          radial-gradient(120% 90% at 50% 0%, #1a212b 0%, var(--tool-bg) 70%);
+        overflow: hidden;
+      }
+      .board {
+        width: min(100%, 46rem);
+        background: var(--tool-panel);
+        border: 1px solid var(--tool-line);
+        border-top: 3px solid var(--tool-red);
+        border-radius: 4px;
+        padding: clamp(1.2rem, 3.5vh, 2rem) clamp(1.3rem, 4vw, 2.4rem);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+      }
+      .board.swap {
+        animation: board-in 0.35s ease;
+      }
+      @keyframes board-in {
+        from {
+          opacity: 0.2;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .board-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.9rem;
+      }
+      .board-n {
+        font-size: clamp(1.4rem, 3.6vh, 2rem);
+        font-weight: 800;
+        letter-spacing: 0.2em;
+        color: #fff;
+      }
+      .board-range {
+        font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+        font-size: 0.88rem;
+        color: var(--tool-red);
+        font-variant-numeric: tabular-nums;
+      }
+      .board-text {
+        margin: 0;
+        font-size: clamp(1rem, 2.4vh, 1.2rem);
+        line-height: 1.55;
+        color: var(--tool-ink);
+      }
+      .board-note {
+        margin: 1rem 0 0;
+        padding-top: 0.85rem;
+        border-top: 1px dashed var(--tool-line);
+        font-size: 0.85rem;
+        line-height: 1.55;
+        color: var(--tool-ink-soft);
+      }
+
+      .subs {
+        position: absolute;
+        left: 50%;
+        bottom: clamp(0.8rem, 3vh, 1.6rem);
+        transform: translateX(-50%);
+        margin: 0;
+        width: min(92%, 44rem);
+        min-height: 2.4rem;
+        text-align: center;
+        font-size: clamp(1rem, 2.6vh, 1.3rem);
+        font-weight: 600;
+        color: #fff;
+        background: rgba(0, 0, 0, 0.72);
+        border: 1px solid var(--tool-line);
+        border-radius: 3px;
+        padding: 0.5rem 1.1rem;
+        transition: opacity 0.2s ease;
+      }
+      .subs.empty {
+        opacity: 0;
+      }
+
+      .cut {
+        position: absolute;
+        top: clamp(0.8rem, 3vh, 1.6rem);
+        right: clamp(0.8rem, 3vh, 1.6rem);
+        margin: 0;
+        font-size: clamp(0.9rem, 2.4vh, 1.15rem);
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        color: var(--tool-red);
+        border: 2px solid var(--tool-red);
+        border-radius: 4px;
+        padding: 0.55rem 1rem;
+        background: rgba(14, 17, 22, 0.85);
+      }
+
+      .tl {
+        background: var(--tool-panel);
+        border-top: 1px solid var(--tool-line);
+        padding: 0.8rem 1rem 0.7rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+      }
+      .track {
+        position: relative;
+        height: 12px;
+        background: #1b222b;
+        border: 1px solid var(--tool-line);
+        border-radius: 6px;
+        cursor: pointer;
+        overflow: hidden;
+      }
+      .track:focus-visible {
+        outline: 2px solid var(--tool-red);
+        outline-offset: 2px;
+      }
+      .fill {
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 0;
+        background: var(--tool-red);
+      }
+      .film {
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin: 0;
+        padding: 0;
+      }
+      .film button {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+        font-size: 0.78rem !important;
+        font-variant-numeric: tabular-nums;
+      }
+      .film b {
+        color: var(--tool-red);
+      }
+      .film button[aria-current='true'] {
+        background: rgba(221, 44, 36, 0.16);
+        border-color: var(--tool-red);
+        color: #fff;
+      }
+      .help {
+        margin: 0;
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        color: var(--tool-ink-soft);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .board.swap {
+          animation: none;
+        }
+        .subs {
+          transition: none;
+        }
+      }
+    </style>
+  </body>
+</html>
