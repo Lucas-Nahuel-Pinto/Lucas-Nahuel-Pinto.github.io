@@ -25,3 +25,6 @@ pnpm-debug.log*
 
 # npm lockfile (repo uses bun)
 package-lock.json
+
+# playwright-cli artifacts (local browser automation)
+.playwright-cli/
