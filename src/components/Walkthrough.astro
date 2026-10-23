@@ -196,6 +196,8 @@ const { lang } = Astro.props;
     /* Short windows / high zoom: never clip the header or the link. */
     overflow-y: auto;
     justify-content: safe center;
+    /* Stage for the card tilt + panel parallax. */
+    perspective: 1000px;
   }
   .menu-shell {
     position: relative;
@@ -210,6 +212,10 @@ const { lang } = Astro.props;
     border: 1px solid rgba(22, 28, 34, 0.14);
     border-radius: 4px;
     box-shadow: 0 10px 30px rgba(23, 32, 42, 0.1);
+    /* Card leans toward the pointer (JS sets the rotation). */
+    transform-style: preserve-3d;
+    transition: transform 0.2s ease-out;
+    will-change: transform;
   }
   .me-head {
     display: flex;
@@ -270,12 +276,15 @@ const { lang } = Astro.props;
 
   .panel {
     position: relative;
-    /* Glass sub-container: language / sound / start. */
+    /* Glass sub-container: language / sound / start.
+       translateZ lifts it out of the card → true parallax while the card
+       tilts; the deeper shadow sells the floating gap. */
+    transform: translateZ(24px);
     background: var(--glass);
     border: 1px solid rgba(22, 28, 34, 0.14);
     backdrop-filter: blur(14px) saturate(1.1);
     border-radius: 2px;
-    box-shadow: 0 12px 32px rgba(23, 32, 42, 0.14);
+    box-shadow: 0 16px 40px rgba(23, 32, 42, 0.18);
     padding: 0.35rem 1.4rem clamp(0.55rem, 1.8vh, 1.4rem);
   }
   .panel::before {
@@ -571,6 +580,7 @@ const { lang } = Astro.props;
     .start-arrow,
     .classic-link svg,
     .ghost-menu,
+    .menu-shell,
     .wt-restore {
       transition: none;
     }
@@ -722,6 +732,24 @@ const { lang } = Astro.props;
       updateSoundLabel();
       if (!muted) audio.blip(520);
     });
+
+    /* · Parallax: the card leans toward the pointer while the glass
+       sub-panel (translateZ) floats above it. Touch and reduced-motion
+       users get the static layout. */
+    const menuShell = root!.querySelector<HTMLElement>('.menu-shell');
+    const tiltQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (menuShell) {
+      menuShell.addEventListener('pointermove', (event) => {
+        if (event.pointerType === 'touch' || tiltQuery.matches) return;
+        const rect = menuShell.getBoundingClientRect();
+        const x = (event.clientX - rect.left) / rect.width - 0.5;
+        const y = (event.clientY - rect.top) / rect.height - 0.5;
+        menuShell.style.transform = `rotateX(${(-y * 5).toFixed(2)}deg) rotateY(${(x * 7).toFixed(2)}deg)`;
+      });
+      menuShell.addEventListener('pointerleave', () => {
+        menuShell.style.transform = '';
+      });
+    }
 
     startBtn.addEventListener('click', () => {
       audio.blip(980);
