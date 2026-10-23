@@ -38,7 +38,7 @@ export const SHOTS: Omit<Shot, 'start' | 'end'>[] = [
     n: 1,
     es: 'Negros → oficina con luz de ventana; al fondo se ven los demás personajes parados a lo lejos (establecimiento).',
     en: 'Black → office with window light; the other characters standing far in the background (establishing).',
-    note: 'Plano fijo; salida del negro. La oficina NO está vacía: los demás personajes se ven parados a lo lejos — el destino se ve desde el inicio, en línea con el vuelo casi recto de los planos 2-3. La voz arranca en t=0 — decidir en review si se pega 1,5 s de Negro bajo la frase 1 (J-cut) o se recorta el negro.',
+    note: 'Plano fijo; salida del negro. La oficina NO está vacía: los demás personajes se ven parados a lo lejos — el destino se ve desde el inicio. La voz arranca en t=0 — decidir en review si se pega 1,5 s de Negro bajo la frase 1 (J-cut) o se recorta el negro.',
   },
   {
     n: 2,
@@ -48,9 +48,9 @@ export const SHOTS: Omit<Shot, 'start' | 'end'>[] = [
   },
   {
     n: 3,
-    es: '"Vení, acompañame" → vuelo al avatar central con estela luminosa.',
-    en: '"Come with me" → flight to the central avatar with a luminous trail.',
-    note: 'Anclado a la última frase del audio ("Vení. Acompányame que te muestro." / "Let\'s go!"). El fantasma vuela en trayectoria CASI RECTA hacia el avatar para poseerlo (sin serpentear); cámara siguiendo el vuelo; estela luminosa.',
+    es: '"Vení, acompañame" → vuelo serpenteante al avatar central con estela luminosa y piruetas antes de poseer.',
+    en: '"Come with me" → sinuous flight to the central avatar with a luminous trail and pirouettes before possession.',
+    note: 'Anclado a la última frase del audio ("Vení. Acompányame que te muestro." / "Let\'s go!"). El fantasma SERPENTEA en el vuelo para dar dinamismo a la escena, y antes de entrar al cuerpo hace unas PIRUETAS EN EL AIRE; estela luminosa siguiendo la trayectoria.',
   },
   {
     n: 4,
