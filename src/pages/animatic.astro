@@ -9,14 +9,16 @@
  * NOT public: <meta name="robots" content="noindex"> plus the sitemap
  * exclusion in astro.config.mjs. DELETE THIS ROUTE BEFORE DEPLOY (Fase 6).
  */
-import { SHOTS } from '../walkthrough/animatic';
+import { buildTimeline, SHOTS } from '../walkthrough/animatic';
 
 const fmt = (t: number): string => {
   const m = Math.floor(t / 60);
   const s = t - m * 60;
   return `${m}:${s.toFixed(1).padStart(4, '0')}`;
 };
-const total = SHOTS[SHOTS.length - 1].end;
+/** Spec fallback; the real track duration replaces it on metadata. */
+const total = 43;
+const initial = buildTimeline('es', total);
 ---
 
 <!doctype html>
@@ -47,7 +49,7 @@ const total = SHOTS[SHOTS.length - 1].end;
         <article class="board" id="an-board" data-shot="1">
           <header class="board-head">
             <span class="board-n" id="an-board-n">PLANO 1 / {SHOTS.length}</span>
-            <span class="board-range" id="an-board-range">0:00.0–{fmt(SHOTS[0].end)}</span>
+            <span class="board-range" id="an-board-range">{fmt(initial[0].start)}–{fmt(initial[0].end)}</span>
           </header>
           <p class="board-text" id="an-board-text">{SHOTS[0].es}</p>
           <p class="board-note" id="an-board-note">{SHOTS[0].note}</p>
@@ -71,17 +73,7 @@ const total = SHOTS[SHOTS.length - 1].end;
         >
           <div class="fill" id="an-fill"></div>
         </div>
-        <ol class="film" id="an-film">
-          {
-            SHOTS.map((shot) => (
-              <li>
-                <button type="button" data-shot-start={String(shot.start)} data-shot-n={String(shot.n)}>
-                  <b>{shot.n}</b> {fmt(shot.start)}
-                </button>
-              </li>
-            ))
-          }
-        </ol>
+        <ol class="film" id="an-film"></ol>
         <p class="help">SPACE play/pausa · ←/→ ±1 s · S saltar · L loop · clic en timeline/plano = buscar</p>
       </footer>
     </div>
@@ -89,7 +81,7 @@ const total = SHOTS[SHOTS.length - 1].end;
     <script>
       import { AudioManager } from '../walkthrough/audio';
       import type { Lang } from '../lib/i18n';
-      import { CUES, SHOTS, type Shot } from '../walkthrough/animatic';
+      import { buildTimeline, CUES, SHOTS, type Shot, type TimelineWindow } from '../walkthrough/animatic';
 
       const fmt = (t: number): string => {
         const m = Math.floor(t / 60);
@@ -97,7 +89,8 @@ const total = SHOTS[SHOTS.length - 1].end;
         return `${m}:${s.toFixed(1).padStart(4, '0')}`;
       };
 
-      const END = SHOTS[SHOTS.length - 1].end;
+      /** Fallback total while metadata loads — the spec's 43 s. */
+      const END = 43;
 
       const shell = document.querySelector<HTMLElement>('#an');
       if (shell) {
@@ -122,7 +115,7 @@ const total = SHOTS[SHOTS.length - 1].end;
         const cutEl = $('#an-cut');
         const trackEl = $('#an-track');
         const fillEl = $('#an-fill');
-        const filmChips = Array.from(shell.querySelectorAll<HTMLButtonElement>('#an-film button'));
+        const filmEl = $('#an-film');
 
         let lang: Lang = 'es';
         let muted = false;
@@ -130,6 +123,8 @@ const total = SHOTS[SHOTS.length - 1].end;
         let ended = false;
         let lastShot = -1; // forces the first board render
         let frame = 0;
+        let timeline: TimelineWindow[] = buildTimeline(lang, END);
+        let filmKey = '';
 
         const audio = new AudioManager(lang, muted);
         audio.onEnded = () => {
@@ -144,6 +139,20 @@ const total = SHOTS[SHOTS.length - 1].end;
           paint();
         };
 
+        const renderFilm = (tl: TimelineWindow[]): void => {
+          filmEl.innerHTML = '';
+          for (const window_ of tl) {
+            const li = document.createElement('li');
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.dataset.shotN = String(window_.n);
+            btn.dataset.shotStart = String(window_.start);
+            btn.innerHTML = `<b>${window_.n}</b> ${fmt(window_.start)}`;
+            li.append(btn);
+            filmEl.append(li);
+          }
+        };
+
         const renderBoard = (shot: Shot): void => {
           lastShot = shot.n;
           boardEl.dataset.shot = String(shot.n);
@@ -155,7 +164,7 @@ const total = SHOTS[SHOTS.length - 1].end;
           boardEl.classList.remove('swap');
           void boardEl.offsetWidth;
           boardEl.classList.add('swap');
-          for (const chip of filmChips) {
+          for (const chip of filmEl.querySelectorAll('button')) {
             if (Number(chip.dataset.shotN) === shot.n) {
               chip.setAttribute('aria-current', 'true');
             } else {
@@ -164,26 +173,45 @@ const total = SHOTS[SHOTS.length - 1].end;
           }
         };
 
+        const withContent = (window_: TimelineWindow): Shot => ({
+          ...SHOTS[window_.n - 1],
+          start: window_.start,
+          end: window_.end,
+        });
+
         const paint = (): void => {
           const t = audio.currentTime;
           const dur = audio.duration || END;
+
+          // Rebuild the timeline whenever the language or the real duration
+          // becomes known (both change the shot windows).
+          const key = `${lang}|${dur}`;
+          if (key !== filmKey) {
+            filmKey = key;
+            timeline = buildTimeline(lang, dur);
+            renderFilm(timeline);
+            trackEl.setAttribute('aria-valuemax', String(dur));
+            lastShot = -1;
+          }
 
           timeEl.textContent = `${fmt(t)} / ${fmt(dur)}`;
           trackEl.setAttribute('aria-valuenow', t.toFixed(1));
           fillEl.style.width = `${Math.min(100, (t / dur) * 100)}%`;
           playBtn.textContent = audio.paused ? '▶' : '⏸';
 
-          let shot = SHOTS[0];
-          for (const candidate of SHOTS) {
-            if (t >= candidate.start) shot = candidate;
+          let active = timeline[0];
+          for (const candidate of timeline) {
+            if (t >= candidate.start) active = candidate;
           }
+          const shot = withContent(active);
           if (shot.n !== lastShot) renderBoard(shot);
 
-          const cue = CUES.find((c) => t >= c.start && t < c.end);
-          subsEl.textContent = cue ? cue[lang] : '';
+          const cue = CUES[lang].find((c) => t >= c.start && t < c.end);
+          subsEl.textContent = cue ? cue.text : '';
           subsEl.classList.toggle('empty', !cue);
 
-          cutEl.hidden = !(ended || t >= END - 0.05);
+          const tlEnd = timeline[timeline.length - 1].end;
+          cutEl.hidden = !(ended || t >= tlEnd - 0.05);
         };
 
         const tick = (): void => {
@@ -219,7 +247,7 @@ const total = SHOTS[SHOTS.length - 1].end;
 
         skipBtn.addEventListener('click', () => {
           audio.pause();
-          audio.seek(END);
+          audio.seek(timeline[timeline.length - 1].end);
           ended = true;
           paint();
         });
@@ -258,15 +286,14 @@ const total = SHOTS[SHOTS.length - 1].end;
           seekTo(ratio * (audio.duration || END));
         });
 
-        for (const chip of filmChips) {
-          chip.addEventListener('click', () => {
-            const shot = SHOTS.find((s) => s.n === Number(chip.dataset.shotN)) ?? SHOTS[0];
-            seekTo(shot.start);
-            // Preview the board even when the seek clamps to the audio end
-            // (the spec timeline is longer than the current voice take).
-            renderBoard(shot);
-          });
-        }
+        // Delegated: the filmstrip is re-rendered whenever the timeline changes.
+        filmEl.addEventListener('click', (event) => {
+          const target = event.target instanceof Element ? event.target.closest('button') : null;
+          if (!target || !filmEl.contains(target)) return;
+          const window_ = timeline.find((w) => w.n === Number(target.dataset.shotN)) ?? timeline[0];
+          seekTo(window_.start);
+          renderBoard(withContent(window_)); // preview even if the seek clamps
+        });
 
         window.addEventListener('keydown', (event) => {
           switch (event.code) {
@@ -293,12 +320,9 @@ const total = SHOTS[SHOTS.length - 1].end;
           }
         });
 
-        // Preload is allowed without a user gesture; refresh the real duration
-        // as soon as the metadata lands.
-        void audio.preload().then(() => {
-          trackEl.setAttribute('aria-valuemax', String(audio.duration || END));
-          paint();
-        });
+        // Preload is allowed without a user gesture; paint() picks up the real
+        // duration (and rebuilds the timeline) as soon as the metadata lands.
+        void audio.preload().then(() => paint());
         paint();
       }
     </script>
@@ -430,9 +454,8 @@ const total = SHOTS[SHOTS.length - 1].end;
         background: var(--tool-panel);
         border: 1px solid var(--tool-line);
         border-top: 3px solid var(--tool-red);
-        border-radius: 4px;
-        padding: clamp(1.2rem, 3.5vh, 2rem) clamp(1.3rem, 4vw, 2.4rem);
         box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+        padding: clamp(1.2rem, 3.5vh, 2rem) clamp(1.3rem, 4vw, 2.4rem);
       }
       .board.swap {
         animation: board-in 0.35s ease;
