@@ -72,9 +72,9 @@ export const SHOTS: Omit<Shot, 'start' | 'end'>[] = [
   },
   {
     n: 7,
-    es: 'HOLD sobre la nuca → zoom final a la nuca → match-cut → POV primera persona con panel AR encendiéndose.',
-    en: 'Hold on the nape → final push-in → match-cut → first-person POV with AR panel booting.',
-    note: '≈6 s: la cámara queda apuntando a la nuca → HOLD quieto (~2 s) → zoom a la nuca como último trayecto (~3-4 s) → match-cut engancha con la Escena 3 (Fase 4).',
+    es: 'HOLD sobre la nuca → zoom rápido a la nuca → match-cut → POV primera persona con panel AR encendiéndose.',
+    en: 'Hold on the nape → quick push-in → match-cut → first-person POV with AR panel booting.',
+    note: '≈6 s: la cámara queda apuntando a la nuca → HOLD quieto (~2 s) → zoom a la nuca como último trayecto, RÁPIDO y contundente (≤2 s) → match-cut engancha con la Escena 3 (Fase 4).',
   },
 ];
 
