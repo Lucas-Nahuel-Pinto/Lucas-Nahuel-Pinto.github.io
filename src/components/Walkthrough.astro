@@ -203,14 +203,13 @@ const { lang } = Astro.props;
     display: flex;
     flex-direction: column;
     /* vh-based rhythm: the menu fits a 588×478 viewport without scrolling. */
-    gap: clamp(0.8rem, 3vh, 1.9rem);
-    /* One glass card holds the whole menu, header to classic link. */
-    padding: clamp(1rem, 3vh, 1.8rem) clamp(1rem, 3.5vh, 1.8rem);
-    background: var(--glass);
+    gap: clamp(0.7rem, 2.8vh, 1.9rem);
+    /* Outer container card (subtle, like the variant study). */
+    padding: clamp(0.85rem, 2.8vh, 1.6rem);
+    background: rgba(255, 255, 255, 0.28);
     border: 1px solid rgba(22, 28, 34, 0.14);
-    backdrop-filter: blur(14px) saturate(1.1);
-    border-radius: 2px;
-    box-shadow: 0 18px 48px rgba(23, 32, 42, 0.16);
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(23, 32, 42, 0.1);
   }
   .me-head {
     display: flex;
@@ -271,6 +270,13 @@ const { lang } = Astro.props;
 
   .panel {
     position: relative;
+    /* Glass sub-container: language / sound / start. */
+    background: var(--glass);
+    border: 1px solid rgba(22, 28, 34, 0.14);
+    backdrop-filter: blur(14px) saturate(1.1);
+    border-radius: 2px;
+    box-shadow: 0 12px 32px rgba(23, 32, 42, 0.14);
+    padding: 0.35rem 1.4rem clamp(0.55rem, 1.8vh, 1.4rem);
   }
   .panel::before {
     content: '';
@@ -409,7 +415,7 @@ const { lang } = Astro.props;
   }
 
   .status {
-    margin: clamp(0.5rem, 1.6vh, 0.95rem) 0 0;
+    margin: clamp(0.35rem, 1.4vh, 0.95rem) 0 0;
     display: flex;
     align-items: center;
     gap: 0.55rem;
