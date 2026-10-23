@@ -217,6 +217,29 @@ const { lang } = Astro.props;
     transition: transform 0.2s ease-out;
     will-change: transform;
   }
+  /* Cursor light: a soft spotlight tracks the pointer across each surface
+     (JS feeds --mx/--my). z-index:-1 keeps it under the text. */
+  .menu-shell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(
+      460px circle at var(--mx, -460px) var(--my, -460px),
+      rgba(255, 255, 255, 0.72) 0%,
+      rgba(255, 255, 255, 0.3) 42%,
+      rgba(255, 255, 255, 0) 74%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .menu-shell:hover::after,
+  .menu-shell:hover .panel::after,
+  .menu-shell:hover .start::after {
+    opacity: 1;
+  }
   .me-head {
     display: flex;
     align-items: center;
@@ -295,6 +318,22 @@ const { lang } = Astro.props;
     width: 56px;
     height: 3px;
     background: var(--me-red);
+  }
+  .panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(
+      380px circle at var(--mx, -380px) var(--my, -380px),
+      rgba(255, 255, 255, 0.62) 0%,
+      rgba(255, 255, 255, 0.25) 42%,
+      rgba(255, 255, 255, 0) 74%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
   .opt-row {
     display: flex;
@@ -381,6 +420,7 @@ const { lang } = Astro.props;
 
   .start {
     appearance: none;
+    position: relative;
     border: 0;
     width: 100%;
     margin-top: clamp(0.8rem, 2.5vh, 1.35rem);
@@ -405,6 +445,21 @@ const { lang } = Astro.props;
       0 100%
     );
     transition: background 0.15s ease;
+  }
+  .start::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+    background: radial-gradient(
+      320px circle at var(--mx, -320px) var(--my, -320px),
+      rgba(255, 255, 255, 0.3) 0%,
+      rgba(255, 255, 255, 0.12) 45%,
+      rgba(255, 255, 255, 0) 75%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
   }
   .start-arrow {
     flex: none;
@@ -733,10 +788,14 @@ const { lang } = Astro.props;
       if (!muted) audio.blip(520);
     });
 
-    /* · Parallax: the card leans toward the pointer while the glass
-       sub-panel (translateZ) floats above it. Touch and reduced-motion
-       users get the static layout. */
+    /* · Parallax + cursor light: the card leans toward the pointer while the
+       glass sub-panel (translateZ) floats above it, and a soft spotlight
+       (--mx/--my) tracks the pointer on card, panel and start button.
+       Touch and reduced-motion users get the static layout. */
     const menuShell = root!.querySelector<HTMLElement>('.menu-shell');
+    const lightSurfaces: HTMLElement[] = [menuShell, root!.querySelector<HTMLElement>('.panel'), startBtn].filter(
+      (el): el is HTMLElement => Boolean(el),
+    );
     const tiltQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (menuShell) {
       menuShell.addEventListener('pointermove', (event) => {
@@ -745,6 +804,11 @@ const { lang } = Astro.props;
         const x = (event.clientX - rect.left) / rect.width - 0.5;
         const y = (event.clientY - rect.top) / rect.height - 0.5;
         menuShell.style.transform = `rotateX(${(-y * 5).toFixed(2)}deg) rotateY(${(x * 7).toFixed(2)}deg)`;
+        for (const el of lightSurfaces) {
+          const box = el.getBoundingClientRect();
+          el.style.setProperty('--mx', `${(event.clientX - box.left).toFixed(1)}px`);
+          el.style.setProperty('--my', `${(event.clientY - box.top).toFixed(1)}px`);
+        }
       });
       menuShell.addEventListener('pointerleave', () => {
         menuShell.style.transform = '';
