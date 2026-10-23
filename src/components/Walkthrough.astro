@@ -183,13 +183,9 @@ const { lang } = Astro.props;
   }
   .screen:not([hidden]) {
     display: flex;
-    /* Soft crossfade when a scene takes over the viewport. */
-    animation: me-screen-in 0.55s ease both;
-  }
-  @keyframes me-screen-in {
-    from {
-      opacity: 0;
-    }
+    /* No scene fade-in: the crossfade's opacity animation could leave a
+       stale composited raster after a state round-trip (washed menu in
+       Firefox). Scenes appear at full opacity instead. */
   }
 
   .wt :where(button, a):focus-visible {
@@ -205,10 +201,10 @@ const { lang } = Astro.props;
     justify-content: safe center;
     /* Full-screen glass stage: IT leans toward the pointer (JS sets the
        rotation), so the pane, the card and every element inside rotate
-       together as one. */
+       together as one. No will-change: a sticky promoted layer is exactly
+       what can go stale after a display/visibility round-trip. */
     transform-style: preserve-3d;
     transition: transform 0.2s ease-out;
-    will-change: transform;
   }
   /* Full-screen glass pane behind the menu container: frosted over the
      steel tower. The spread shadow keeps the pane covering the screen
@@ -715,8 +711,23 @@ const { lang } = Astro.props;
     const soundLabel = $('wt-sound-label');
     const classicLink = $<HTMLAnchorElement>('wt-classic');
     const skipBtn = $<HTMLButtonElement>('wt-skip');
+    const menuStage = root!.querySelector<HTMLElement>('[data-screen="menu"]');
 
     let voiceReady = false;
+
+    /* Repaint the full-screen glass after a state round-trip: a transform
+       change forces the compositor to re-raster the layer — the programmatic
+       version of the manual workaround (moving the pointer). Skipped while a
+       live tilt is active, since that transform already invalidates. */
+    const wakeGlass = (): void => {
+      if (!menuStage || menuStage.style.transform) return;
+      menuStage.style.transform = 'translateZ(0)';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          menuStage.style.transform = '';
+        });
+      });
+    };
 
     /* · Render de estado · */
     const render = (state: string): void => {
@@ -731,6 +742,7 @@ const { lang } = Astro.props;
         // track is already cached after the first preload.
         startBtn.disabled = !voiceReady;
         if (voiceReady) loadingEl.setAttribute('data-done', '');
+        wakeGlass();
       }
       for (const screen of screens) {
         const active = screen.dataset.screen === state;
@@ -816,7 +828,6 @@ const { lang } = Astro.props;
        pointer on card, panel and start button.
        Touch and reduced-motion users get the static layout. */
     const menuShell = root!.querySelector<HTMLElement>('.menu-shell');
-    const menuStage = root!.querySelector<HTMLElement>('[data-screen="menu"]');
     const lightSurfaces: HTMLElement[] = [menuShell, root!.querySelector<HTMLElement>('.panel'), startBtn].filter(
       (el): el is HTMLElement => Boolean(el),
     );
