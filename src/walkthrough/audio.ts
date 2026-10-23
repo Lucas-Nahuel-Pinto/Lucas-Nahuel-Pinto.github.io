@@ -11,6 +11,7 @@ export class AudioManager {
   private muted: boolean;
   private blipContext: AudioContext | null = null;
   private noiseCache: AudioBuffer | null = null;
+  private fadeHandle: number | null = null;
 
   onEnded: (() => void) | null = null;
 
@@ -69,17 +70,48 @@ export class AudioManager {
 
   play(): void {
     if (!this.audio) return;
-    this.audio.currentTime = 0;
-    this.audio.muted = this.muted;
-    void this.audio.play().catch((err) => {
-      console.warn('[walkthrough] voice playback blocked:', err);
-    });
+    const audio = this.audio;
+    this.cancelFade();
+    audio.currentTime = 0;
+    audio.muted = this.muted;
+    // Fade in so the voice never starts abruptly.
+    audio.volume = 0;
+    void audio
+      .play()
+      .then(() => this.fadeIn(audio))
+      .catch((err) => {
+        console.warn('[walkthrough] voice playback blocked:', err);
+      });
   }
 
   stop(): void {
+    this.cancelFade();
     if (!this.audio) return;
     this.audio.pause();
     this.audio.currentTime = 0;
+  }
+
+  private cancelFade(): void {
+    if (this.fadeHandle !== null) {
+      cancelAnimationFrame(this.fadeHandle);
+      this.fadeHandle = null;
+    }
+  }
+
+  /** Smooth 700ms volume ramp (smoothstep) from silence to full. */
+  private fadeIn(audio: HTMLAudioElement, durationMs = 700): void {
+    this.cancelFade();
+    const start = performance.now();
+    const step = (now: number): void => {
+      if (this.audio !== audio || audio.paused) {
+        this.fadeHandle = null;
+        return;
+      }
+      const t = Math.min((now - start) / durationMs, 1);
+      audio.volume = t * t * (3 - 2 * t);
+      this.fadeHandle = t < 1 ? requestAnimationFrame(step) : null;
+    };
+    this.fadeHandle = requestAnimationFrame(step);
   }
 
   /** Short, deep UI tick for menu interactions (respects mute).

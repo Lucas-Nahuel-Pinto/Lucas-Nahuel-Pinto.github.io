@@ -176,6 +176,13 @@ const { lang } = Astro.props;
   }
   .screen:not([hidden]) {
     display: flex;
+    /* Soft crossfade when a scene takes over the viewport. */
+    animation: me-screen-in 0.55s ease both;
+  }
+  @keyframes me-screen-in {
+    from {
+      opacity: 0;
+    }
   }
 
   .wt :where(button, a):focus-visible {
@@ -546,6 +553,9 @@ const { lang } = Astro.props;
   @media (prefers-reduced-motion: reduce) {
     .wt::before,
     .status::before {
+      animation: none;
+    }
+    .screen:not([hidden]) {
       animation: none;
     }
     .start,
