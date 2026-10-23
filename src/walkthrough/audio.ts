@@ -103,25 +103,25 @@ export class AudioManager {
       out.gain.value = 1;
       out.connect(ctx.destination);
 
-      // · Body: the note — deep sine with a long, smooth decay
+      // · Body: the note — deep bass sine with a long, smooth decay
       const body = ctx.createOscillator();
       body.type = 'sine';
-      body.frequency.setValueAtTime(frequency * 0.5, now);
+      body.frequency.setValueAtTime(frequency * 0.35, now);
       const bodyFilter = ctx.createBiquadFilter();
       bodyFilter.type = 'lowpass';
-      bodyFilter.frequency.value = 2200;
+      bodyFilter.frequency.value = 1600;
       const bodyGain = ctx.createGain();
       bodyGain.gain.setValueAtTime(0.0001, now);
-      bodyGain.gain.linearRampToValueAtTime(0.1, now + 0.007);
+      bodyGain.gain.linearRampToValueAtTime(0.11, now + 0.007);
       bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
       body.connect(bodyFilter).connect(bodyGain).connect(out);
       body.start(now);
       body.stop(now + 0.75);
 
-      // · Partial: octave up, quiet and short — which key was pressed
+      // · Partial: octave above the body, quiet and short — which key
       const partial = ctx.createOscillator();
       partial.type = 'sine';
-      partial.frequency.setValueAtTime(frequency, now);
+      partial.frequency.setValueAtTime(frequency * 0.7, now);
       const partialGain = ctx.createGain();
       partialGain.gain.setValueAtTime(0.0001, now);
       partialGain.gain.linearRampToValueAtTime(0.025, now + 0.005);
