@@ -16,9 +16,9 @@ const fmt = (t: number): string => {
   const s = t - m * 60;
   return `${m}:${s.toFixed(1).padStart(4, '0')}`;
 };
-/** Spec fallback; the real track duration replaces it on metadata. */
-const total = 43;
-const initial = buildTimeline('es', total);
+/** The timeline is the master clock (the tail runs past the audio file). */
+const initial = buildTimeline('es');
+const total = initial[initial.length - 1].end;
 ---
 
 <!doctype html>
@@ -89,9 +89,6 @@ const initial = buildTimeline('es', total);
         return `${m}:${s.toFixed(1).padStart(4, '0')}`;
       };
 
-      /** Fallback total while metadata loads — the spec's 43 s. */
-      const END = 43;
-
       const shell = document.querySelector<HTMLElement>('#an');
       if (shell) {
         const $ = <T extends HTMLElement>(selector: string): T => {
@@ -123,20 +120,71 @@ const initial = buildTimeline('es', total);
         let ended = false;
         let lastShot = -1; // forces the first board render
         let frame = 0;
-        let timeline: TimelineWindow[] = buildTimeline(lang, END);
+        let timeline: TimelineWindow[] = buildTimeline(lang);
         let filmKey = '';
+        /* The timeline is the master clock: the mp3 only covers the voiced
+           part, so once the file ends a virtual clock carries the silent
+           action tail (shots 4–7). */
+        let mode: 'audio' | 'virtual' = 'audio';
+        let virtualT = 0;
+        let virtualAt: number | null = null; // null = paused in virtual mode
 
-        const audio = new AudioManager(lang, muted);
-        audio.onEnded = () => {
+        const timelineEnd = (): number => timeline[timeline.length - 1].end;
+
+        const nowT = (): number =>
+          mode === 'audio' ? audio.currentTime : virtualAt === null ? virtualT : virtualT + (performance.now() - virtualAt) / 1000;
+
+        const isPlaying = (): boolean => (mode === 'audio' ? !audio.paused : virtualAt !== null);
+
+        const pauseCurrent = (): void => {
+          if (mode === 'audio') {
+            audio.pause();
+          } else if (virtualAt !== null) {
+            virtualT = nowT();
+            virtualAt = null;
+          }
+        };
+
+        const startCurrent = (): void => {
+          if (mode === 'audio') {
+            if (audio.currentTime > 0) audio.resume();
+            else audio.play();
+          } else {
+            virtualAt = performance.now();
+          }
+          if (!frame) frame = requestAnimationFrame(tick);
+        };
+
+        const handleTimelineEnd = (): void => {
           if (loop) {
             ended = false;
-            audio.seek(0);
-            audio.resume();
+            mode = 'audio';
+            virtualAt = null;
+            virtualT = 0;
+            audio.play(); // AudioManager.play() rewinds to 0
             if (!frame) frame = requestAnimationFrame(tick);
           } else {
             ended = true;
+            mode = 'virtual';
+            virtualT = timelineEnd();
+            virtualAt = null;
           }
           paint();
+        };
+
+        const audio = new AudioManager(lang, muted);
+        audio.onEnded = () => {
+          const end = timelineEnd();
+          if (audio.duration && end > audio.duration + 0.05) {
+            // Keep rolling past the file on the virtual clock.
+            mode = 'virtual';
+            virtualT = audio.currentTime;
+            virtualAt = performance.now();
+            if (!frame) frame = requestAnimationFrame(tick);
+            paint();
+          } else {
+            handleTimelineEnd();
+          }
         };
 
         const renderFilm = (tl: TimelineWindow[]): void => {
@@ -180,24 +228,22 @@ const initial = buildTimeline('es', total);
         });
 
         const paint = (): void => {
-          const t = audio.currentTime;
-          const dur = audio.duration || END;
-
-          // Rebuild the timeline whenever the language or the real duration
-          // becomes known (both change the shot windows).
-          const key = `${lang}|${dur}`;
-          if (key !== filmKey) {
-            filmKey = key;
-            timeline = buildTimeline(lang, dur);
+          // Rebuild the filmstrip whenever the language changes (the cue
+          // anchors of each take give the language its own shot windows).
+          if (lang !== filmKey) {
+            filmKey = lang;
+            timeline = buildTimeline(lang);
             renderFilm(timeline);
-            trackEl.setAttribute('aria-valuemax', String(dur));
             lastShot = -1;
           }
+          const end = timelineEnd();
+          trackEl.setAttribute('aria-valuemax', String(end));
 
-          timeEl.textContent = `${fmt(t)} / ${fmt(dur)}`;
+          const t = Math.min(nowT(), end);
+          timeEl.textContent = `${fmt(t)} / ${fmt(end)}`;
           trackEl.setAttribute('aria-valuenow', t.toFixed(1));
-          fillEl.style.width = `${Math.min(100, (t / dur) * 100)}%`;
-          playBtn.textContent = audio.paused ? '▶' : '⏸';
+          fillEl.style.width = `${Math.min(100, (t / end) * 100)}%`;
+          playBtn.textContent = isPlaying() ? '⏸' : '▶';
 
           let active = timeline[0];
           for (const candidate of timeline) {
@@ -210,44 +256,64 @@ const initial = buildTimeline('es', total);
           subsEl.textContent = cue ? cue.text : '';
           subsEl.classList.toggle('empty', !cue);
 
-          const tlEnd = timeline[timeline.length - 1].end;
-          cutEl.hidden = !(ended || t >= tlEnd - 0.05);
+          cutEl.hidden = !(ended || t >= end - 0.05);
         };
 
         const tick = (): void => {
+          if (mode === 'virtual' && virtualAt !== null && nowT() >= timelineEnd()) {
+            frame = 0;
+            handleTimelineEnd();
+            return;
+          }
           paint();
-          frame = audio.paused ? 0 : requestAnimationFrame(tick);
+          frame = isPlaying() ? requestAnimationFrame(tick) : 0;
         };
 
         const seekTo = (time: number): void => {
           ended = false;
-          audio.seek(time);
+          const wasPlaying = isPlaying();
+          const t = Math.max(0, Math.min(time, timelineEnd()));
+          const adur = audio.duration || 0;
+          if (!adur || t < adur - 0.05) {
+            // Inside the voiced part: drive the real audio playhead.
+            mode = 'audio';
+            virtualAt = null;
+            audio.seek(t);
+            if (wasPlaying) audio.resume();
+          } else {
+            // Silent tail: drive the virtual clock.
+            if (mode === 'audio') audio.pause();
+            mode = 'virtual';
+            virtualT = t;
+            virtualAt = wasPlaying ? performance.now() : null;
+          }
+          if (wasPlaying && !frame) frame = requestAnimationFrame(tick);
           paint();
         };
 
         const togglePlay = (): void => {
-          if (!audio.paused) {
-            audio.pause();
+          if (isPlaying()) {
+            pauseCurrent();
             paint();
             return;
           }
-          const dur = audio.duration || END;
-          if (ended || audio.currentTime >= dur - 0.05) {
+          const end = timelineEnd();
+          if (ended || nowT() >= end - 0.05) {
             ended = false;
+            mode = 'audio';
+            virtualAt = null;
+            virtualT = 0;
             audio.seek(0);
           }
-          if (audio.currentTime > 0) audio.resume();
-          else audio.play();
-          if (frame) cancelAnimationFrame(frame);
-          frame = requestAnimationFrame(tick);
+          startCurrent();
           paint();
         };
 
         playBtn.addEventListener('click', togglePlay);
 
         skipBtn.addEventListener('click', () => {
-          audio.pause();
-          audio.seek(timeline[timeline.length - 1].end);
+          pauseCurrent();
+          seekTo(timelineEnd());
           ended = true;
           paint();
         });
@@ -257,15 +323,7 @@ const initial = buildTimeline('es', total);
           langBtn.textContent = lang.toUpperCase();
           langBtn.setAttribute('aria-pressed', String(lang === 'en'));
           audio.setLang(lang);
-          lastShot = -1; // re-render the board copy in the new language
-          paint();
-          // The swapped-in track reports its duration asynchronously.
-          const untilLoaded = performance.now() + 10_000;
-          const poll = (): void => {
-            paint();
-            if (!audio.duration && performance.now() < untilLoaded) requestAnimationFrame(poll);
-          };
-          requestAnimationFrame(poll);
+          paint(); // rebuilds the filmstrip + board copy for the new language
         });
 
         muteBtn.addEventListener('click', () => {
@@ -283,7 +341,7 @@ const initial = buildTimeline('es', total);
         trackEl.addEventListener('click', (event) => {
           const rect = trackEl.getBoundingClientRect();
           const ratio = (event.clientX - rect.left) / rect.width;
-          seekTo(ratio * (audio.duration || END));
+          seekTo(ratio * timelineEnd());
         });
 
         // Delegated: the filmstrip is re-rendered whenever the timeline changes.
@@ -303,11 +361,11 @@ const initial = buildTimeline('es', total);
               break;
             case 'ArrowLeft':
               event.preventDefault();
-              seekTo(audio.currentTime - 1);
+              seekTo(nowT() - 1);
               break;
             case 'ArrowRight':
               event.preventDefault();
-              seekTo(audio.currentTime + 1);
+              seekTo(nowT() + 1);
               break;
             case 'KeyS':
               skipBtn.click();

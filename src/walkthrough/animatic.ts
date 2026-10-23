@@ -56,25 +56,25 @@ export const SHOTS: Omit<Shot, 'start' | 'end'>[] = [
     n: 4,
     es: 'Posesión: destello → sobresalto → recuperación → pulgar; cámara acerca a la cara (con gafas).',
     en: 'Possession: flash → jolt → recovery → thumbs-up; camera pushes in on the face (with glasses).',
-    note: 'Destello de 1 frame; Cycles es opcional en este plano. ⚠ REVISAR: con la voz actual la cola real es ~3 s para los 4 planos 4–7 — o se acortan, o el video se extiende con música/acción sin voz.',
+    note: '≈5 s para verlo bien: destello (1 frame) → el cuerpo se sobresalta → se recupera → pulgar; dolly hacia la cara. Cycles opcional en este plano.',
   },
   {
     n: 5,
     es: 'Cartel HUD sutil "LUCAS PINTO — QA ENGINEER"; 🐿️ izquierda, avatar+gafas centro, 🦊 derecha.',
     en: 'Subtle HUD sign "LUCAS PINTO — QA ENGINEER"; 🐿️ left, avatar+glasses center, 🦊 right.',
-    note: 'Los tres con gafas de sol (= dispositivo AR); cartel en overlay, identidad HUD.',
+    note: '≈3,5 s para leer el cartel. Los tres con gafas de sol (= dispositivo AR); cartel en overlay, identidad HUD.',
   },
   {
     n: 6,
     es: 'Giro orbital de 180° rodeando al personaje sin soltarlo del encuadre, termina detrás.',
     en: '180° orbital around the character keeping the frame, ends behind.',
-    note: 'Cámara = objeto animado; encuadre constante a la altura de hombros.',
+    note: '≈7 s — órbita continua y pareja (nada brusco). Cámara = objeto animado; encuadre constante a la altura de hombros.',
   },
   {
     n: 7,
     es: 'Zoom a la nuca → match-cut → POV primera persona con panel AR encendiéndose.',
     en: 'Push-in to the nape → match-cut → first-person POV with AR panel booting.',
-    note: 'Fin exacto del video: el match-cut es el enganche con la Escena 3 (Fase 4).',
+    note: '≈6 s con pausa: acercada a la nuca (~2 s) → HOLD unos segundos quieto en la nuca → el trayecto continúa (~2 s) → match-cut engancha con la Escena 3 (Fase 4).',
   },
 ];
 
@@ -136,20 +136,28 @@ const FLIGHT_PATTERN: Record<Lang, RegExp> = {
 /** Establishing shot length before the ghost takes the frame (spec: 3 s of 43). */
 const ESTABLISHING = 1.5;
 
-/** Spec durations of shots 4–7 — the silent tail keeps their ratio (4:3:6:3). */
-const TAIL_WEIGHTS = [4, 3, 6, 3];
+/**
+ * Duration of the silent action tail (shots 4–7), in seconds. The voice
+ * takes end before these shots, so the cutscene keeps rolling on a virtual
+ * clock — values from the user's animatic review (2.4): possession shown
+ * properly, HUD legible, smooth 180° orbit, and a hold on the nape before
+ * the match-cut.
+ */
+const TAIL_DURATIONS = [5, 3.5, 7, 6];
 
 export type TimelineWindow = { n: number; start: number; end: number };
 
 /**
- * Builds the 7 shot windows for a language and track duration.
+ * Builds the 7 shot windows for a language. The timeline is the MASTER
+ * clock of the cutscene; the voice track plays inside it and the tail runs
+ * past the end of the audio file.
  *
  * - Shot 1: opening establishing beat (ESTABLISHING seconds).
  * - Shot 2: from there to the flight line.
  * - Shot 3: the flight line itself (measured cue window).
- * - Shots 4–7: whatever tail follows the last word, split by spec ratio.
+ * - Shots 4–7: TAIL_DURATIONS after the last word.
  */
-export function buildTimeline(lang: Lang, duration: number): TimelineWindow[] {
+export function buildTimeline(lang: Lang): TimelineWindow[] {
   const cues = CUES[lang];
   const lastCue = cues[cues.length - 1];
   const flightIdx = Math.max(0, cues.findIndex((c) => FLIGHT_PATTERN[lang].test(c.text.trim())));
@@ -162,11 +170,8 @@ export function buildTimeline(lang: Lang, duration: number): TimelineWindow[] {
     [flightCue.start, lastCue.end],
   ];
 
-  const tail = Math.max(0, duration - lastCue.end);
-  const totalWeight = TAIL_WEIGHTS.reduce((a, b) => a + b, 0);
-  let cursor = Math.max(lastCue.end, shot1End);
-  for (const weight of TAIL_WEIGHTS) {
-    const span = (tail * weight) / totalWeight;
+  let cursor = lastCue.end;
+  for (const span of TAIL_DURATIONS) {
     windows.push([cursor, cursor + span]);
     cursor += span;
   }
