@@ -84,9 +84,9 @@ export class AudioManager {
 
   /** Short, deep UI tick for menu interactions (respects mute).
    *
-   * A sci-fi device panel sound: a long deep sub tail (an octave and a half
-   * down), a downward-body upward chirp for the confirm gesture, a fifth
-   * overtone, and a longer servo sweep — a console acknowledging you. */
+   * A piano-key press, not a metal panel: a warm low fundamental with a long
+   * natural decay (the note), a quiet octave partial (key definition), and a
+   * soft low-passed thump (the hammer) — nothing resonant, nothing ringing. */
   blip(frequency = 660): void {
     if (this.muted) return;
     try {
@@ -103,64 +103,45 @@ export class AudioManager {
       out.gain.value = 1;
       out.connect(ctx.destination);
 
-      // · Sub: deep device body with a long resonant tail
-      const sub = ctx.createOscillator();
-      sub.type = 'sine';
-      sub.frequency.setValueAtTime(frequency * 0.4 * 1.12, now);
-      sub.frequency.exponentialRampToValueAtTime(frequency * 0.4, now + 0.15);
-      const subFilter = ctx.createBiquadFilter();
-      subFilter.type = 'lowpass';
-      subFilter.frequency.value = 900;
-      const subGain = ctx.createGain();
-      subGain.gain.setValueAtTime(0.0001, now);
-      subGain.gain.linearRampToValueAtTime(0.075, now + 0.012);
-      subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
-      sub.connect(subFilter).connect(subGain).connect(out);
-      sub.start(now);
-      sub.stop(now + 0.65);
+      // · Body: the note — deep sine with a long, smooth decay
+      const body = ctx.createOscillator();
+      body.type = 'sine';
+      body.frequency.setValueAtTime(frequency * 0.5, now);
+      const bodyFilter = ctx.createBiquadFilter();
+      bodyFilter.type = 'lowpass';
+      bodyFilter.frequency.value = 2200;
+      const bodyGain = ctx.createGain();
+      bodyGain.gain.setValueAtTime(0.0001, now);
+      bodyGain.gain.linearRampToValueAtTime(0.1, now + 0.007);
+      bodyGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.7);
+      body.connect(bodyFilter).connect(bodyGain).connect(out);
+      body.start(now);
+      body.stop(now + 0.75);
 
-      // · Chirp: sine sweeping up — the panel confirm gesture
-      const tone = ctx.createOscillator();
-      tone.type = 'sine';
-      tone.frequency.setValueAtTime(frequency * 0.6, now);
-      tone.frequency.exponentialRampToValueAtTime(frequency * 0.85, now + 0.06);
-      const toneFilter = ctx.createBiquadFilter();
-      toneFilter.type = 'lowpass';
-      toneFilter.frequency.value = 4400;
-      const toneGain = ctx.createGain();
-      toneGain.gain.setValueAtTime(0.0001, now);
-      toneGain.gain.linearRampToValueAtTime(0.055, now + 0.006);
-      toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
-      tone.connect(toneFilter).connect(toneGain).connect(out);
-      tone.start(now);
-      tone.stop(now + 0.33);
+      // · Partial: octave up, quiet and short — which key was pressed
+      const partial = ctx.createOscillator();
+      partial.type = 'sine';
+      partial.frequency.setValueAtTime(frequency, now);
+      const partialGain = ctx.createGain();
+      partialGain.gain.setValueAtTime(0.0001, now);
+      partialGain.gain.linearRampToValueAtTime(0.025, now + 0.005);
+      partialGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+      partial.connect(partialGain).connect(out);
+      partial.start(now);
+      partial.stop(now + 0.4);
 
-      // · Overtone: a fifth above the chirp — console shimmer
-      const shine = ctx.createOscillator();
-      shine.type = 'triangle';
-      shine.frequency.setValueAtTime(frequency * 1.5, now);
-      const shineGain = ctx.createGain();
-      shineGain.gain.setValueAtTime(0.0001, now);
-      shineGain.gain.linearRampToValueAtTime(0.02, now + 0.005);
-      shineGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
-      shine.connect(shineGain).connect(out);
-      shine.start(now);
-      shine.stop(now + 0.27);
-
-      // · Servo: longer band-pass sweep — the panel processing
-      const air = ctx.createBufferSource();
-      air.buffer = this.noiseBuffer(ctx);
-      const bandpass = ctx.createBiquadFilter();
-      bandpass.type = 'bandpass';
-      bandpass.Q.value = 2;
-      bandpass.frequency.setValueAtTime(3400, now);
-      bandpass.frequency.exponentialRampToValueAtTime(650, now + 0.14);
-      const airGain = ctx.createGain();
-      airGain.gain.setValueAtTime(0.025, now);
-      airGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
-      air.connect(bandpass).connect(airGain).connect(out);
-      air.start(now);
-      air.stop(now + 0.18);
+      // · Hammer: soft low thump of the key mechanism
+      const hammer = ctx.createBufferSource();
+      hammer.buffer = this.noiseBuffer(ctx);
+      const hammerFilter = ctx.createBiquadFilter();
+      hammerFilter.type = 'lowpass';
+      hammerFilter.frequency.value = 500;
+      const hammerGain = ctx.createGain();
+      hammerGain.gain.setValueAtTime(0.04, now);
+      hammerGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+      hammer.connect(hammerFilter).connect(hammerGain).connect(out);
+      hammer.start(now);
+      hammer.stop(now + 0.05);
     } catch {
       /* audio effects are decorative — never break the UI */
     }
