@@ -162,7 +162,11 @@ const { lang } = Astro.props;
     }
   }
   .wt[data-state='classic'] {
-    display: none;
+    /* visibility instead of display:none: keeps the layer tree alive so
+       the full-screen glass pane (backdrop-filter) doesn't come back
+       transparent after the classic round-trip. Hidden = no hit-testing,
+       no a11y tree — same behavior for the user. */
+    visibility: hidden;
   }
 
   .screen {
