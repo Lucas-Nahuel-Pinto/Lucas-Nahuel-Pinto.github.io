@@ -84,9 +84,9 @@ export class AudioManager {
 
   /** Short, deep UI tick for menu interactions (respects mute).
    *
-   * A futuristic panel sound, not glass: an upward chirp (the classic sci-fi
-   * confirm), a metallic triangle overtone, a low sub for body, and a noise
-   * burst whose band-pass sweeps down like a tiny servo. */
+   * A sci-fi device panel sound: a long deep sub tail (an octave and a half
+   * down), a downward-body upward chirp for the confirm gesture, a fifth
+   * overtone, and a longer servo sweep — a console acknowledging you. */
   blip(frequency = 660): void {
     if (this.muted) return;
     try {
@@ -103,64 +103,64 @@ export class AudioManager {
       out.gain.value = 1;
       out.connect(ctx.destination);
 
-      // · Sub: octave down — keeps the sound deep
+      // · Sub: deep device body with a long resonant tail
       const sub = ctx.createOscillator();
       sub.type = 'sine';
-      sub.frequency.setValueAtTime(frequency * 0.5 * 1.08, now);
-      sub.frequency.exponentialRampToValueAtTime(frequency * 0.5, now + 0.08);
+      sub.frequency.setValueAtTime(frequency * 0.4 * 1.12, now);
+      sub.frequency.exponentialRampToValueAtTime(frequency * 0.4, now + 0.15);
       const subFilter = ctx.createBiquadFilter();
       subFilter.type = 'lowpass';
-      subFilter.frequency.value = 1400;
+      subFilter.frequency.value = 900;
       const subGain = ctx.createGain();
       subGain.gain.setValueAtTime(0.0001, now);
-      subGain.gain.linearRampToValueAtTime(0.055, now + 0.008);
-      subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.22);
+      subGain.gain.linearRampToValueAtTime(0.075, now + 0.012);
+      subGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
       sub.connect(subFilter).connect(subGain).connect(out);
       sub.start(now);
-      sub.stop(now + 0.24);
+      sub.stop(now + 0.65);
 
-      // · Chirp: sine sweeping up — the futuristic confirm gesture
+      // · Chirp: sine sweeping up — the panel confirm gesture
       const tone = ctx.createOscillator();
       tone.type = 'sine';
-      tone.frequency.setValueAtTime(frequency * 0.72, now);
-      tone.frequency.exponentialRampToValueAtTime(frequency, now + 0.045);
+      tone.frequency.setValueAtTime(frequency * 0.6, now);
+      tone.frequency.exponentialRampToValueAtTime(frequency * 0.85, now + 0.06);
       const toneFilter = ctx.createBiquadFilter();
       toneFilter.type = 'lowpass';
-      toneFilter.frequency.value = 5200;
+      toneFilter.frequency.value = 4400;
       const toneGain = ctx.createGain();
       toneGain.gain.setValueAtTime(0.0001, now);
-      toneGain.gain.linearRampToValueAtTime(0.06, now + 0.005);
-      toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      toneGain.gain.linearRampToValueAtTime(0.055, now + 0.006);
+      toneGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
       tone.connect(toneFilter).connect(toneGain).connect(out);
       tone.start(now);
-      tone.stop(now + 0.2);
+      tone.stop(now + 0.33);
 
-      // · Overtone: triangle an octave up — metallic panel edge
+      // · Overtone: a fifth above the chirp — console shimmer
       const shine = ctx.createOscillator();
       shine.type = 'triangle';
-      shine.frequency.setValueAtTime(frequency * 2, now);
+      shine.frequency.setValueAtTime(frequency * 1.5, now);
       const shineGain = ctx.createGain();
       shineGain.gain.setValueAtTime(0.0001, now);
-      shineGain.gain.linearRampToValueAtTime(0.02, now + 0.004);
-      shineGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+      shineGain.gain.linearRampToValueAtTime(0.02, now + 0.005);
+      shineGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
       shine.connect(shineGain).connect(out);
       shine.start(now);
-      shine.stop(now + 0.14);
+      shine.stop(now + 0.27);
 
-      // · Servo: noise through a band-pass sweeping down
+      // · Servo: longer band-pass sweep — the panel processing
       const air = ctx.createBufferSource();
       air.buffer = this.noiseBuffer(ctx);
       const bandpass = ctx.createBiquadFilter();
       bandpass.type = 'bandpass';
       bandpass.Q.value = 2;
-      bandpass.frequency.setValueAtTime(4200, now);
-      bandpass.frequency.exponentialRampToValueAtTime(900, now + 0.06);
+      bandpass.frequency.setValueAtTime(3400, now);
+      bandpass.frequency.exponentialRampToValueAtTime(650, now + 0.14);
       const airGain = ctx.createGain();
       airGain.gain.setValueAtTime(0.025, now);
-      airGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+      airGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
       air.connect(bandpass).connect(airGain).connect(out);
       air.start(now);
-      air.stop(now + 0.09);
+      air.stop(now + 0.18);
     } catch {
       /* audio effects are decorative — never break the UI */
     }
@@ -169,7 +169,7 @@ export class AudioManager {
   /** Small cached white-noise buffer for the air layer of the UI ticks. */
   private noiseBuffer(ctx: AudioContext): AudioBuffer {
     if (!this.noiseCache) {
-      const buffer = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.1), ctx.sampleRate);
+      const buffer = ctx.createBuffer(1, Math.round(ctx.sampleRate * 0.2), ctx.sampleRate);
       const data = buffer.getChannelData(0);
       for (let i = 0; i < data.length; i += 1) {
         data[i] = Math.random() * 2 - 1;
