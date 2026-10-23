@@ -98,8 +98,9 @@ export class AudioManager {
     }
   }
 
-  /** Smooth 700ms volume ramp (smoothstep) from silence to full. */
-  private fadeIn(audio: HTMLAudioElement, durationMs = 700): void {
+  /** Fast-attack volume ramp (350ms): smooth enough to avoid any pop,
+   * quick enough that the first word of the voice is never swallowed. */
+  private fadeIn(audio: HTMLAudioElement, durationMs = 350): void {
     this.cancelFade();
     const start = performance.now();
     const step = (now: number): void => {
@@ -108,7 +109,8 @@ export class AudioManager {
         return;
       }
       const t = Math.min((now - start) / durationMs, 1);
-      audio.volume = t * t * (3 - 2 * t);
+      const eased = 1 - (1 - t) * (1 - t);
+      audio.volume = 0.15 + 0.85 * eased;
       this.fadeHandle = t < 1 ? requestAnimationFrame(step) : null;
     };
     this.fadeHandle = requestAnimationFrame(step);
