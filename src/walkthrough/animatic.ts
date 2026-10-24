@@ -44,7 +44,7 @@ export const SHOTS: Omit<Shot, 'start' | 'end'>[] = [
     n: 2,
     es: 'Primer plano del fantasma hablando: audio ES/EN + subtítulos + doodles 2D al lado.',
     en: 'Ghost close-up speaking: ES/EN voice + subtitles + 2D doodles alongside.',
-    note: 'Doodles 2D con pop al aparecer cada palabra clave: 🪪 "QA Engineer" · 🔎 "herramientas" · ⚙️ "procesos" · 📈 "next-level" · 🧭 "decisiones" · ⚡ "eficiente". Manos flotantes gesticulan; vibración corporal por cadencia.',
+    note: 'Doodles 2D con pop al aparecer cada palabra clave: 🪪 "QA Engineer" · 🔎 "herramientas" · ⚙️ "procesos" · 📈 "next-level" · 🧭 "decisiones" · ⚡ "eficiente". Manos flotantes gesticulan; vibración corporal por cadencia. LUZ INTERIOR del fantasma pulsando con la envolvente del audio mientras habla (indica de dónde sale la voz).',
   },
   {
     n: 3,
