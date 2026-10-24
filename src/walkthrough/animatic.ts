@@ -50,7 +50,7 @@ export const SHOTS: Omit<Shot, 'start' | 'end'>[] = [
     n: 3,
     es: '"Vení, acompañame" → vuelo serpenteante al avatar central con estela luminosa y piruetas antes de poseer.',
     en: '"Come with me" → sinuous flight to the central avatar with a luminous trail and pirouettes before possession.',
-    note: 'Anclado a la última frase del audio ("Vení. Acompányame que te muestro." / "Let\'s go!"). El fantasma parte lejos del avatar: el trayecto sigue ~3 s DESPUÉS de terminar la frase (FLIGHT_EXTRA) para que el vuelo se lea completo. En vuelo SERPENTEA para dar dinamismo, y antes de entrar al cuerpo hace unas PIRUETAS EN EL AIRE; estela luminosa siguiendo la trayectoria.',
+    note: 'Anclado a la última frase del audio ("Vení. Acompányame que te muestro." / "Let\'s go!"). El fantasma parte lejos del avatar: el trayecto sigue ~5 s DESPUÉS de terminar la frase (FLIGHT_EXTRA) para que el vuelo se lea completo. En vuelo SERPENTEA para dar dinamismo, y antes de entrar al cuerpo hace unas PIRUETAS EN EL AIRE; estela luminosa siguiendo la trayectoria.',
   },
   {
     n: 4,
@@ -148,9 +148,10 @@ const TAIL_DURATIONS = [5, 3.5, 7, 6];
 /**
  * Extra flight time (seconds) past the last spoken word. The ghost starts
  * far from the avatar, so the trajectory keeps rolling after the voice
- * line finishes — serpentine + pirouettes need room to read (review 2.4).
+ * line finishes — serpentine + pirouettes need room to read (reviews 2.4:
+ * 3 s requested, +2 s more).
  */
-const FLIGHT_EXTRA = 3;
+const FLIGHT_EXTRA = 5;
 
 export type TimelineWindow = { n: number; start: number; end: number };
 
