@@ -36,15 +36,15 @@ export type Shot = {
 export const SHOTS: Omit<Shot, 'start' | 'end'>[] = [
   {
     n: 1,
-    es: 'Negros → oficina con luz de ventana; el fantasma ya está flotando en cuadro y habla desde t=0 (luz interior pulsando); al fondo, los demás personajes a lo lejos (establecimiento).',
-    en: 'Black → office with window light; the ghost is already floating in frame, speaking from t=0 (interior light pulsing); the other characters standing far in the background (establishing).',
-    note: 'Plano fijo; salida del negro CON EL FANTASMA EN CUADRO desde el primer frame: es ahí donde arranca la voz (t=0), así que la fuente se ve desde el inicio — luz interior pulsando + vibración por cadencia. La oficina NO está vacía: los demás personajes se ven parados a lo lejos — el destino se ve desde el inicio. Con el hablante visible en t=0 ya NO aplica la opción de 1,5 s de Negro bajo la frase 1 (J-cut): esconder al que habla contraría el motivo de la luz (decisión review 2.4).',
+    es: 'Negros → oficina con luz de ventana, FONDO DESENFOCADO (DOF); el fantasma ya está flotando en cuadro y habla desde t=0 (luz interior pulsando); al fondo, los demás personajes a lo lejos (establecimiento).',
+    en: 'Black → office with window light, defocused background (DOF); the ghost is already floating in frame, speaking from t=0 (interior light pulsing); the other characters standing far in the background (establishing).',
+    note: 'Plano fijo; salida del negro CON EL FANTASMA EN CUADRO desde el primer frame: es ahí donde arranca la voz (t=0), así que la fuente se ve desde el inicio — luz interior pulsando + vibración por cadencia. La oficina NO está vacía: los demás personajes se ven parados a lo lejos — el destino se ve desde el inicio. FONDO DESENFOCADO (DOF, poca profundidad de campo): la atención va al fantasma — los lejanos y la oficina quedan como contexto bokeh (review 2.4). Con el hablante visible en t=0 ya NO aplica la opción de 1,5 s de Negro bajo la frase 1 (J-cut): esconder al que habla contraría el motivo de la luz (decisión review 2.4).',
   },
   {
     n: 2,
-    es: 'Primer plano del fantasma hablando: audio ES/EN + subtítulos + doodles 2D al lado.',
-    en: 'Ghost close-up speaking: ES/EN voice + subtitles + 2D doodles alongside.',
-    note: 'Doodles 2D con pop al aparecer cada palabra clave: 🪪 "QA Engineer" · 🔎 "herramientas" · ⚙️ "procesos" · 📈 "next-level" · 🧭 "decisiones" · ⚡ "eficiente". Manos flotantes gesticulan; vibración corporal por cadencia. LUZ INTERIOR del fantasma pulsando con la envolvente del audio mientras habla (indica de dónde sale la voz).',
+    es: 'Primer plano del fantasma hablando, fondo desenfocado (DOF): audio ES/EN + subtítulos + doodles 2D al lado.',
+    en: 'Ghost close-up speaking, defocused background (DOF): ES/EN voice + subtitles + 2D doodles alongside.',
+    note: 'Doodles 2D con pop al aparecer cada palabra clave: 🪪 "QA Engineer" · 🔎 "herramientas" · ⚙️ "procesos" · 📈 "next-level" · 🧭 "decisiones" · ⚡ "eficiente". Manos flotantes gesticulan; vibración corporal por cadencia. LUZ INTERIOR del fantasma pulsando con la envolvente del audio mientras habla (indica de dónde sale la voz). FONDO DESENFOCADO (DOF): poca profundidad de campo — fantasma + doodles nítidos, oficina en bokeh (review 2.4).',
   },
   {
     n: 3,
