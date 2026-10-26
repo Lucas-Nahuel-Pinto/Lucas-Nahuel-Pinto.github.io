@@ -1,26 +1,18 @@
 /**
  * State machine for the walkthrough app.
  *
- * Flow: menu → cutscene → fp → panel → case (see design spec section 3).
- * `classic` is the degradation escape hatch: the traditional HTML page.
- * Every state can bail out to `menu` or `classic`; there is no dead end.
+ * Flow: menu → panel (project grid) → case (project detail) → the Astro
+ * case-study route. `classic` is the degradation escape hatch: the
+ * traditional HTML page. Every state can bail out to `menu` or `classic`;
+ * there is no dead end.
  */
-export const STATES = [
-  'menu',
-  'cutscene',
-  'fp',
-  'panel',
-  'case',
-  'classic',
-] as const;
+export const STATES = ['menu', 'panel', 'case', 'classic'] as const;
 
 export type WalkthroughState = (typeof STATES)[number];
 
 const TRANSITIONS: Record<WalkthroughState, readonly WalkthroughState[]> = {
-  menu: ['cutscene', 'classic'],
-  cutscene: ['fp', 'menu', 'classic'],
-  fp: ['panel', 'menu', 'classic'],
-  panel: ['case', 'fp', 'menu', 'classic'],
+  menu: ['panel', 'classic'],
+  panel: ['case', 'menu', 'classic'],
   case: ['panel', 'menu', 'classic'],
   classic: ['menu'],
 } as const;

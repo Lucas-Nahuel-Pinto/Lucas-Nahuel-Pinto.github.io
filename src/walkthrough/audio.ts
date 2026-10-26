@@ -1,161 +1,19 @@
-import type { Lang } from '../lib/i18n';
-
 /**
- * Plays the intro voice track (kept OUTSIDE the video file so language and
- * mute can change without reloading anything) plus tiny UI sound effects
- * synthesized with WebAudio (no asset files needed).
+ * UI sound effects for the walkthrough, synthesized with WebAudio so no
+ * asset files are needed. There is no voice track: the intro cinematic was
+ * dropped, so the overlay never waits on the network to make a sound.
  */
 export class AudioManager {
-  private audio: HTMLAudioElement | null = null;
-  private lang: Lang;
   private muted: boolean;
-  private blipContext: AudioContext | null = null;
+  private context: AudioContext | null = null;
   private noiseCache: AudioBuffer | null = null;
-  private fadeHandle: number | null = null;
 
-  onEnded: (() => void) | null = null;
-
-  constructor(lang: Lang, muted: boolean) {
-    this.lang = lang;
+  constructor(muted: boolean) {
     this.muted = muted;
-  }
-
-  private voiceSrc(lang: Lang): string {
-    return `${import.meta.env.BASE_URL}audio/intro-speech-${lang}.mp3`;
-  }
-
-  /**
-   * Preloads the voice for the current language.
-   * Resolves when the element can play through, or after `timeoutMs` —
-   * always resolves so the START button can never stay blocked forever.
-   */
-  preload(timeoutMs = 10_000): Promise<boolean> {
-    const audio = new Audio();
-    audio.preload = 'auto';
-    audio.src = this.voiceSrc(this.lang);
-    audio.muted = this.muted;
-    audio.addEventListener('ended', () => this.onEnded?.());
-    this.audio = audio;
-
-    return new Promise((resolve) => {
-      let settled = false;
-      const done = (ready: boolean) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        if (!ready) {
-          console.warn('[walkthrough] voice preload timed out; starting anyway');
-        }
-        resolve(ready);
-      };
-      const timer = setTimeout(() => done(false), timeoutMs);
-      audio.addEventListener('canplaythrough', () => done(true), { once: true });
-      audio.addEventListener('error', () => done(false), { once: true });
-      audio.load();
-    });
-  }
-
-  /** Swap the voice track (menu language change). Stops any playback. */
-  setLang(lang: Lang): void {
-    if (lang === this.lang) return;
-    this.lang = lang;
-    this.audio?.pause();
-    void this.preload();
   }
 
   setMuted(muted: boolean): void {
     this.muted = muted;
-    if (this.audio) this.audio.muted = muted;
-  }
-
-  play(): void {
-    if (!this.audio) return;
-    const audio = this.audio;
-    this.cancelFade();
-    audio.currentTime = 0;
-    audio.muted = this.muted;
-    // Fade in so the voice never starts abruptly.
-    audio.volume = 0;
-    void audio
-      .play()
-      .then(() => this.fadeIn(audio))
-      .catch((err) => {
-        console.warn('[walkthrough] voice playback blocked:', err);
-      });
-  }
-
-  /** Resume from the current position (play() always rewinds to 0). */
-  resume(): void {
-    const audio = this.audio;
-    if (!audio || !audio.paused) return;
-    this.cancelFade();
-    audio.muted = this.muted;
-    void audio
-      .play()
-      .then(() => this.fadeIn(audio))
-      .catch((err) => {
-        console.warn('[walkthrough] voice resume blocked:', err);
-      });
-  }
-
-  pause(): void {
-    this.cancelFade();
-    this.audio?.pause();
-  }
-
-  /** Move the playhead (clamped to the loaded duration). */
-  seek(seconds: number): void {
-    const audio = this.audio;
-    if (!audio) return;
-    const duration = Number.isFinite(audio.duration) ? audio.duration : seconds;
-    audio.currentTime = Math.max(0, Math.min(seconds, duration));
-  }
-
-  /** Current playhead in seconds (0 before a track is loaded). */
-  get currentTime(): number {
-    return this.audio?.currentTime ?? 0;
-  }
-
-  /** Track duration in seconds (0 until metadata is available). */
-  get duration(): number {
-    const value = this.audio?.duration ?? 0;
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  get paused(): boolean {
-    return this.audio?.paused ?? true;
-  }
-
-  stop(): void {
-    this.cancelFade();
-    if (!this.audio) return;
-    this.audio.pause();
-    this.audio.currentTime = 0;
-  }
-
-  private cancelFade(): void {
-    if (this.fadeHandle !== null) {
-      cancelAnimationFrame(this.fadeHandle);
-      this.fadeHandle = null;
-    }
-  }
-
-  /** Fast-attack volume ramp (350ms): smooth enough to avoid any pop,
-   * quick enough that the first word of the voice is never swallowed. */
-  private fadeIn(audio: HTMLAudioElement, durationMs = 350): void {
-    this.cancelFade();
-    const start = performance.now();
-    const step = (now: number): void => {
-      if (this.audio !== audio || audio.paused) {
-        this.fadeHandle = null;
-        return;
-      }
-      const t = Math.min((now - start) / durationMs, 1);
-      const eased = 1 - (1 - t) * (1 - t);
-      audio.volume = 0.15 + 0.85 * eased;
-      this.fadeHandle = t < 1 ? requestAnimationFrame(step) : null;
-    };
-    this.fadeHandle = requestAnimationFrame(step);
   }
 
   /** Short, deep UI tick for menu interactions (respects mute).
@@ -170,8 +28,8 @@ export class AudioManager {
         window.AudioContext ??
         (window as unknown as { webkitAudioContext?: typeof AudioContext })
           .webkitAudioContext;
-      this.blipContext ??= new Ctx();
-      const ctx = this.blipContext;
+      this.context ??= new Ctx();
+      const ctx = this.context;
       if (ctx.state === 'suspended') void ctx.resume();
 
       const now = ctx.currentTime;
@@ -237,10 +95,8 @@ export class AudioManager {
   }
 
   dispose(): void {
-    this.stop();
-    this.audio = null;
-    void this.blipContext?.close().catch(() => {});
-    this.blipContext = null;
+    void this.context?.close().catch(() => {});
+    this.context = null;
     this.noiseCache = null;
   }
 }

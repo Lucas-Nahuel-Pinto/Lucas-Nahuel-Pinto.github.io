@@ -9,12 +9,5 @@ export default defineConfig({
   redirects: {
     '/': '/es',
   },
-  integrations: [
-    sitemap({
-      serialize(item) {
-        // Internal animatic review tool (Fase 2) — never list it publicly.
-        return item.url.endsWith('/animatic') ? undefined : item;
-      },
-    }),
-  ],
+  integrations: [sitemap()],
 });

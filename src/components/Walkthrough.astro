@@ -1,5 +1,7 @@
 ---
 import type { Lang } from '../lib/i18n';
+import { PROJECTS } from '../lib/projects';
+import { buildCards } from '../walkthrough/panel';
 import '@fontsource/barlow-condensed/500.css';
 import '@fontsource/barlow-condensed/600.css';
 import '@fontsource/barlow-condensed/700.css';
@@ -8,6 +10,11 @@ interface Props {
   lang: Lang;
 }
 const { lang } = Astro.props;
+
+// One payload for both languages: the client renders the grid and the detail
+// from it, and a hot language switch never reloads. `<` is escaped so no
+// project string can close the script tag.
+const payload = JSON.stringify(buildCards(PROJECTS)).replace(/</g, '\\u003c');
 ---
 
 <div id="wt" class="wt" data-state="menu" data-lang={lang}>
@@ -52,18 +59,16 @@ const { lang } = Astro.props;
           </button>
         </div>
 
-        <button type="button" class="start" id="wt-start" disabled>
+        <button type="button" class="start" id="wt-start">
           <span data-i18n="start">Comenzar</span>
           <svg class="start-arrow" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M4 12h15"></path>
             <path d="m13 6 6 6-6 6"></path>
           </svg>
         </button>
-
-        <p class="status" id="wt-loading" role="status" data-i18n="loading">Cargando introducción…</p>
       </div>
 
-      <a class="classic-link" id="wt-classic" href="#work">
+      <a class="classic-link" data-classic href="#work">
         <span data-i18n="classic">Ver proyectos sin 3D</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 4v15"></path>
@@ -73,25 +78,64 @@ const { lang } = Astro.props;
     </div>
   </section>
 
-  <!-- ESCENA 2 · Cinemática (placeholder hasta la Fase 3) -->
-  <section class="screen screen-cutscene" data-screen="cutscene" aria-label="Cinemática" hidden>
-    <div class="placeholder" data-i18n="cutsceneSoon">Cinemática — próximamente</div>
-    <div class="subs" id="wt-subs" aria-live="polite"></div>
-    <button type="button" class="skip" id="wt-skip" data-i18n="skip">Saltar ▸</button>
+  <!-- ESCENA 2 · Grilla de proyectos: COMENZAR cae directo acá -->
+  <section class="screen screen-panel" data-screen="panel" aria-label="Proyectos" data-i18n-aria="projects" hidden>
+    <div class="panel-shell">
+      <header class="me-head">
+        <span class="me-brand" data-i18n="projects">Proyectos</span>
+        <span class="me-head-line" aria-hidden="true"></span>
+        <span class="count" id="wt-count">03</span>
+        <div class="seg seg-sm" role="group" data-i18n-aria="language">
+          <button type="button" class="seg-btn" data-lang-opt="es" aria-pressed="true">ES</button>
+          <button type="button" class="seg-btn" data-lang-opt="en" aria-pressed="false">EN</button>
+        </div>
+        <span class="me-head-mark" aria-hidden="true"></span>
+      </header>
+
+      <div class="grid-head">
+        <h2 class="grid-title" data-i18n="choose">Elegí un proyecto</h2>
+        <p class="grid-intro" data-i18n="projectsIntro">
+          Tres proyectos con evidencia ejecutable: abrí uno y mirá el caso completo.
+        </p>
+      </div>
+
+      <ul class="grid" id="wt-grid"></ul>
+
+      <div class="screen-actions">
+        <button type="button" class="ghost-menu" data-goto-menu data-i18n="backToMenu">◀ Volver al menú</button>
+        <a class="classic-link" data-classic href="#work">
+          <span data-i18n="classic">Ver proyectos sin 3D</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 4v15"></path>
+            <path d="m6 13 6 6 6-6"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
   </section>
 
-  <!-- ESCENA 3 · Primera persona (placeholder hasta la Fase 4) -->
-  <section class="screen screen-fp" data-screen="fp" aria-label="Primera persona" hidden>
-    <div class="placeholder" data-i18n="fpSoon">Primera persona — próximamente</div>
-    <button type="button" class="ghost-menu" data-goto-menu data-i18n="backToMenu">◀ Volver al menú</button>
-  </section>
+  <!-- ESCENA 3 · Detalle del proyecto -->
+  <section class="screen screen-case" data-screen="case" aria-label="Detalle de proyecto" data-i18n-aria="project" hidden>
+    <div class="case-shell">
+      <header class="me-head">
+        <span class="me-brand" data-i18n="project">Proyecto</span>
+        <span class="me-head-line" aria-hidden="true"></span>
+        <span class="me-head-mark" aria-hidden="true"></span>
+      </header>
 
-  <!-- ESCENA 4 · Panel AR (placeholder hasta la Fase 5) -->
-  <section class="screen screen-panel" data-screen="panel" aria-label="Panel AR" hidden>
-    <div class="placeholder" data-i18n="panelSoon">Panel AR — próximamente</div>
-    <button type="button" class="ghost-menu" data-goto-menu data-i18n="backToMenu">◀ Volver al menú</button>
+      <div class="case-body" id="wt-case"></div>
+
+      <div class="screen-actions">
+        <button type="button" class="ghost-menu" data-back-to-panel data-i18n="backToProjects">
+          ◀ Volver a proyectos
+        </button>
+        <button type="button" class="ghost-menu" data-goto-menu data-i18n="backToMenu">◀ Volver al menú</button>
+      </div>
+    </div>
   </section>
 </div>
+
+<script type="application/json" id="wt-projects" is:inline set:html={payload}></script>
 
 <button type="button" class="wt-restore" id="wt-restore" data-i18n="backToMenu" hidden>
   ◀ Volver al menú
@@ -153,6 +197,18 @@ const { lang } = Astro.props;
     );
     animation: me-facets 40s ease-in-out infinite alternate;
   }
+  /* ONE frosted pane for every screen. It used to live on the menu screen,
+     which meant display/visibility round-trips could leave a stale raster
+     (washed menu in Firefox). A layer that never toggles can't go stale. */
+  .wt::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(16px) saturate(1.08);
+  }
   @keyframes me-facets {
     from {
       transform: translate3d(-8%, 0, 0);
@@ -200,23 +256,11 @@ const { lang } = Astro.props;
     overflow-y: auto;
     justify-content: safe center;
     /* Full-screen glass stage: IT leans toward the pointer (JS sets the
-       rotation), so the pane, the card and every element inside rotate
-       together as one. No will-change: a sticky promoted layer is exactly
-       what can go stale after a display/visibility round-trip. */
+       rotation), so the card and every element inside rotate together as
+       one. No will-change: a sticky promoted layer is exactly what can go
+       stale after a display/visibility round-trip. */
     transform-style: preserve-3d;
     transition: transform 0.2s ease-out;
-  }
-  /* Full-screen glass pane behind the menu container: frosted over the
-     steel tower. The spread shadow keeps the pane covering the screen
-     while it leans (box-shadows never trigger scrollbars). */
-  .screen-menu::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(16px) saturate(1.08);
-    box-shadow: 0 0 0 100vmax rgba(255, 255, 255, 0.12);
   }
   .menu-shell {
     position: relative;
@@ -280,6 +324,17 @@ const { lang } = Astro.props;
     height: 10px;
     background: var(--me-red);
     flex: none;
+  }
+  .count {
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.3em;
+    color: var(--me-red-dark);
+  }
+  .seg-sm .seg-btn {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
   }
 
   .title-block {
@@ -483,46 +538,11 @@ const { lang } = Astro.props;
     flex: none;
     transition: transform 0.15s ease;
   }
-  .start:hover:not(:disabled) {
-    background: var(--me-red-hot);
-  }
-  .start:hover:not(:disabled) .start-arrow {
+  .start:hover .start-arrow {
     transform: translateX(6px);
   }
-  .start:disabled {
-    background: rgba(255, 255, 255, 0.65);
-    color: var(--me-ink-soft);
-    cursor: wait;
-    box-shadow: inset 0 0 0 1px var(--me-edge);
-  }
-
-  .status {
-    margin: clamp(0.35rem, 1.4vh, 0.95rem) 0 0;
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    font-weight: 600;
-    font-size: 0.8rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--me-ink-soft);
-    min-height: 1.2em;
-  }
-  .status::before {
-    content: '';
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--me-red);
-    animation: me-pulse 1.4s ease-in-out infinite;
-  }
-  .status[data-done] {
-    display: none;
-  }
-  @keyframes me-pulse {
-    50% {
-      opacity: 0.25;
-    }
+  .start:hover {
+    background: var(--me-red-hot);
   }
 
   .classic-link {
@@ -548,50 +568,356 @@ const { lang } = Astro.props;
     transform: translateY(3px);
   }
 
-  /* · Placeholders de escenas */
-  .screen-cutscene {
-    background: #000;
+  /* · Grilla de proyectos */
+  .screen-panel,
+  .screen-case {
+    text-align: left;
+    /* Short windows scroll inside the overlay instead of clipping cards. */
+    overflow-y: auto;
+    justify-content: safe center;
   }
-  .screen-fp,
-  .screen-panel {
-    background: transparent;
+  .panel-shell,
+  .case-shell {
+    position: relative;
+    width: min(100%, 70rem);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.7rem, 2.2vh, 1.35rem);
+    padding: clamp(0.9rem, 2.4vh, 1.6rem);
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(22, 28, 34, 0.14);
+    border-radius: 4px;
+    box-shadow: 0 10px 30px rgba(23, 32, 42, 0.1);
   }
-  .placeholder {
-    font-size: clamp(1.1rem, 3vw, 1.5rem);
-    color: #47515c;
-    letter-spacing: 0.1em;
+  .grid-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.6rem 1.5rem;
+    flex-wrap: wrap;
   }
-  .skip {
-    position: absolute;
-    top: 1.25rem;
-    right: 1.25rem;
+  .grid-title {
+    margin: 0;
+    font-weight: 700;
+    font-size: clamp(1.4rem, 4.4vh, 2.3rem);
+    line-height: 1;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+  }
+  .grid-intro {
+    margin: 0;
+    max-width: 46ch;
+    color: var(--me-ink-soft);
+    font-size: clamp(0.88rem, 1.7vh, 1rem);
+    line-height: 1.35;
+  }
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    /* Three across on desktop, two in a cramped window, one on mobile. */
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+    gap: clamp(0.55rem, 1.6vh, 1rem);
+  }
+  /* Cards and detail nodes are created by JS, so they never carry Astro's
+     scoping attribute: every selector here that targets them is :global(),
+     anchored to the overlay so it cannot leak into the classic page. */
+  .wt :global(.card) {
     appearance: none;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    color: #fff;
-    font: inherit;
-    font-size: 0.9rem;
-    letter-spacing: 0.15em;
-    padding: 0.5rem 1.1rem;
-    border-radius: 999px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+    font-family: inherit;
+    color: var(--me-ink);
+    border: 1px solid rgba(22, 28, 34, 0.14);
+    border-radius: 2px;
+    padding: clamp(0.75rem, 2vh, 1.15rem);
     cursor: pointer;
+    /* Spotlight lives in the background itself: no stacking games, and it
+       reads through the translucent card while staying under the text. */
+    background:
+      radial-gradient(
+        280px circle at var(--mx, -280px) var(--my, -280px),
+        rgba(255, 255, 255, 0.8) 0%,
+        rgba(255, 255, 255, 0) 72%
+      ),
+      rgba(255, 255, 255, 0.55);
+    transition:
+      transform 0.18s ease,
+      border-color 0.18s ease,
+      background-color 0.18s ease,
+      box-shadow 0.18s ease;
   }
-  .skip:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-  .subs {
+  .wt :global(.card::before) {
+    content: '';
     position: absolute;
-    left: 50%;
-    bottom: 3rem;
-    transform: translateX(-50%);
-    width: min(90%, 46rem);
-    text-align: center;
-    font-size: clamp(1rem, 2.5vw, 1.25rem);
-    color: #fff;
-    text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
-    min-height: 1.4em;
+    top: -1px;
+    left: -1px;
+    width: 42px;
+    height: 3px;
+    background: var(--me-red);
+    opacity: 0;
+    transition: opacity 0.18s ease;
   }
-  .ghost-menu {
+  .wt :global(.card:hover),
+  .wt :global(.card:focus-visible) {
+    transform: translateY(-4px);
+    border-color: var(--me-red);
+    box-shadow: 0 14px 30px rgba(23, 32, 42, 0.16);
+  }
+  .wt :global(.card:hover::before),
+  .wt :global(.card:focus-visible::before) {
+    opacity: 1;
+  }
+  .wt :global(.card-index) {
+    font-weight: 700;
+    font-size: 0.78rem;
+    letter-spacing: 0.3em;
+    color: var(--me-red-dark);
+  }
+  .wt :global(.card-title) {
+    margin: 0;
+    font-weight: 700;
+    font-size: clamp(1.05rem, 2.6vh, 1.35rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+  .wt :global(.card-pitch) {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--me-ink-soft);
+    font-size: clamp(0.84rem, 1.7vh, 0.95rem);
+    line-height: 1.35;
+  }
+  .wt :global(.card-metric) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    margin-top: auto;
+    padding-top: 0.6rem;
+  }
+  .wt :global(.card-metric b) {
+    font-size: clamp(1.35rem, 4vh, 1.8rem);
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .wt :global(.card-metric span) {
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--me-ink-soft);
+  }
+  .wt :global(.card-tags) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .wt :global(.tag) {
+    font-size: 0.66rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--me-ink-soft);
+    border: 1px solid rgba(22, 28, 34, 0.18);
+    border-radius: 999px;
+    padding: 0.12rem 0.5rem;
+  }
+  .wt :global(.card-go) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--me-red-dark);
+  }
+  .wt :global(.card-go svg) {
+    transition: transform 0.18s ease;
+  }
+  .wt :global(.card:hover .card-go svg),
+  .wt :global(.card:focus-visible .card-go svg) {
+    transform: translateX(4px);
+  }
+
+  /* · Detalle del proyecto */
+  .case-shell {
+    width: min(100%, 64rem);
+  }
+  .case-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: clamp(1rem, 3vh, 2rem);
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .case-body {
+      grid-template-columns: 1fr;
+    }
+  }
+  .wt :global(.case-eyebrow) {
+    margin: 0 0 0.35rem;
+    font-weight: 600;
+    font-size: 0.76rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--me-red-dark);
+  }
+  .wt :global(.case-title) {
+    margin: 0 0 0.55rem;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 5vh, 2.8rem);
+    line-height: 0.95;
+    letter-spacing: -0.015em;
+    text-transform: uppercase;
+  }
+  .wt :global(.case-title:focus) {
+    outline: none;
+  }
+  .wt :global(.case-pitch) {
+    margin: 0 0 0.9rem;
+    color: var(--me-ink-soft);
+    font-size: clamp(0.95rem, 1.9vh, 1.08rem);
+    line-height: 1.45;
+  }
+  .wt :global(.case-facts) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    margin: 0.2rem 0 0;
+    max-width: 62ch;
+  }
+  .wt :global(.case-fact) {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    gap: 0.6rem;
+    align-items: start;
+  }
+  .wt :global(.case-fact dt) {
+    padding-top: 0.15rem;
+    font-weight: 600;
+    font-size: 0.7rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--me-red-dark);
+  }
+  .wt :global(.case-fact dd) {
+    margin: 0;
+    color: var(--me-ink-soft);
+    font-size: 0.88rem;
+    line-height: 1.4;
+  }
+  @media (max-width: 700px) {
+    .wt :global(.case-fact) {
+      grid-template-columns: 1fr;
+      gap: 0.15rem;
+    }
+  }
+  .wt :global(.case-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: clamp(0.8rem, 2.4vh, 1.4rem);
+  }
+  .wt :global(.cta) {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1.25rem;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: clamp(0.95rem, 2.2vh, 1.1rem);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #fff;
+    background: var(--me-red);
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% calc(100% - 14px),
+      calc(100% - 14px) 100%,
+      0 100%
+    );
+    transition: background 0.15s ease;
+  }
+  .wt :global(.cta:hover) {
+    background: var(--me-red-hot);
+    text-decoration: none;
+  }
+  .wt :global(.case-aside) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .wt :global(.case-metric) {
+    padding: 0.7rem 0;
+    border-top: 3px solid var(--me-red);
+    border-bottom: 1px solid rgba(22, 28, 34, 0.14);
+  }
+  .wt :global(.case-metric b) {
+    display: block;
+    font-size: clamp(2rem, 7vh, 3.2rem);
+    font-weight: 700;
+    line-height: 1;
+  }
+  .wt :global(.case-metric span) {
+    font-size: 0.76rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--me-ink-soft);
+  }
+  .wt :global(.case-skills) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .wt :global(.case-skills li) {
+    border-left: 2px solid rgba(22, 28, 34, 0.16);
+    padding-left: 0.7rem;
+  }
+  .wt :global(.case-skills b) {
+    display: block;
+    font-size: 0.92rem;
+    letter-spacing: 0.02em;
+  }
+  .wt :global(.case-skills span) {
+    color: var(--me-ink-soft);
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+
+  .screen-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    flex-wrap: wrap;
+  }
+  /* Detail: back-to-projects is the primary exit, menu the secondary one. */
+  .screen-case .screen-actions {
+    justify-content: flex-start;
+  }
+  .ghost-menu,
+  .wt :global(.ghost-menu) {
     appearance: none;
     background: var(--glass);
     backdrop-filter: blur(10px);
@@ -599,14 +925,19 @@ const { lang } = Astro.props;
     box-shadow: 0 6px 18px rgba(23, 32, 42, 0.12);
     color: var(--me-ink-strong);
     font: inherit;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
     padding: 0.5rem 1.1rem;
     border-radius: 2px;
     cursor: pointer;
     transition: border-color 0.15s ease;
   }
-  .ghost-menu:hover {
+  .ghost-menu:hover,
+  .wt :global(.ghost-menu:hover) {
     border-color: var(--me-red);
+    text-decoration: none;
   }
 
   /* · Botón de retorno en modo clásico */
@@ -640,11 +971,7 @@ const { lang } = Astro.props;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .wt::before,
-    .status::before {
-      animation: none;
-    }
-    .screen:not([hidden]) {
+    .wt::before {
       animation: none;
     }
     .start,
@@ -653,9 +980,16 @@ const { lang } = Astro.props;
     .start-arrow,
     .classic-link svg,
     .ghost-menu,
+    .card,
+    .card-go svg,
+    .cta,
     .screen-menu,
     .wt-restore {
       transition: none;
+    }
+    .card:hover,
+    .card:focus-visible {
+      transform: none;
     }
   }
 </style>
@@ -664,16 +998,17 @@ const { lang } = Astro.props;
   import { StateMachine } from '../walkthrough/state';
   import { AudioManager } from '../walkthrough/audio';
   import { STRINGS } from '../walkthrough/strings';
+  import { parseCards, projectHref, type ProjectCard } from '../walkthrough/panel';
   import { UI, LANGS, localizePath, type Lang } from '../lib/i18n';
 
   const root = document.getElementById('wt');
   const restoreBtn = document.getElementById('wt-restore');
+  const payload = document.getElementById('wt-projects');
+  const cards = parseCards(payload?.textContent ?? null);
 
   if (root && restoreBtn) {
     const sm = new StateMachine();
-    const screens = Array.from(
-      root.querySelectorAll<HTMLElement>('[data-screen]'),
-    );
+    const screens = Array.from(root.querySelectorAll<HTMLElement>('[data-screen]'));
 
     const read = (key: string): string | null => {
       try {
@@ -698,7 +1033,7 @@ const { lang } = Astro.props;
         : routeLang;
     let muted = read('wt:muted') === '1';
 
-    const audio = new AudioManager(lang, muted);
+    const audio = new AudioManager(muted);
 
     const $ = <T extends HTMLElement = HTMLElement>(id: string): T => {
       const el = document.getElementById(id);
@@ -706,19 +1041,68 @@ const { lang } = Astro.props;
       return el as T;
     };
     const startBtn = $<HTMLButtonElement>('wt-start');
-    const loadingEl = $('wt-loading');
     const soundBtn = $<HTMLButtonElement>('wt-sound');
     const soundLabel = $('wt-sound-label');
-    const classicLink = $<HTMLAnchorElement>('wt-classic');
-    const skipBtn = $<HTMLButtonElement>('wt-skip');
-    const menuStage = root!.querySelector<HTMLElement>('[data-screen="menu"]');
+    const gridEl = $<HTMLUListElement>('wt-grid');
+    const countEl = $('wt-count');
+    const caseEl = $('wt-case');
+    const menuStage = root.querySelector<HTMLElement>('[data-screen="menu"]');
 
-    let voiceReady = false;
+    /* Everything behind the overlay: the navbar, the classic page and the
+       footer. Inert while the app is on screen so the duplicate classic
+       content never reaches the a11y tree or the tab order. */
+    const pageChrome = Array.from(
+      document.querySelectorAll<HTMLElement>('[data-wt-page], body > header, body > footer'),
+    );
 
-    /* Repaint the full-screen glass after a state round-trip: a transform
-       change forces the compositor to re-raster the layer — the programmatic
-       version of the manual workaround (moving the pointer). Skipped while a
-       live tilt is active, since that transform already invalidates. */
+    /** Project currently open in the detail screen (survives a language swap). */
+    let openSlug: string | null = null;
+    /** Card button that opened the detail, so focus can return to it. */
+    let opener: HTMLButtonElement | null = null;
+    let caseTitle: HTMLElement | null = null;
+
+    const t = () => STRINGS[lang];
+
+    const el = <K extends keyof HTMLElementTagNameMap>(
+      tag: K,
+      className?: string,
+      text?: string,
+    ): HTMLElementTagNameMap[K] => {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = text;
+      return node;
+    };
+
+    const icon = (path: string): SVGSVGElement => {
+      const wrap = document.createElement('span');
+      wrap.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"></path></svg>`;
+      return wrap.firstElementChild as SVGSVGElement;
+    };
+
+    /* · Render de estado · */
+    const render = (state: string): void => {
+      root.dataset.state = state;
+      restoreBtn.hidden = state !== 'classic';
+      // Lock the page behind the overlay so the scrollbar can't show up
+      // doing nothing; classic mode is the only state where we scroll.
+      document.documentElement.style.overflow = state === 'classic' ? '' : 'hidden';
+      if (state === 'menu') wakeGlass();
+      for (const screen of screens) {
+        const active = screen.dataset.screen === state;
+        screen.hidden = !active;
+        if (active) screen.removeAttribute('inert');
+        else screen.setAttribute('inert', '');
+      }
+      for (const node of pageChrome) {
+        if (state === 'classic') node.removeAttribute('inert');
+        else node.setAttribute('inert', '');
+      }
+    };
+
+    /* Repaint the frosted pane after a state round-trip: a transform change
+       forces the compositor to re-raster it. Skipped while a live tilt is
+       active, since that transform already invalidates. */
     const wakeGlass = (): void => {
       if (!menuStage || menuStage.style.transform) return;
       menuStage.style.transform = 'translateZ(0)';
@@ -729,52 +1113,205 @@ const { lang } = Astro.props;
       });
     };
 
-    /* · Render de estado · */
-    const render = (state: string): void => {
-      root!.dataset.state = state;
-      restoreBtn.hidden = state !== 'classic';
-      // Lock the page behind the overlay so the scrollbar can't show up
-      // doing nothing; classic mode is the only state where we scroll.
-      document.documentElement.style.overflow =
-        state === 'classic' ? '' : 'hidden';
-      if (state === 'menu') {
-        // Re-enabling START whenever we come back to the menu; the voice
-        // track is already cached after the first preload.
-        startBtn.disabled = !voiceReady;
-        if (voiceReady) loadingEl.setAttribute('data-done', '');
-        wakeGlass();
+    sm.on(render);
+
+    /* · Grilla de proyectos · */
+    const renderGrid = (): void => {
+      if (!cards) return;
+      gridEl.replaceChildren();
+      countEl.textContent = String(cards.length).padStart(2, '0');
+
+      cards.forEach((card, index) => {
+        const copy = card.copy[lang];
+        const item = el('li');
+        const btn = el('button', 'card');
+        btn.type = 'button';
+        btn.dataset.slug = card.slug;
+
+        const metric = el('span', 'card-metric');
+        metric.append(el('b', undefined, copy.metric.value), el('span', undefined, copy.metric.label));
+
+        const tags = el('span', 'card-tags');
+        for (const tag of copy.tags.slice(0, 3)) tags.append(el('span', 'tag', tag));
+
+        const go = el('span', 'card-go', t().cardOpen);
+        go.append(icon('M4 12h15m-6-6 6 6-6 6'));
+
+        btn.append(
+          el('span', 'card-index', String(index + 1).padStart(2, '0')),
+          el('span', 'card-title', copy.title),
+          el('span', 'card-pitch', copy.pitch),
+          metric,
+          tags,
+          go,
+        );
+
+        // Cursor spotlight per card: the gradient lives in the card's own
+        // background, so it never fights the text layer.
+        btn.addEventListener('pointermove', (event) => {
+          const box = btn.getBoundingClientRect();
+          btn.style.setProperty('--mx', `${(event.clientX - box.left).toFixed(1)}px`);
+          btn.style.setProperty('--my', `${(event.clientY - box.top).toFixed(1)}px`);
+        });
+        btn.addEventListener('click', () => openProject(card.slug, btn));
+
+        item.append(btn);
+        gridEl.append(item);
+      });
+    };
+
+    /* · Detalle del proyecto · */
+    const renderCase = (card: ProjectCard): void => {
+      const copy = card.copy[lang];
+      const index = (cards?.findIndex((item) => item.slug === card.slug) ?? 0) + 1;
+      caseEl.replaceChildren();
+
+      const main = el('div', 'case-main');
+      const total = cards?.length ?? 1;
+      const eyebrow = el(
+        'p',
+        'case-eyebrow',
+        `${String(index).padStart(2, '0')} / ${String(total).padStart(2, '0')}`,
+      );
+      const title = el('h2', 'case-title', copy.title);
+      title.tabIndex = -1;
+      caseTitle = title;
+
+      const tags = el('ul', 'card-tags');
+      for (const tag of copy.tags) tags.append(el('li', 'tag', tag));
+
+      // Problem → result: the two lines that make the case worth opening.
+      const facts = el('dl', 'case-facts');
+      for (const [label, text] of [
+        [UI[lang].problem, copy.problem],
+        [UI[lang].results, copy.result],
+      ]) {
+        const row = el('div', 'case-fact');
+        row.append(el('dt', undefined, label), el('dd', undefined, text));
+        facts.append(row);
       }
-      for (const screen of screens) {
-        const active = screen.dataset.screen === state;
-        screen.hidden = !active;
-        if (active) screen.removeAttribute('inert');
-        else screen.setAttribute('inert', '');
+
+      const actions = el('div', 'case-actions');
+      const primary = el('a', 'cta', t().openCase);
+      primary.href = projectHref(lang, card.slug);
+      primary.append(icon('M4 12h15m-6-6 6 6-6 6'));
+      actions.append(primary);
+
+      if (card.live) {
+        const live = el('a', 'ghost-menu', t().liveDemo);
+        live.href = card.live.href;
+        actions.append(live);
+      }
+      if (card.repo) {
+        const repo = el('a', 'ghost-menu', t().viewCode);
+        repo.href = card.repo.url;
+        repo.target = '_blank';
+        repo.rel = 'noopener';
+        actions.append(repo);
+      }
+
+      main.append(eyebrow, title, el('p', 'case-pitch', copy.pitch), tags, facts, actions);
+
+      const aside = el('aside', 'case-aside');
+      const metric = el('div', 'case-metric');
+      metric.append(el('b', undefined, copy.metric.value), el('span', undefined, copy.metric.label));
+      const skills = el('ul', 'case-skills');
+      for (const skill of copy.skills) {
+        const item = el('li');
+        item.append(el('b', undefined, skill.name), el('span', undefined, skill.desc));
+        skills.append(item);
+      }
+      aside.append(metric, skills);
+
+      caseEl.append(main, aside);
+    };
+
+    const openProject = (slug: string, from?: HTMLButtonElement): void => {
+      const card = cards?.find((item) => item.slug === slug);
+      if (!card) return;
+      openSlug = slug;
+      opener = from ?? null;
+      saveView(slug);
+      renderCase(card);
+      if (sm.set('case')) {
+        // Focus the heading so the detail is announced from the top.
+        requestAnimationFrame(() => caseTitle?.focus());
       }
     };
-    sm.on(render);
-    render(sm.state);
+
+    /* Where the visitor was, so "back" from a case study doesn't dump them in
+       the menu again. sessionStorage is per-tab: a fresh visit still starts on
+       the menu. */
+    const RESUME_KEY = 'wt:resume';
+    const saveView = (slug: string | null): void => {
+      try {
+        sessionStorage.setItem(RESUME_KEY, JSON.stringify({ slug }));
+      } catch {
+        /* optional */
+      }
+    };
+    const restoreView = (): void => {
+      if (!cards) return;
+      let raw: string | null = null;
+      try {
+        raw = sessionStorage.getItem(RESUME_KEY);
+        if (raw) sessionStorage.removeItem(RESUME_KEY);
+      } catch {
+        return;
+      }
+      if (!raw) return;
+
+      let slug: string | null = null;
+      try {
+        slug = (JSON.parse(raw) as { slug?: string | null }).slug ?? null;
+      } catch {
+        return;
+      }
+
+      const card = slug ? cards.find((item) => item.slug === slug) : undefined;
+      if (!sm.set('panel')) return;
+      if (card) {
+        openSlug = card.slug;
+        renderCase(card);
+        sm.set('case');
+      }
+    };
+
+    const backToGrid = (): void => {
+      if (!sm.set('panel')) return;
+      requestAnimationFrame(() => opener?.focus());
+    };
+
+    const goMenu = (): void => {
+      if (sm.set('menu')) requestAnimationFrame(() => startBtn.focus());
+    };
 
     /* · i18n en caliente · */
     const applyLang = (next: Lang): void => {
       lang = next;
-      root!.dataset.lang = next;
+      root.dataset.lang = next;
       document.documentElement.lang = next;
       document.title = UI[next].siteTitle;
       write('wt:lang', next);
 
-      for (const el of root!.querySelectorAll<HTMLElement>('[data-i18n]')) {
-        const key = el.dataset.i18n as keyof (typeof STRINGS)['es'];
-        el.textContent = STRINGS[next][key];
+      for (const node of root.querySelectorAll<HTMLElement>('[data-i18n]')) {
+        const key = node.dataset.i18n as keyof (typeof STRINGS)['es'];
+        node.textContent = STRINGS[next][key];
       }
-      for (const el of root!.querySelectorAll<HTMLElement>('[data-i18n-aria]')) {
-        const key = el.dataset.i18nAria as keyof (typeof STRINGS)['es'];
-        el.setAttribute('aria-label', STRINGS[next][key]);
+      for (const node of root.querySelectorAll<HTMLElement>('[data-i18n-aria]')) {
+        const key = node.dataset.i18nAria as keyof (typeof STRINGS)['es'];
+        node.setAttribute('aria-label', STRINGS[next][key]);
       }
-      for (const btn of root!.querySelectorAll<HTMLButtonElement>('[data-lang-opt]')) {
+      for (const btn of root.querySelectorAll<HTMLButtonElement>('[data-lang-opt]')) {
         btn.setAttribute('aria-pressed', String(btn.dataset.langOpt === next));
       }
       updateSoundLabel();
-      audio.setLang(next);
+
+      renderGrid();
+      if (openSlug) {
+        const card = cards?.find((item) => item.slug === openSlug);
+        if (card) renderCase(card);
+      }
 
       const target = localizePath(location.pathname, next);
       if (location.pathname !== target) {
@@ -783,31 +1320,12 @@ const { lang } = Astro.props;
     };
 
     const updateSoundLabel = (): void => {
-      soundLabel.textContent = muted
-        ? STRINGS[lang].soundOff
-        : STRINGS[lang].soundOn;
+      soundLabel.textContent = muted ? t().soundOff : t().soundOn;
       soundBtn.setAttribute('aria-pressed', String(!muted));
     };
 
-    /* · Preparación del audio (nunca deja el START bloqueado) · */
-    let readyPromise: Promise<boolean> | null = null;
-    const ensureVoice = (): Promise<boolean> => {
-      readyPromise ??= audio.preload().then((ready) => {
-        // Never leave START blocked: preload resolves or times out, and we
-        // enable the button either way (degradation rule: no dead screens).
-        voiceReady = true;
-        if (sm.state === 'menu') {
-          startBtn.disabled = false;
-          loadingEl.setAttribute('data-done', '');
-        }
-        if (!ready) console.warn('[walkthrough] voice not fully buffered');
-        return ready;
-      });
-      return readyPromise;
-    };
-
-    /* · Eventos del menú · */
-    for (const btn of root!.querySelectorAll<HTMLButtonElement>('[data-lang-opt]')) {
+    /* · Eventos · */
+    for (const btn of root.querySelectorAll<HTMLButtonElement>('[data-lang-opt]')) {
       btn.addEventListener('click', () => {
         audio.blip(760);
         applyLang(btn.dataset.langOpt as Lang);
@@ -822,15 +1340,15 @@ const { lang } = Astro.props;
       if (!muted) audio.blip(520);
     });
 
-    /* · Tilt + cursor light: the FULL-SCREEN stage leans toward the
-       pointer, so the glass pane, the card and everything inside rotate
-       together as one scene. A soft spotlight (--mx/--my) tracks the
-       pointer on card, panel and start button.
-       Touch and reduced-motion users get the static layout. */
-    const menuShell = root!.querySelector<HTMLElement>('.menu-shell');
-    const lightSurfaces: HTMLElement[] = [menuShell, root!.querySelector<HTMLElement>('.panel'), startBtn].filter(
-      (el): el is HTMLElement => Boolean(el),
-    );
+    /* · Tilt + cursor light del menú: el stage full-screen se inclina hacia
+       el puntero, así el vidrio, la tarjeta y todo lo de adentro rotan como
+       una sola escena. Touch y reduced-motion reciben el layout quieto. */
+    const menuShell = root.querySelector<HTMLElement>('.menu-shell');
+    const lightSurfaces: HTMLElement[] = [
+      menuShell,
+      root.querySelector<HTMLElement>('.panel'),
+      startBtn,
+    ].filter((node): node is HTMLElement => Boolean(node));
     const tiltQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     if (menuStage) {
       menuStage.addEventListener('pointermove', (event) => {
@@ -839,10 +1357,10 @@ const { lang } = Astro.props;
         const x = (event.clientX - rect.left) / rect.width - 0.5;
         const y = (event.clientY - rect.top) / rect.height - 0.5;
         menuStage.style.transform = `rotateX(${(-y * 5).toFixed(2)}deg) rotateY(${(x * 7).toFixed(2)}deg)`;
-        for (const el of lightSurfaces) {
-          const box = el.getBoundingClientRect();
-          el.style.setProperty('--mx', `${(event.clientX - box.left).toFixed(1)}px`);
-          el.style.setProperty('--my', `${(event.clientY - box.top).toFixed(1)}px`);
+        for (const node of lightSurfaces) {
+          const box = node.getBoundingClientRect();
+          node.style.setProperty('--mx', `${(event.clientX - box.left).toFixed(1)}px`);
+          node.style.setProperty('--my', `${(event.clientY - box.top).toFixed(1)}px`);
         }
       });
       menuStage.addEventListener('pointerleave', () => {
@@ -850,40 +1368,40 @@ const { lang } = Astro.props;
       });
     }
 
+    /* COMENZAR cae directo en la grilla: no hay cinemática ni espera de audio. */
     startBtn.addEventListener('click', () => {
       audio.blip(980);
-      startBtn.disabled = true;
-      loadingEl.removeAttribute('data-done');
-      loadingEl.textContent = STRINGS[lang].loading;
-      void ensureVoice().then(() => {
-        if (sm.set('cutscene')) {
-          audio.play();
-        } else {
-          startBtn.disabled = false;
-        }
-        loadingEl.setAttribute('data-done', '');
+      saveView(null);
+      if (sm.set('panel')) {
+        const first = gridEl.querySelector<HTMLButtonElement>('.card');
+        requestAnimationFrame(() => first?.focus());
+      }
+    });
+
+    for (const btn of root.querySelectorAll<HTMLButtonElement>('[data-back-to-panel]')) {
+      btn.addEventListener('click', () => {
+        audio.blip(640);
+        backToGrid();
       });
-    });
+    }
 
-    audio.onEnded = () => {
-      if (sm.state === 'cutscene') sm.set('fp');
-    };
+    for (const btn of root.querySelectorAll<HTMLButtonElement>('[data-goto-menu]')) {
+      btn.addEventListener('click', () => {
+        audio.blip(700);
+        goMenu();
+      });
+    }
 
-    skipBtn.addEventListener('click', () => {
-      audio.blip(640);
-      audio.stop();
-      sm.set('fp');
-    });
-
-    classicLink.addEventListener('click', (event) => {
+    const goClassic = (event: Event): void => {
       event.preventDefault();
       audio.blip(560);
       if (sm.set('classic')) {
-        document
-          .getElementById('work')
-          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('work')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    });
+    };
+    for (const link of root.querySelectorAll<HTMLAnchorElement>('[data-classic]')) {
+      link.addEventListener('click', goClassic);
+    }
 
     restoreBtn.addEventListener('click', () => {
       audio.blip(700);
@@ -891,16 +1409,29 @@ const { lang } = Astro.props;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    for (const btn of root!.querySelectorAll<HTMLButtonElement>('[data-goto-menu]')) {
-      btn.addEventListener('click', () => {
-        audio.stop();
-        sm.set('menu');
-      });
-    }
+    /* Escape sube un nivel: detalle → grilla → menú. Nunca deja al visitante
+       encerrado en una pantalla sin salida. */
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      if (sm.state === 'case') {
+        event.preventDefault();
+        backToGrid();
+      } else if (sm.state === 'panel') {
+        event.preventDefault();
+        goMenu();
+      }
+    });
 
     /* · Init · */
+    if (!cards) {
+      // Payload missing or broken: the HTML page behind the overlay is the
+      // product — degrade to it instead of showing an empty grid.
+      console.warn('[walkthrough] project payload unavailable; using classic mode');
+      sm.set('classic');
+    }
     applyLang(lang);
     audio.setMuted(muted);
-    void ensureVoice();
+    render(sm.state);
+    restoreView();
   }
 </script>

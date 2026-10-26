@@ -1,9 +1,12 @@
 import type { Lang } from '../lib/i18n';
 
 /**
- * Client-side copy for the walkthrough app (menu + placeholders).
+ * Client-side copy for the walkthrough app (menu, project grid, detail).
  * The URL route provides the initial language; switching in the menu
  * swaps these strings in place without reloading.
+ *
+ * Project copy is NOT here: it lives in `src/lib/projects.ts` and reaches
+ * the client through the payload built in `panel.ts`.
  */
 export type WalkthroughStrings = {
   role: string;
@@ -12,11 +15,15 @@ export type WalkthroughStrings = {
   soundOn: string;
   soundOff: string;
   start: string;
-  loading: string;
-  skip: string;
-  cutsceneSoon: string;
-  fpSoon: string;
-  panelSoon: string;
+  projects: string;
+  projectsIntro: string;
+  choose: string;
+  project: string;
+  cardOpen: string;
+  openCase: string;
+  backToProjects: string;
+  viewCode: string;
+  liveDemo: string;
   classic: string;
   backToMenu: string;
 };
@@ -29,11 +36,15 @@ export const STRINGS: Record<Lang, WalkthroughStrings> = {
     soundOn: 'Encendido',
     soundOff: 'Apagado',
     start: 'Comenzar',
-    loading: 'Cargando introducción…',
-    skip: 'Saltar ▸',
-    cutsceneSoon: 'Cinemática — próximamente',
-    fpSoon: 'Primera persona — próximamente',
-    panelSoon: 'Panel AR — próximamente',
+    projects: 'Proyectos',
+    projectsIntro: 'Tres proyectos con evidencia ejecutable: abrí uno y mirá el caso completo.',
+    choose: 'Elegí un proyecto',
+    project: 'Proyecto',
+    cardOpen: 'Ver detalle',
+    openCase: 'Abrir caso completo',
+    backToProjects: '◀ Volver a proyectos',
+    viewCode: 'Ver código',
+    liveDemo: 'Ver demo',
     classic: 'Ver proyectos sin 3D',
     backToMenu: '◀ Volver al menú',
   },
@@ -44,11 +55,15 @@ export const STRINGS: Record<Lang, WalkthroughStrings> = {
     soundOn: 'On',
     soundOff: 'Off',
     start: 'Start',
-    loading: 'Loading intro…',
-    skip: 'Skip ▸',
-    cutsceneSoon: 'Cutscene — coming soon',
-    fpSoon: 'First person — coming soon',
-    panelSoon: 'AR panel — coming soon',
+    projects: 'Projects',
+    projectsIntro: 'Three projects with runnable evidence: open one and read the full case.',
+    choose: 'Choose a project',
+    project: 'Project',
+    cardOpen: 'View details',
+    openCase: 'Open full case study',
+    backToProjects: '◀ Back to projects',
+    viewCode: 'View code',
+    liveDemo: 'View demo',
     classic: 'View projects without 3D',
     backToMenu: '◀ Back to menu',
   },

@@ -47,34 +47,38 @@ const copy = {
 
   <Walkthrough lang={lang} />
 
-  <section class="hero">
-    <p class="role">{copy.heroRole}</p>
-    <h1>Lucas Pinto</h1>
-    <p class="pitch">{copy.heroPitch}</p>
-    <a class="btn btn-primary" href="#work">{copy.scroll}</a>
-  </section>
+  <!-- Classic page: SEO + no-JS + degraded-GPU story. The overlay marks it
+       inert while it is on screen, so screen readers never hear it twice. -->
+  <div data-wt-page>
+    <section class="hero">
+      <p class="role">{copy.heroRole}</p>
+      <h1>Lucas Pinto</h1>
+      <p class="pitch">{copy.heroPitch}</p>
+      <a class="btn btn-primary" href="#work">{copy.scroll}</a>
+    </section>
 
-  <section id="work" class="work-head">
-    <h2>{copy.workTitle}</h2>
-    <p class="muted">{copy.workIntro}</p>
-  </section>
+    <section id="work" class="work-head">
+      <h2>{copy.workTitle}</h2>
+      <p class="muted">{copy.workIntro}</p>
+    </section>
 
-  {PROJECTS.map((project, index) => {
-    const data = project.content[lang];
-    return (
-      <Stripe
-        index={index}
-        title={data.caseStudy.title}
-        pitch={data.caseStudy.pitch}
-        slug={project.slug}
-        stripe={data.stripe}
-        lang={lang}
-        repoUrl={project.repo?.url}
-        viewCode={copy.viewCode}
-        openCase={copy.openCase}
-      />
-    );
-  })}
+    {PROJECTS.map((project, index) => {
+      const data = project.content[lang];
+      return (
+        <Stripe
+          index={index}
+          title={data.caseStudy.title}
+          pitch={data.caseStudy.pitch}
+          slug={project.slug}
+          stripe={data.stripe}
+          lang={lang}
+          repoUrl={project.repo?.url}
+          viewCode={copy.viewCode}
+          openCase={copy.openCase}
+        />
+      );
+    })}
+  </div>
 </BaseLayout>
 
 <style>
