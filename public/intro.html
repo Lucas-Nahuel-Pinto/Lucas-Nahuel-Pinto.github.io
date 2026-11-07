@@ -289,9 +289,10 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-        // Considerably high viewpoint looking down at the chart, so the
-        // extruded depth reads in 3D (the chart face still points at the user).
-        camera.position.set(0, 4.8, 5.0);
+        // Side view: camera positioned to the side and above, looking at the chart.
+        // The -0.45 tilt makes the face angle toward the viewer while the side position
+        // reveals the elevation of sectors as they pop up.
+        camera.position.set(4.5, 4.0, 2.0);
         camera.lookAt(0, 0, 0);
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.7));
@@ -392,6 +393,7 @@
         // even when they elevate on hover. Camera at (0,4.8,5) looks at origin,
         // so +z sticks toward the viewer.
         blueMesh.position.z = 0.05;
+        blueMesh.position.y = 0.05;
         blueMesh.userData = { entry: centerEntry, baseEmissive: 1.0 };
         group.add(blueMesh);
         meshes.push(blueMesh);
