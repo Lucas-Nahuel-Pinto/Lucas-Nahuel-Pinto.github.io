@@ -118,6 +118,37 @@
         outline: none;
       }
 
+      /* Minimalist side arrows (clickable): left / right of the chart */
+      .chart-arrow {
+        position: absolute;
+        top: 50%;
+        width: 18px;
+        height: 10px;
+        background: none;
+        border: 0;
+        padding: 0;
+        opacity: 0.55;
+        cursor: pointer;
+        transform: translateY(-50%);
+        z-index: 5;
+      }
+      .chart-arrow svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      .chart-arrow--left {
+        left: 6px;
+      }
+      .chart-arrow--right {
+        right: 6px;
+      }
+      .chart-arrow:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 4px;
+        border-radius: 2px;
+      }
+
       /* Hover/selection label below the chart */
       #chart-label {
         position: relative;
@@ -183,6 +214,18 @@
 
       <div id="chart-wrap" class="chart-wrap">
         <canvas id="chart"></canvas>
+
+        <!-- Minimalist side arrows (rotate menu) -->
+        <button type="button" class="chart-arrow chart-arrow--left" aria-label="Seccion anterior">
+          <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+            <path d="M9 1 L1 5 L9 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button type="button" class="chart-arrow chart-arrow--right" aria-label="Seccion siguiente">
+          <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+            <path d="M1 1 L9 5 L1 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
 
         <!-- Visible fallback when WebGL is unavailable -->
         <div id="fallback">
@@ -379,7 +422,8 @@
 
         // Center disc (interactive)
         const centerEntry = MENU.find((m) => m.kind === 'center');
-        const blueGeo = new THREE.CylinderGeometry(BLUE_R, BLUE_R, DEPTH + 0.08, 64);
+        const CENTER_H = DEPTH * 2.5; // taller center disc (About Me) to stand out
+        const blueGeo = new THREE.CylinderGeometry(BLUE_R, BLUE_R, CENTER_H, 64);
         blueGeo.rotateX(Math.PI / 2);
         const blueMat = new THREE.MeshStandardMaterial({
           // Near-black base so the warm lamp can't grey it out; the background
@@ -508,6 +552,29 @@
           isDragging = false;
         });
 
+        // ---------- Scroll / arrow keys / side arrows: rotate menu ----------
+        const MENU_STEP = Math.PI * 2 / 3; // one sector = 120deg
+
+        document.querySelector('.chart-arrow--left').addEventListener('click', () => {
+          group.rotation.z -= MENU_STEP;
+        });
+        document.querySelector('.chart-arrow--right').addEventListener('click', () => {
+          group.rotation.z += MENU_STEP;
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          group.rotation.z += e.deltaY * 0.005;
+        }, { passive: false });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.altKey || e.ctrlKey || e.metaKey) return;
+          const tag = (e.target.tagName || '').toLowerCase();
+          if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+          if (e.key === 'ArrowRight') { e.preventDefault(); group.rotation.z += MENU_STEP; }
+          else if (e.key === 'ArrowLeft') { e.preventDefault(); group.rotation.z -= MENU_STEP; }
+        });
+
         // ---------- Resize ----------
         function resize() {
           const w = canvas.clientWidth;
@@ -520,19 +587,17 @@
         window.addEventListener('resize', resize);
 
         // ---------- Animation loop ----------
-        const ELEVATE = 0.32;
+        const STRETCH = 0.35; // hovered sector stretches along local z (= world Y when standing) instead of lifting
         function tick() {
           // group.rotation.x stays at BASE_TILT (kept for 3D appreciation)
           // group.rotation.z is controlled by mouse drag (updated in pointermove)
           const active = activeMesh();
           meshes.forEach((mesh) => {
             const on = mesh === active;
-            const targetZ = on ? ELEVATE : 0;
-            mesh.position.z += (targetZ - mesh.position.z) * 0.16;
             const s = on ? 1.04 : 1;
             mesh.scale.x += (s - mesh.scale.x) * 0.16;
             mesh.scale.y += (s - mesh.scale.y) * 0.16;
-            mesh.scale.z += (s - mesh.scale.z) * 0.16;
+            mesh.scale.z += ((on ? 1 + STRETCH : 1) - mesh.scale.z) * 0.16;
             mesh.material.emissive.setHex(mesh.userData.entry.color);
             const base = mesh.userData.baseEmissive || 0;
             mesh.material.emissiveIntensity = on ? base + 0.35 : base;
