@@ -57,19 +57,41 @@
       .site-nav .logo {
         font-size: clamp(21px, 4vw, 26px);
         letter-spacing: -0.02em;
-        color: #fff;
-        text-decoration: none;
         user-select: none;
       }
       .site-nav .contact {
         font-size: clamp(17px, 3vw, 23px);
+      }
+      /* Holographic chips: same glass recipe as the chart labels, so the
+         navbar text stays readable over the illustrated background. */
+      .site-nav .logo,
+      .site-nav .contact {
         color: #fff;
-        text-decoration: underline;
-        text-underline-offset: 3px;
+        text-decoration: none;
+        padding: 0.26em 0.66em 0.3em;
+        border: 2px solid rgba(126, 232, 255, 0.95);
+        border-radius: 12px;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 32%, rgba(255, 255, 255, 0) 52%),
+          linear-gradient(180deg, rgba(0, 170, 255, 0.32) 0%, rgba(0, 70, 175, 0.55) 55%, rgba(1, 22, 74, 0.85) 100%);
+        box-shadow:
+          0 0 10px rgba(80, 215, 255, 0.55),
+          0 0 24px rgba(0, 150, 255, 0.28),
+          inset 0 0 14px rgba(80, 215, 255, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        text-shadow:
+          0 0 8px rgba(130, 230, 255, 0.85),
+          0 1px 3px rgba(0, 0, 0, 0.75);
+        transition: filter 0.15s ease, box-shadow 0.15s ease;
       }
       .site-nav .contact:hover,
       .site-nav .logo:hover {
-        opacity: 0.7;
+        filter: brightness(1.25);
+        box-shadow:
+          0 0 14px rgba(120, 230, 255, 0.9),
+          0 0 32px rgba(0, 170, 255, 0.5),
+          inset 0 0 18px rgba(120, 230, 255, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
       }
       .site-nav a:focus-visible {
         outline: 2px solid var(--focus);
@@ -122,24 +144,45 @@
         outline: none;
       }
 
-      /* Minimalist side arrows (clickable): left / right of the chart */
+      /* Side arrows: holographic HUD buttons (same glass recipe as the
+         labels) so they contrast against the illustrated background. */
       .chart-arrow {
         position: absolute;
         top: 50%;
-        width: 18px;
-        height: 10px;
-        background: none;
-        border: 0;
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
         padding: 0;
-        opacity: 0.55;
         cursor: pointer;
         transform: translateY(-50%);
         z-index: 5;
+        border: 2px solid rgba(126, 232, 255, 0.95);
+        border-radius: 12px;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 32%, rgba(255, 255, 255, 0) 52%),
+          linear-gradient(180deg, rgba(0, 170, 255, 0.32) 0%, rgba(0, 70, 175, 0.55) 55%, rgba(1, 22, 74, 0.85) 100%);
+        box-shadow:
+          0 0 10px rgba(80, 215, 255, 0.6),
+          0 0 24px rgba(0, 150, 255, 0.3),
+          inset 0 0 14px rgba(80, 215, 255, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        transition: filter 0.15s ease, box-shadow 0.15s ease;
+      }
+      .chart-arrow:hover,
+      .chart-arrow:focus-visible {
+        filter: brightness(1.25);
+        box-shadow:
+          0 0 14px rgba(120, 230, 255, 0.9),
+          0 0 32px rgba(0, 170, 255, 0.5),
+          inset 0 0 18px rgba(120, 230, 255, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
       }
       .chart-arrow svg {
         display: block;
-        width: 100%;
-        height: 100%;
+        width: 18px;
+        height: 10px;
+        filter: drop-shadow(0 0 5px rgba(150, 240, 255, 0.95));
       }
       .chart-arrow--left {
         left: 6px;
@@ -149,8 +192,14 @@
       }
       .chart-arrow:focus-visible {
         outline: 2px solid var(--focus);
-        outline-offset: 4px;
-        border-radius: 2px;
+        outline-offset: 3px;
+        border-radius: 12px;
+      }
+      @media (max-width: 480px) {
+        .chart-arrow {
+          width: 34px;
+          height: 34px;
+        }
       }
 
       /* Hover/selection label below the chart */
@@ -318,8 +367,8 @@
           kind: 'center',
           label: 'About Me',
           href: 'about.html',
-          color: 0x59d8ff, // light neon blue (About Me)
-          css: '#59d8ff',
+          color: 0xffffff, // white (About Me)
+          css: '#ffffff',
           sr: 'sr-about'
         },
         {
@@ -394,7 +443,7 @@
         const group = new THREE.Group();
         // The canvas is 136% of the wrap (hover headroom); scale the scene so
         // the chart keeps exactly the same on-screen size and position.
-        group.scale.setScalar(1 / 1.36);
+        group.scale.setScalar(1 / 1.26);
         // Chart STANDING vertically on the ground (bottom edge at y=0). With
         // rotation.x = -π/2 the disc plane becomes vertical; local +z (the STRETCH
         // axis) maps to world +y, so hovered sectors stretch UPWARD from the floor.
@@ -410,14 +459,27 @@
         const WHITE_OUT = 1.2; // white ring outer (tucked under the colored ring)
         const BLUE_R = 0.9; // center disc radius
         const DEPTH = 0.6; // extrusion depth: sections extrude upward from the pie base
-        const GAP = 1.6 * DEG; // gap between segments (menu affordance)
+        // Gap between sectors as an absolute distance (world units), not an
+        // angle: a constant angle leaves a hairline seam at the inner radius
+        // and a wide one at the outer edge. The bevel grows each sector by
+        // bevelSize on every side, so SEG_GAP must stay wider than
+        // 2 * bevelSize or neighbouring sectors intersect (visible overlap).
+        const SEG_GAP = 0.07;
+        const BEVEL_SIZE = 0.025;
 
-        function sectorShape(ri, ro, a1, a2) {
+        function sectorShape(ri, ro, a1, a2, gap = 0) {
+          // Convert the constant seam distance into per-radius angle offsets.
+          const go = gap / 2 / ro;
+          const gi = gap / 2 / ri;
+          const a1o = a1 + go;
+          const a2o = a2 - go;
+          const a1i = a1 + gi;
+          const a2i = a2 - gi;
           const s = new THREE.Shape();
-          s.moveTo(Math.cos(a1) * ro, Math.sin(a1) * ro);
-          s.absarc(0, 0, ro, a1, a2, false);
-          s.lineTo(Math.cos(a2) * ri, Math.sin(a2) * ri);
-          s.absarc(0, 0, ri, a2, a1, true);
+          s.moveTo(Math.cos(a1o) * ro, Math.sin(a1o) * ro);
+          s.absarc(0, 0, ro, a1o, a2o, false);
+          s.lineTo(Math.cos(a2i) * ri, Math.sin(a2i) * ri);
+          s.absarc(0, 0, ri, a2i, a1i, true);
           s.closePath();
           return s;
         }
@@ -426,7 +488,7 @@
           depth: DEPTH,
           bevelEnabled: true,
           bevelThickness: 0.04,
-          bevelSize: 0.04,
+          bevelSize: BEVEL_SIZE,
           bevelSegments: 3,
           curveSegments: 64
         };
@@ -435,12 +497,12 @@
 
         // 3 outer segments (interactive)
         MENU.filter((m) => m.kind === 'segment').forEach((m) => {
-          const a1 = (m.center - 60) * DEG + GAP / 2;
-          const a2 = (m.center + 60) * DEG - GAP / 2;
-          const geo = new THREE.ExtrudeGeometry(sectorShape(R_IN, R_OUT, a1, a2), extrude);
+          const a1 = (m.center - 60) * DEG;
+          const a2 = (m.center + 60) * DEG;
+          const geo = new THREE.ExtrudeGeometry(sectorShape(R_IN, R_OUT, a1, a2, SEG_GAP), extrude);
           const mat = new THREE.MeshStandardMaterial({
             color: m.color,
-            roughness: 0.42,
+            roughness: 1,
             metalness: 0.04
           });
           const mesh = new THREE.Mesh(geo, mat);
@@ -467,13 +529,13 @@
         // which the standing group maps to world +Y -> the center extrudes upward.
         blueGeo.rotateX(Math.PI / 2);
         const blueMat = new THREE.MeshStandardMaterial({
-          // Near-black base so the warm lamp can't grey it out; the background
-          // blue comes almost entirely from emissive (see baseEmissive below).
-          color: 0x01050e,
-          roughness: 0.85,
-          metalness: 1,
+          // White drum: a light diffuse base + white emissive keeps it reading
+          // white under the warm lamp instead of turning grey.
+          color: 0xf2f7fc,
+          roughness: 0.55,
+          metalness: 0.08,
           emissive: centerEntry.color,
-          emissiveIntensity: 1
+          emissiveIntensity: 0
         });
         const blueMesh = new THREE.Mesh(blueGeo, blueMat);
         // Cylinder geometry is centered on its own origin, so lift it by half its
@@ -632,7 +694,7 @@
         window.addEventListener('resize', resize);
 
         // ---------- Animation loop ----------
-        const STRETCH = 0.35; // hovered sector stretches along local z (= world Y when standing) instead of lifting
+        const STRETCH = 0.25; // hovered sector stretches along local z (= world Y when standing) instead of lifting
         function tick() {
           // group.rotation.x stays at BASE_TILT (kept for 3D appreciation).
           // Ease the chart toward the rotation that faces the active sector.
