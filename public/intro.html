@@ -34,8 +34,11 @@
       body {
         font-family: var(--font-heading);
         color: #fff;
-        background:
-          radial-gradient(120% 100% at 50% 35%, #0c1e3a 0%, #061224 55%, #030a14 100%);
+        background-color: #030a14; /* fallback while / while the image loads */
+        background-image: url("/mainPage-bg.png");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
         overflow: hidden;
       }
 
@@ -412,7 +415,7 @@
             metalness: 0.04
           });
           const mesh = new THREE.Mesh(geo, mat);
-          mesh.userData = { entry: m, baseEmissive: 0.4 }; // neon glow at rest
+          mesh.userData = { entry: m, baseEmissive: 0.2 }; // neon glow at rest
           group.add(mesh);
           meshes.push(mesh);
         });
@@ -448,7 +451,7 @@
         // height: its base now sits at local z=0, exactly like the sections.
         // Same base plane, same upward face as the rest of the chart.
         blueMesh.position.z = CENTER_H / 2;
-        blueMesh.userData = { entry: centerEntry, baseEmissive: 1.0 };
+        blueMesh.userData = { entry: centerEntry, baseEmissive: 0.2 };
         group.add(blueMesh);
         meshes.push(blueMesh);
 
