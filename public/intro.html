@@ -152,9 +152,15 @@
 
       /* Hover/selection label below the chart */
       #chart-label {
-        position: relative;
+        /* Sits just below the pie: absolute inside .chart-wrap, so the gap
+           scales with the chart size (pie bottom ~= 73% of the wrap height). */
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 77%;
         z-index: 1;
-        margin-top: 1.75rem;
+        margin-top: 0;
+        pointer-events: none;
         min-height: 1.6em;
         font-size: clamp(1.1rem, 3.2vw, 1.7rem);
         line-height: 1.6em;
@@ -235,10 +241,10 @@
           <a href="#">Jira Traceability Manager</a>
           <a href="#">Harness Manager</a>
         </div>
-      </div>
 
-      <!-- Name of the hovered/focused section, below the chart -->
-      <p id="chart-label" aria-live="polite"></p>
+        <!-- Name of the active section, right below the chart -->
+        <p id="chart-label" aria-live="polite"></p>
+      </div>
 
       <!-- Real links: keyboard, SEO and semantic layer over the 3D canvas -->
       <nav class="sr-only" aria-label="Secciones del portfolio">
@@ -280,8 +286,8 @@
           kind: 'center',
           label: 'About Me',
           href: 'about.html',
-          color: 0x0c1e3a, // same blue tone as the page background
-          css: '#4285f4', // label stays readable on the dark page
+          color: 0x59d8ff, // light neon blue (About Me)
+          css: '#59d8ff',
           sr: 'sr-about'
         },
         {
@@ -289,8 +295,8 @@
           kind: 'segment',
           label: 'QA Checklist',
           href: '#',
-          color: 0xea4335,
-          css: '#ea4335',
+          color: 0xff3355, // neon red
+          css: '#ff3355',
           sr: 'sr-p1',
           center: 90
         },
@@ -299,8 +305,8 @@
           kind: 'segment',
           label: 'Jira Traceability Manager',
           href: '#',
-          color: 0xfbbc05,
-          css: '#fbbc05',
+          color: 0xffe600, // neon yellow
+          css: '#ffe600',
           sr: 'sr-p2',
           center: -30
         },
@@ -309,8 +315,8 @@
           kind: 'segment',
           label: 'Harness Manager',
           href: '#',
-          color: 0x34a853,
-          css: '#34a853',
+          color: 0x2bff88, // neon green
+          css: '#2bff88',
           sr: 'sr-p3',
           center: 210
         }
@@ -406,7 +412,7 @@
             metalness: 0.04
           });
           const mesh = new THREE.Mesh(geo, mat);
-          mesh.userData = { entry: m, baseEmissive: 0 };
+          mesh.userData = { entry: m, baseEmissive: 0.4 }; // neon glow at rest
           group.add(mesh);
           meshes.push(mesh);
         });
@@ -544,27 +550,17 @@
         let targetZ = FACE_USER - firstSegment.center * DEG;
         group.rotation.z = targetZ;
 
-        // Which outer sector is currently facing the user?
-        function frontEntry() {
-          const zDeg = targetZ / DEG;
-          let best = null;
-          let bestDiff = Infinity;
-          MENU.filter((m) => m.kind === 'segment').forEach((m) => {
-            let d = (m.center + zDeg + 45) % 360;
-            if (d > 180) d -= 360;
-            if (d < -180) d += 360;
-            if (Math.abs(d) < bestDiff) {
-              bestDiff = Math.abs(d);
-              best = m;
-            }
-          });
-          return best;
-        }
+        // Traversal order: the center (About Me) is part of the arrow list too.
+        const NAV_ORDER = ['about', 'p1', 'p2', 'p3'];
+        let navIdx = 1; // first segment is in front at load
 
         // One click = one position, endlessly, in the requested direction.
         function rotateMenu(dir) {
-          targetZ += dir * MENU_STEP;
-          const entry = frontEntry();
+          navIdx = (navIdx + dir + NAV_ORDER.length) % NAV_ORDER.length;
+          const entry = MENU.find((m) => m.id === NAV_ORDER[navIdx]) || null;
+          if (entry && entry.kind === 'segment') {
+            targetZ += dir * MENU_STEP;
+          }
           const mesh = entry ? meshes.find((m) => m.userData.entry === entry) : null;
           if (mesh) {
             hovered = mesh;
