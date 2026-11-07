@@ -132,12 +132,13 @@
       <nav class="fixed top-0 left-0 right-0 z-10 w-full px-5 sm:px-8 py-4 sm:py-5 flex flex-row justify-between items-center bg-transparent">
         <!-- Logo (left) -->
         <div class="flex flex-row items-center gap-3">
-          <span
+          <a
+            href="#"
             class="text-[21px] sm:text-[26px] tracking-tight text-white select-none"
             style="font-family: var(--font-heading)"
           >
-            Mainframe&reg;
-          </span>
+            Lucas Pinto
+          </a>
           <span
             class="text-[25px] sm:text-[30px] text-white select-none leading-none"
             style="letter-spacing: -0.02em"
@@ -148,15 +149,17 @@
 
         <!-- Desktop nav links (center, hidden below md) -->
         <div class="hidden md:flex flex-row items-center text-[23px] text-white">
-          <a href="#" class="hover:opacity-60 transition-opacity">
-            Lucas Pinto | Portfolio
-          </a>
+          <span class="select-none">
+            Portfolio
+          </span>
         </div>
 
         <!-- Desktop CTA (right, hidden below md) -->
         <div class="hidden md:block">
           <a
-            href="mailto:hello@mainframe.co"
+            href="#"
+            data-contact
+            rel="nofollow noopener"
             class="text-[23px] text-white underline underline-offset-2 hover:opacity-60 transition-opacity"
           >
             Contactar
@@ -190,14 +193,13 @@
         id="mobile-menu"
         class="fixed inset-0 z-[9] bg-black/90 backdrop-blur-md flex flex-col justify-center px-8 gap-8 transition-opacity duration-300 md:hidden opacity-0 pointer-events-none"
       >
+        <span class="mobile-link text-[32px] font-medium text-white select-none">
+          Portafolio
+        </span>
         <a
           href="#"
-          class="mobile-link text-[32px] font-medium text-white hover:opacity-60 transition-opacity"
-        >
-          Lucas Pinto | Portfolio
-        </a>
-        <a
-          href="mailto:hello@mainframe.co"
+          data-contact
+          rel="nofollow noopener"
           class="mobile-link text-[32px] font-medium text-white underline underline-offset-2 hover:opacity-60 transition-opacity"
         >
           Contactar
@@ -455,6 +457,21 @@
         Array.prototype.forEach.call(document.querySelectorAll('.mobile-link'), function (link) {
           link.addEventListener('click', function () {
             setMenu(false);
+          });
+        });
+      })();
+
+      // Anti-scraping contact: the address never appears in the HTML source;
+      // it is assembled at runtime only when the user clicks Contactar.
+      (function () {
+        var addr =
+          ['pinto', 'lucas', 'nahuel'].join('.') +
+          String.fromCharCode(64) +
+          ['gmail', 'com'].join('.');
+        Array.prototype.forEach.call(document.querySelectorAll('[data-contact]'), function (el) {
+          el.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.location.href = 'mailto:' + addr;
           });
         });
       })();
