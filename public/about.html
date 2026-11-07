@@ -399,16 +399,24 @@
         }, { passive: false });
 
         wheel.addEventListener('keydown', function (e) {
+          if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === wheel) {
+            e.preventDefault();
+            var active = activeWheelItem();
+            if (active) active.click();
+          }
+        });
+
+        // Arrow/PageUp-PageDown navigation works from anywhere on the page
+        document.addEventListener('keydown', function (e) {
+          if (e.altKey || e.ctrlKey || e.metaKey) return;
+          var tag = (e.target.tagName || '').toLowerCase();
+          if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
           if (e.key === 'ArrowDown' || e.key === 'PageDown') {
             e.preventDefault();
             stepWheel(1);
           } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
             e.preventDefault();
             stepWheel(-1);
-          } else if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === wheel) {
-            e.preventDefault();
-            var active = activeWheelItem();
-            if (active) active.click();
           }
         });
 
