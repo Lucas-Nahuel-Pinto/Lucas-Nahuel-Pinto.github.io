@@ -425,6 +425,9 @@
         const centerEntry = MENU.find((m) => m.kind === 'center');
         const CENTER_H = DEPTH * 1.6; // center is taller but shares the sections' base plane
         const blueGeo = new THREE.CylinderGeometry(BLUE_R, BLUE_R, CENTER_H, 64);
+        // CylinderGeometry's axis is +Y; rotate 90deg so the axis becomes local +Z,
+        // which the standing group maps to world +Y -> the center extrudes upward.
+        blueGeo.rotateX(Math.PI / 2);
         const blueMat = new THREE.MeshStandardMaterial({
           // Near-black base so the warm lamp can't grey it out; the background
           // blue comes almost entirely from emissive (see baseEmissive below).
@@ -529,25 +532,40 @@
           });
         });
 
-        // ---------- Scroll / arrow keys / side arrows: navigate menu ----------
-        const NAV_ORDER = ['about', 'p1', 'p2', 'p3']; // menu traversal order
-
-        let navIdx = 0;
-        let targetZ = 0; // rotation.z the chart eases toward
-
-        // Camera sits at (5.5, 4.5, 5.5): its horizontal direction is +X/+Z (45deg).
-        // A sector whose local center angle is C points at world direction
-        // (cos(C+z), 0, -sin(C+z)); solving that equals 45deg gives z = -45deg - C.
+        // ---------- Scroll / arrow keys / side arrows: rotate the menu ----------
+        const MENU_STEP = (Math.PI * 2) / 3; // one sector position per click
+        // Camera sits at (5.5, 4.5, 5.5): horizontal direction +X/+Z (45deg).
+        // A sector with local center angle C points at world angle C+z, so
+        // z = -45deg - C puts it exactly in front of the user.
         const FACE_USER = -Math.PI / 4;
 
-        function goNav(dir) {
-          navIdx = (navIdx + dir + NAV_ORDER.length) % NAV_ORDER.length;
-          const entry = MENU.find((m) => m.id === NAV_ORDER[navIdx]) || null;
+        // Start with the first sector exactly facing the user.
+        const firstSegment = MENU.find((m) => m.kind === 'segment');
+        let targetZ = FACE_USER - firstSegment.center * DEG;
+        group.rotation.z = targetZ;
+
+        // Which outer sector is currently facing the user?
+        function frontEntry() {
+          const zDeg = targetZ / DEG;
+          let best = null;
+          let bestDiff = Infinity;
+          MENU.filter((m) => m.kind === 'segment').forEach((m) => {
+            let d = (m.center + zDeg + 45) % 360;
+            if (d > 180) d -= 360;
+            if (d < -180) d += 360;
+            if (Math.abs(d) < bestDiff) {
+              bestDiff = Math.abs(d);
+              best = m;
+            }
+          });
+          return best;
+        }
+
+        // One click = one position, endlessly, in the requested direction.
+        function rotateMenu(dir) {
+          targetZ += dir * MENU_STEP;
+          const entry = frontEntry();
           const mesh = entry ? meshes.find((m) => m.userData.entry === entry) : null;
-          if (entry && entry.kind === 'segment') {
-            // Bring this sector to the front, facing the user.
-            targetZ = FACE_USER - entry.center * DEG;
-          }
           if (mesh) {
             hovered = mesh;
             updateLabel();
@@ -555,10 +573,10 @@
         }
 
         document.querySelector('.chart-arrow--left').addEventListener('click', () => {
-          goNav(-1);
+          rotateMenu(-1);
         });
         document.querySelector('.chart-arrow--right').addEventListener('click', () => {
-          goNav(1);
+          rotateMenu(1);
         });
 
         canvas.addEventListener('wheel', (e) => {
@@ -570,8 +588,8 @@
           if (e.altKey || e.ctrlKey || e.metaKey) return;
           const tag = (e.target.tagName || '').toLowerCase();
           if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
-          if (e.key === 'ArrowRight') { e.preventDefault(); goNav(1); }
-          else if (e.key === 'ArrowLeft') { e.preventDefault(); goNav(-1); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); rotateMenu(1); }
+          else if (e.key === 'ArrowLeft') { e.preventDefault(); rotateMenu(-1); }
         });
 
         // ---------- Resize ----------
