@@ -282,18 +282,28 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-        camera.position.set(0, 2.7, 6.2);
+        camera.position.set(0, 0.8, 6.5);
         camera.lookAt(0, 0, 0);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-        const key = new THREE.DirectionalLight(0xffffff, 1.7);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const key = new THREE.DirectionalLight(0xffffff, 1.15);
         key.position.set(3, 5, 6);
         scene.add(key);
         const fill = new THREE.DirectionalLight(0xaaccff, 0.5);
         fill.position.set(-4, -2, 3);
         scene.add(fill);
 
+        // Ceiling-lamp light source: warm spot hanging above the chart
+        const lamp = new THREE.SpotLight(0xfff2d8, 26, 0, 0.7, 0.7, 2);
+        lamp.position.set(0, 4.6, 2.6);
+        lamp.target.position.set(0, 0, 0);
+        scene.add(lamp);
+        scene.add(lamp.target);
+
         const group = new THREE.Group();
+        // Chart tilted UP (top edge recedes, face angles toward the viewer)
+        const BASE_TILT = -0.45;
+        group.rotation.x = BASE_TILT;
         scene.add(group);
 
         const DEG = Math.PI / 180;
@@ -453,13 +463,13 @@
         });
 
         // ---------- Parallax (subtle 3D feel) ----------
-        const targetRot = { x: 0, y: 0 };
+        const targetRot = { x: BASE_TILT, y: 0 };
         if (!reducedMotion) {
           window.addEventListener('pointermove', (e) => {
             const nx = (e.clientX / window.innerWidth) * 2 - 1;
             const ny = (e.clientY / window.innerHeight) * 2 - 1;
             targetRot.y = nx * 0.16;
-            targetRot.x = ny * 0.1;
+            targetRot.x = BASE_TILT + ny * 0.1;
           });
         }
 
