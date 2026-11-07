@@ -104,7 +104,7 @@
       }
       .chart-wrap canvas {
         /* The canvas is larger than the wrap: the hovered segment pops out
-           (scale + z-elevate + parallax) and would otherwise be clipped by
+           (scale + z-stretch) and would otherwise be clipped by
            the canvas edge. The pie keeps its visual size and center. */
         position: absolute;
         left: -18%;
@@ -333,7 +333,7 @@
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
         // Camera at a pleasing 3/4 angle so we see the standing chart from the side,
-        // with the face (and elevation of hovered sectors) readable.
+        // with the face (and hovered-sector stretch) readable.
         camera.position.set(5.5, 4.5, 5.5);
         camera.lookAt(0, 2.0, 0);
 
@@ -357,8 +357,8 @@
         // the chart keeps exactly the same on-screen size and position.
         group.scale.setScalar(1 / 1.36);
         // Chart STANDING vertically on the ground (bottom edge at y=0). With
-        // rotation.x = -π/2 the disc plane becomes vertical; local +z (the ELEVATE
-        // axis) maps to world +y, so hovered sectors rise UPWARD from the floor.
+        // rotation.x = -π/2 the disc plane becomes vertical; local +z (the STRETCH
+        // axis) maps to world +y, so hovered sectors stretch UPWARD from the floor.
         const BASE_TILT = -Math.PI / 2;
         group.rotation.x = BASE_TILT;
         group.position.y = 2.0; // R_OUT ≈ 2.0 -> bottom of standing disc rests on y=0
@@ -370,7 +370,7 @@
         const WHITE_IN = 0.94; // white ring inner radius
         const WHITE_OUT = 1.2; // white ring outer (tucked under the colored ring)
         const BLUE_R = 0.9; // center disc radius
-        const DEPTH = 0.3; // extrusion depth
+        const DEPTH = 0.3; // extrusion depth (standing -> Y axis thickness)
         const GAP = 1.6 * DEG; // gap between segments (menu affordance)
 
         function sectorShape(ri, ro, a1, a2) {
@@ -422,9 +422,8 @@
 
         // Center disc (interactive)
         const centerEntry = MENU.find((m) => m.kind === 'center');
-        const CENTER_H = DEPTH * 2.5; // taller center disc (About Me) to stand out
+        const CENTER_H = 0.75; // taller center disc (About Me) to stand out
         const blueGeo = new THREE.CylinderGeometry(BLUE_R, BLUE_R, CENTER_H, 64);
-        blueGeo.rotateX(Math.PI / 2);
         const blueMat = new THREE.MeshStandardMaterial({
           // Near-black base so the warm lamp can't grey it out; the background
           // blue comes almost entirely from emissive (see baseEmissive below).
@@ -436,7 +435,7 @@
         });
         const blueMesh = new THREE.Mesh(blueGeo, blueMat);
         // Center stays slightly elevated so it's never occluded by outer sectors
-        // when they rise on hover (ELEVATE moves local +z = world +y when standing).
+        // when they stretch on hover (local +z = world +y when standing).
         blueMesh.position.z = 0.05;
         blueMesh.position.y = 0.05;
         blueMesh.userData = { entry: centerEntry, baseEmissive: 1.0 };
@@ -503,7 +502,7 @@
             if (hit) act(hit);
             return;
           }
-          // Touch: first tap selects (elevates + shows name), second tap navigates
+          // Touch: first tap selects (stretches + shows name), second tap navigates
           const hit = pick(e.clientX, e.clientY);
           if (!hit) {
             selected = null;
@@ -529,37 +528,27 @@
           });
         });
 
-        // ---------- Z rotation by drag (wheel spin) ----------
-        let dragStartX = 0;
-        let dragZRotation = 0;
-        let isDragging = false;
-
-        canvas.addEventListener('pointerdown', (e) => {
-          isDragging = true;
-          dragStartX = e.clientX;
-          dragZRotation = group.rotation.z;
-        });
-
-        canvas.addEventListener('pointermove', (e) => {
-          if (!isDragging) return;
-          const dx = e.clientX - dragStartX;
-          // Sensitivity: 0.02 rad per pixel (adjust as needed)
-          dragZRotation += dx * 0.02;
-          group.rotation.z = dragZRotation;
-        });
-
-        canvas.addEventListener('pointerup', (e) => {
-          isDragging = false;
-        });
-
-        // ---------- Scroll / arrow keys / side arrows: rotate menu ----------
+        // ---------- Scroll / arrow keys / side arrows: navigate menu ----------
         const MENU_STEP = Math.PI * 2 / 3; // one sector = 120deg
+        const NAV_ORDER = ['about', 'p1', 'p2', 'p3']; // menu traversal order
+
+        let navIdx = 0;
+
+        function goNav(dir) {
+          navIdx = (navIdx + dir + NAV_ORDER.length) % NAV_ORDER.length;
+          group.rotation.z += dir * MENU_STEP;
+          const mesh = meshes.find((m) => m.userData.entry.id === NAV_ORDER[navIdx]) || null;
+          if (mesh) {
+            hovered = mesh;
+            updateLabel();
+          }
+        }
 
         document.querySelector('.chart-arrow--left').addEventListener('click', () => {
-          group.rotation.z -= MENU_STEP;
+          goNav(-1);
         });
         document.querySelector('.chart-arrow--right').addEventListener('click', () => {
-          group.rotation.z += MENU_STEP;
+          goNav(1);
         });
 
         canvas.addEventListener('wheel', (e) => {
@@ -571,8 +560,8 @@
           if (e.altKey || e.ctrlKey || e.metaKey) return;
           const tag = (e.target.tagName || '').toLowerCase();
           if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
-          if (e.key === 'ArrowRight') { e.preventDefault(); group.rotation.z += MENU_STEP; }
-          else if (e.key === 'ArrowLeft') { e.preventDefault(); group.rotation.z -= MENU_STEP; }
+          if (e.key === 'ArrowRight') { e.preventDefault(); goNav(1); }
+          else if (e.key === 'ArrowLeft') { e.preventDefault(); goNav(-1); }
         });
 
         // ---------- Resize ----------
@@ -590,7 +579,7 @@
         const STRETCH = 0.35; // hovered sector stretches along local z (= world Y when standing) instead of lifting
         function tick() {
           // group.rotation.x stays at BASE_TILT (kept for 3D appreciation)
-          // group.rotation.z is controlled by mouse drag (updated in pointermove)
+          // group.rotation.z is controlled by arrows / scroll / keyboard / hover
           const active = activeMesh();
           meshes.forEach((mesh) => {
             const on = mesh === active;
