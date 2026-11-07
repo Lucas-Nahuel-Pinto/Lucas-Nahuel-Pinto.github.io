@@ -20,6 +20,21 @@
         align-items: center;
         text-align: center;
       }
+      /* Minimalist scroll hints above/below the wheel (decorative) */
+      .wheel-hint {
+        display: block;
+        width: 18px;
+        height: 10px;
+        margin-inline: auto;
+        opacity: 0.55;
+        pointer-events: none;
+      }
+      .wheel-hint--up {
+        margin-bottom: 10px;
+      }
+      .wheel-hint--down {
+        margin-top: 10px;
+      }
       /* Infinite-loop depth wheel menu: 3 slots, only the center item is selectable */
       #wheel {
         --wheel-slot: clamp(42px, 9vw, 62px);
@@ -214,6 +229,10 @@
       <!-- HERO SECTION (z-index: 1) -->
       <main class="relative z-[1] h-screen w-full flex flex-col justify-end pb-12 md:justify-center md:pb-0 px-5 sm:px-8 md:px-10 lg:px-16 overflow-hidden items-end">
         <div class="wheel-wrap max-w-xl w-full relative z-10 flex flex-col">
+          <!-- Minimalist scroll hints -->
+          <svg class="wheel-hint wheel-hint--up" viewBox="0 0 18 10" fill="none" aria-hidden="true">
+            <path d="M1 9 L9 1 L17 9" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
           <!-- DEPTH WHEEL MENU (3 slots, only the center item is selectable) -->
           <nav
             id="wheel"
@@ -227,6 +246,9 @@
             <a class="wheel-item" data-slot="2" href="#herramientas" inert aria-hidden="true" tabindex="-1">Herramientas</a>
             <a class="wheel-item" data-slot="-1" href="#proyectos" inert aria-hidden="true" tabindex="-1">Mis Proyectos</a>
           </nav>
+          <svg class="wheel-hint wheel-hint--down" viewBox="0 0 18 10" fill="none" aria-hidden="true">
+            <path d="M1 1 L9 9 L17 1" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
         </div>
       </main>
 
