@@ -35,7 +35,7 @@
         font-family: var(--font-heading);
         color: #fff;
         background-color: #030a14; /* fallback while / while the image loads */
-        background-image: url("/mainPage-bg.png");
+        background-image: url("/mainPage-bg.jpg");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -161,21 +161,49 @@
         left: 0;
         right: 0;
         top: 77%;
-        z-index: 1;
-        margin-top: 0;
+        z-index: 2;
+        display: flex;
+        justify-content: center;
+        padding: 0 6px;
+        margin: 0;
         pointer-events: none;
-        min-height: 1.6em;
-        font-size: clamp(1.1rem, 3.2vw, 1.7rem);
-        line-height: 1.6em;
-        text-align: center;
-        letter-spacing: 0.01em;
-        color: #fff;
+        color: #fff; /* the JS overrides this with the section's neon color */
         opacity: 0;
         transition: opacity 0.2s ease;
         user-select: none;
       }
       #chart-label.is-visible {
         opacity: 1;
+      }
+
+      /* Holographic HUD panel: same futuristic-cartoon language as the
+         intro background (glowing cyan rim, glowing blue glass, glossy sheen).
+         The dark glass guarantees contrast for the neon section color. */
+      #chart-label-text {
+        position: relative;
+        display: inline-block;
+        max-width: 100%;
+        padding: 0.38em 1em 0.44em;
+        font-size: clamp(1rem, 2.7vw, 1.45rem);
+        line-height: 1.25;
+        text-align: center;
+        letter-spacing: 0.02em;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0) 50%),
+          linear-gradient(180deg, rgba(0, 170, 255, 0.30) 0%, rgba(0, 70, 175, 0.55) 55%, rgba(1, 22, 74, 0.84) 100%);
+        border: 2px solid rgba(126, 232, 255, 0.95);
+        border-radius: 14px;
+        box-shadow:
+          0 0 12px rgba(80, 215, 255, 0.65),
+          0 0 30px rgba(0, 150, 255, 0.35),
+          inset 0 0 18px rgba(80, 215, 255, 0.35),
+          inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        text-shadow:
+          0 0 8px currentColor,
+          0 0 2px rgba(255, 255, 255, 0.65),
+          0 1px 3px rgba(0, 0, 0, 0.8);
+        white-space: normal;
+        overflow-wrap: anywhere;
       }
 
       /* ---------- Fallback (no WebGL) ---------- */
@@ -246,7 +274,7 @@
         </div>
 
         <!-- Name of the active section, right below the chart -->
-        <p id="chart-label" aria-live="polite"></p>
+        <p id="chart-label" aria-live="polite"><span id="chart-label-text"></span></p>
       </div>
 
       <!-- Real links: keyboard, SEO and semantic layer over the 3D canvas -->
@@ -281,6 +309,7 @@
       const wrap = document.getElementById('chart-wrap');
       const canvas = document.getElementById('chart');
       const labelEl = document.getElementById('chart-label');
+      const labelTextEl = document.getElementById('chart-label-text');
 
       // Menu data: center + 3 outer segments (Chrome-style palette)
       const MENU = [
@@ -442,9 +471,9 @@
           // blue comes almost entirely from emissive (see baseEmissive below).
           color: 0x01050e,
           roughness: 0.85,
-          metalness: 0,
+          metalness: 1,
           emissive: centerEntry.color,
-          emissiveIntensity: 0
+          emissiveIntensity: 1
         });
         const blueMesh = new THREE.Mesh(blueGeo, blueMat);
         // Cylinder geometry is centered on its own origin, so lift it by half its
@@ -467,7 +496,7 @@
         function updateLabel() {
           const mesh = activeMesh();
           if (mesh) {
-            labelEl.textContent = mesh.userData.entry.label;
+            labelTextEl.textContent = mesh.userData.entry.label;
             labelEl.style.color = mesh.userData.entry.css;
             labelEl.classList.add('is-visible');
           } else {
