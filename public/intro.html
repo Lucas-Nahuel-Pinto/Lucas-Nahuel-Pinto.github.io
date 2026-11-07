@@ -289,11 +289,10 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-        // Side view: camera positioned to the side and above, looking at the chart.
-        // The -0.45 tilt makes the face angle toward the viewer while the side position
-        // reveals the elevation of sectors as they pop up.
-        camera.position.set(4.5, 4.0, 2.0);
-        camera.lookAt(0, 0, 0);
+        // Camera at a pleasing 3/4 angle so we see the standing chart from the side,
+        // with the face (and elevation of hovered sectors) readable.
+        camera.position.set(5.5, 4.5, 5.5);
+        camera.lookAt(0, 2.0, 0);
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.7));
         const key = new THREE.DirectionalLight(0xffffff, 1.15);
@@ -314,9 +313,12 @@
         // The canvas is 136% of the wrap (hover headroom); scale the scene so
         // the chart keeps exactly the same on-screen size and position.
         group.scale.setScalar(1 / 1.36);
-        // Chart tilted UP (top edge recedes, face angles toward the viewer)
-        const BASE_TILT = -0.45;
+        // Chart STANDING vertically on the ground (bottom edge at y=0). With
+        // rotation.x = -π/2 the disc plane becomes vertical; local +z (the ELEVATE
+        // axis) maps to world +y, so hovered sectors rise UPWARD from the floor.
+        const BASE_TILT = -Math.PI / 2;
         group.rotation.x = BASE_TILT;
+        group.position.y = 2.0; // R_OUT ≈ 2.0 -> bottom of standing disc rests on y=0
         scene.add(group);
 
         const DEG = Math.PI / 180;
@@ -389,9 +391,8 @@
           emissiveIntensity: 0
         });
         const blueMesh = new THREE.Mesh(blueGeo, blueMat);
-        // Always slightly forward ( +z ) so it's never occluded by outer sectors
-        // even when they elevate on hover. Camera at (0,4.8,5) looks at origin,
-        // so +z sticks toward the viewer.
+        // Center stays slightly elevated so it's never occluded by outer sectors
+        // when they rise on hover (ELEVATE moves local +z = world +y when standing).
         blueMesh.position.z = 0.05;
         blueMesh.position.y = 0.05;
         blueMesh.userData = { entry: centerEntry, baseEmissive: 1.0 };
