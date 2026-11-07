@@ -99,7 +99,7 @@
 
       .chart-wrap {
         position: relative;
-        width: min(78vmin, 540px);
+        width: min(54.6vmin, 378px); /* 30% smaller than 78vmin/540px */
         aspect-ratio: 1 / 1;
       }
       .chart-wrap canvas {
@@ -229,8 +229,8 @@
           kind: 'center',
           label: 'About Me',
           href: 'about.html',
-          color: 0x4285f4,
-          css: '#4285f4',
+          color: 0x0c1e3a, // same blue tone as the page background
+          css: '#4285f4', // label stays readable on the dark page
           sr: 'sr-about'
         },
         {
@@ -367,12 +367,16 @@
         const blueGeo = new THREE.CylinderGeometry(BLUE_R, BLUE_R, DEPTH + 0.08, 64);
         blueGeo.rotateX(Math.PI / 2);
         const blueMat = new THREE.MeshStandardMaterial({
-          color: centerEntry.color,
-          roughness: 0.38,
-          metalness: 0.04
+          // Near-black base so the warm lamp can't grey it out; the background
+          // blue comes almost entirely from emissive (see baseEmissive below).
+          color: 0x01050e,
+          roughness: 0.85,
+          metalness: 0,
+          emissive: centerEntry.color,
+          emissiveIntensity: 0
         });
         const blueMesh = new THREE.Mesh(blueGeo, blueMat);
-        blueMesh.userData = { entry: centerEntry, baseEmissive: 0 };
+        blueMesh.userData = { entry: centerEntry, baseEmissive: 1.0 };
         group.add(blueMesh);
         meshes.push(blueMesh);
 
@@ -500,7 +504,8 @@
             mesh.scale.y += (s - mesh.scale.y) * 0.16;
             mesh.scale.z += (s - mesh.scale.z) * 0.16;
             mesh.material.emissive.setHex(mesh.userData.entry.color);
-            mesh.material.emissiveIntensity = on ? 0.28 : 0;
+            const base = mesh.userData.baseEmissive || 0;
+            mesh.material.emissiveIntensity = on ? base + 0.35 : base;
           });
 
           renderer.render(scene, camera);
