@@ -103,9 +103,15 @@
         aspect-ratio: 1 / 1;
       }
       .chart-wrap canvas {
+        /* The canvas is larger than the wrap: the hovered segment pops out
+           (scale + z-elevate + parallax) and would otherwise be clipped by
+           the canvas edge. The pie keeps its visual size and center. */
+        position: absolute;
+        left: -18%;
+        top: -18%;
+        width: 136%;
+        height: 136%;
         display: block;
-        width: 100%;
-        height: 100%;
         touch-action: manipulation;
       }
       .chart-wrap canvas:focus-visible {
@@ -114,6 +120,8 @@
 
       /* Hover/selection label below the chart */
       #chart-label {
+        position: relative;
+        z-index: 1;
         margin-top: 1.75rem;
         min-height: 1.6em;
         font-size: clamp(1.1rem, 3.2vw, 1.7rem);
@@ -301,6 +309,9 @@
         scene.add(lamp.target);
 
         const group = new THREE.Group();
+        // The canvas is 136% of the wrap (hover headroom); scale the scene so
+        // the chart keeps exactly the same on-screen size and position.
+        group.scale.setScalar(1 / 1.36);
         // Chart tilted UP (top edge recedes, face angles toward the viewer)
         const BASE_TILT = -0.45;
         group.rotation.x = BASE_TILT;
@@ -359,7 +370,7 @@
           { ...extrude, depth: DEPTH - 0.07 }
         );
         group.add(
-          new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }))
+          new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.5 }))
         );
 
         // Center disc (interactive)
@@ -479,8 +490,8 @@
 
         // ---------- Resize ----------
         function resize() {
-          const w = wrap.clientWidth;
-          const h = wrap.clientHeight;
+          const w = canvas.clientWidth;
+          const h = canvas.clientHeight;
           renderer.setSize(w, h, false);
           camera.aspect = w / h;
           camera.updateProjectionMatrix();
