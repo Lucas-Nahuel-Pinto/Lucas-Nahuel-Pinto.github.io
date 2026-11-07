@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lucas Pinto — Portfolio</title>
+    <meta
+      name="description"
+      content="Menú principal 3D en forma de gráfico de torta: About Me y proyectos personales de Lucas Pinto."
+    />
+    <style>
+      :root {
+        --font-heading: "HelveticaNowDisplay-Medium", "Helvetica Neue", Arial, sans-serif;
+        --chrome-red: #ea4335;
+        --chrome-yellow: #fbbc05;
+        --chrome-green: #34a853;
+        --chrome-blue: #4285f4;
+        --focus: #facc15;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+
+      body {
+        font-family: var(--font-heading);
+        color: #fff;
+        background:
+          radial-gradient(120% 100% at 50% 35%, #0c1e3a 0%, #061224 55%, #030a14 100%);
+        overflow: hidden;
+      }
+
+      /* ---------- Navbar (same as about.html) ---------- */
+      .site-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 10;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+      }
+      .site-nav .logo {
+        font-size: clamp(21px, 4vw, 26px);
+        letter-spacing: -0.02em;
+        color: #fff;
+        text-decoration: none;
+        user-select: none;
+      }
+      .site-nav .contact {
+        font-size: clamp(17px, 3vw, 23px);
+        color: #fff;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+      .site-nav .contact:hover,
+      .site-nav .logo:hover {
+        opacity: 0.7;
+      }
+      .site-nav a:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 4px;
+        border-radius: 2px;
+      }
+
+      /* ---------- Stage ---------- */
+      .stage {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4.5rem 1rem 2rem;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .chart-wrap {
+        position: relative;
+        width: min(78vmin, 540px);
+        aspect-ratio: 1 / 1;
+      }
+      .chart-wrap canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: manipulation;
+      }
+      .chart-wrap canvas:focus-visible {
+        outline: none;
+      }
+
+      /* Hover/selection label below the chart */
+      #chart-label {
+        margin-top: 1.75rem;
+        min-height: 1.6em;
+        font-size: clamp(1.1rem, 3.2vw, 1.7rem);
+        line-height: 1.6em;
+        text-align: center;
+        letter-spacing: 0.01em;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        user-select: none;
+      }
+      #chart-label.is-visible {
+        opacity: 1;
+      }
+
+      /* ---------- Fallback (no WebGL) ---------- */
+      #fallback {
+        position: absolute;
+        inset: 0;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1.25rem;
+        text-align: center;
+      }
+      .no-webgl #fallback {
+        display: flex;
+      }
+      .no-webgl canvas {
+        display: none;
+      }
+      #fallback a {
+        color: #fff;
+        text-decoration: none;
+        font-size: clamp(1.2rem, 4vw, 1.8rem);
+        padding: 0.5em 1.2em;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 999px;
+      }
+      #fallback a:hover {
+        border-color: #fff;
+      }
+      #fallback a:focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar (same as about.html) -->
+    <nav class="site-nav">
+      <a class="logo" href="#">Lucas Pinto</a>
+      <a class="contact" href="#" data-contact rel="nofollow noopener">Contactar</a>
+    </nav>
+
+    <main class="stage">
+      <h1 class="sr-only">Lucas Pinto — Portfolio</h1>
+
+      <div id="chart-wrap" class="chart-wrap">
+        <canvas id="chart"></canvas>
+
+        <!-- Visible fallback when WebGL is unavailable -->
+        <div id="fallback">
+          <a href="about.html">About Me</a>
+          <a href="#">QA Checklist</a>
+          <a href="#">Jira Traceability Manager</a>
+          <a href="#">Harness Manager</a>
+        </div>
+      </div>
+
+      <!-- Name of the hovered/focused section, below the chart -->
+      <p id="chart-label" aria-live="polite"></p>
+
+      <!-- Real links: keyboard, SEO and semantic layer over the 3D canvas -->
+      <nav class="sr-only" aria-label="Secciones del portfolio">
+        <a id="sr-about" href="about.html">About Me</a>
+        <a id="sr-p1" href="#">QA Checklist</a>
+        <a id="sr-p2" href="#">Jira Traceability Manager</a>
+        <a id="sr-p3" href="#">Harness Manager</a>
+      </nav>
+    </main>
+
+    <script>
+      // Anti-scraping contact: the address never appears in the HTML source;
+      // it is assembled at runtime only when the user clicks Contactar.
+      (function () {
+        var addr =
+          ['pinto', 'lucas', 'nahuel'].join('.') +
+          String.fromCharCode(64) +
+          ['gmail', 'com'].join('.');
+        Array.prototype.forEach.call(document.querySelectorAll('[data-contact]'), function (el) {
+          el.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.location.href = 'mailto:' + addr;
+          });
+        });
+      })();
+    </script>
+
+    <script type="module">
+      import * as THREE from './assets/vendor/three.module.min.js';
+
+      const wrap = document.getElementById('chart-wrap');
+      const canvas = document.getElementById('chart');
+      const labelEl = document.getElementById('chart-label');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      // Menu data: center + 3 outer segments (Chrome-style palette)
+      const MENU = [
+        {
+          id: 'about',
+          kind: 'center',
+          label: 'About Me',
+          href: 'about.html',
+          color: 0x4285f4,
+          css: '#4285f4',
+          sr: 'sr-about'
+        },
+        {
+          id: 'p1',
+          kind: 'segment',
+          label: 'QA Checklist',
+          href: '#',
+          color: 0xea4335,
+          css: '#ea4335',
+          sr: 'sr-p1',
+          center: 90
+        },
+        {
+          id: 'p2',
+          kind: 'segment',
+          label: 'Jira Traceability Manager',
+          href: '#',
+          color: 0xfbbc05,
+          css: '#fbbc05',
+          sr: 'sr-p2',
+          center: -30
+        },
+        {
+          id: 'p3',
+          kind: 'segment',
+          label: 'Harness Manager',
+          href: '#',
+          color: 0x34a853,
+          css: '#34a853',
+          sr: 'sr-p3',
+          center: 210
+        }
+      ];
+
+      let renderer;
+      try {
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      } catch (err) {
+        document.body.classList.add('no-webgl');
+      }
+
+      if (renderer) {
+        init(renderer);
+      }
+
+      function init(renderer) {
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearAlpha(0);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+        camera.position.set(0, 2.7, 6.2);
+        camera.lookAt(0, 0, 0);
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        const key = new THREE.DirectionalLight(0xffffff, 1.7);
+        key.position.set(3, 5, 6);
+        scene.add(key);
+        const fill = new THREE.DirectionalLight(0xaaccff, 0.5);
+        fill.position.set(-4, -2, 3);
+        scene.add(fill);
+
+        const group = new THREE.Group();
+        scene.add(group);
+
+        const DEG = Math.PI / 180;
+        const R_OUT = 2.0; // outer radius of colored ring
+        const R_IN = 1.16; // inner radius of colored ring
+        const WHITE_IN = 0.94; // white ring inner radius
+        const WHITE_OUT = 1.2; // white ring outer (tucked under the colored ring)
+        const BLUE_R = 0.9; // center disc radius
+        const DEPTH = 0.3; // extrusion depth
+        const GAP = 1.6 * DEG; // gap between segments (menu affordance)
+
+        function sectorShape(ri, ro, a1, a2) {
+          const s = new THREE.Shape();
+          s.moveTo(Math.cos(a1) * ro, Math.sin(a1) * ro);
+          s.absarc(0, 0, ro, a1, a2, false);
+          s.lineTo(Math.cos(a2) * ri, Math.sin(a2) * ri);
+          s.absarc(0, 0, ri, a2, a1, true);
+          s.closePath();
+          return s;
+        }
+
+        const extrude = {
+          depth: DEPTH,
+          bevelEnabled: true,
+          bevelThickness: 0.04,
+          bevelSize: 0.04,
+          bevelSegments: 3,
+          curveSegments: 64
+        };
+
+        const meshes = [];
+
+        // 3 outer segments (interactive)
+        MENU.filter((m) => m.kind === 'segment').forEach((m) => {
+          const a1 = (m.center - 60) * DEG + GAP / 2;
+          const a2 = (m.center + 60) * DEG - GAP / 2;
+          const geo = new THREE.ExtrudeGeometry(sectorShape(R_IN, R_OUT, a1, a2), extrude);
+          const mat = new THREE.MeshStandardMaterial({
+            color: m.color,
+            roughness: 0.42,
+            metalness: 0.04
+          });
+          const mesh = new THREE.Mesh(geo, mat);
+          mesh.userData = { entry: m, baseEmissive: 0 };
+          group.add(mesh);
+          meshes.push(mesh);
+        });
+
+        // White ring (decorative) — slightly shallower than the colored ring so
+        // its top face never sits coplanar with the sectors (avoids z-fighting)
+        const ringGeo = new THREE.ExtrudeGeometry(
+          sectorShape(WHITE_IN, WHITE_OUT, 0, Math.PI * 2),
+          { ...extrude, depth: DEPTH - 0.07 }
+        );
+        group.add(
+          new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 }))
+        );
+
+        // Center disc (interactive)
+        const centerEntry = MENU.find((m) => m.kind === 'center');
+        const blueGeo = new THREE.CylinderGeometry(BLUE_R, BLUE_R, DEPTH + 0.08, 64);
+        blueGeo.rotateX(Math.PI / 2);
+        const blueMat = new THREE.MeshStandardMaterial({
+          color: centerEntry.color,
+          roughness: 0.38,
+          metalness: 0.04
+        });
+        const blueMesh = new THREE.Mesh(blueGeo, blueMat);
+        blueMesh.userData = { entry: centerEntry, baseEmissive: 0 };
+        group.add(blueMesh);
+        meshes.push(blueMesh);
+
+        // ---------- Interaction state ----------
+        let hovered = null; // mesh under the pointer (mouse)
+        let selected = null; // mesh tapped (touch)
+        let focused = null; // mesh whose sr link has keyboard focus
+
+        function activeMesh() {
+          return hovered || focused || selected;
+        }
+
+        function updateLabel() {
+          const mesh = activeMesh();
+          if (mesh) {
+            labelEl.textContent = mesh.userData.entry.label;
+            labelEl.style.color = mesh.userData.entry.css;
+            labelEl.classList.add('is-visible');
+          } else {
+            labelEl.classList.remove('is-visible');
+          }
+        }
+
+        function act(mesh) {
+          const href = mesh.userData.entry.href;
+          if (href && href !== '#') window.location.href = href;
+        }
+
+        // ---------- Pointer (mouse hover + touch 2-tap) ----------
+        const raycaster = new THREE.Raycaster();
+        const ndc = new THREE.Vector2();
+
+        function pick(clientX, clientY) {
+          const rect = canvas.getBoundingClientRect();
+          ndc.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+          ndc.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+          raycaster.setFromCamera(ndc, camera);
+          const hits = raycaster.intersectObjects(meshes, false);
+          return hits.length ? hits[0].object : null;
+        }
+
+        canvas.addEventListener('pointermove', (e) => {
+          if (e.pointerType !== 'mouse') return;
+          const hit = pick(e.clientX, e.clientY);
+          if (hit !== hovered) {
+            hovered = hit;
+            updateLabel();
+          }
+        });
+
+        canvas.addEventListener('pointerleave', () => {
+          if (hovered) {
+            hovered = null;
+            updateLabel();
+          }
+        });
+
+        canvas.addEventListener('pointerup', (e) => {
+          if (e.pointerType === 'mouse') {
+            const hit = pick(e.clientX, e.clientY);
+            if (hit) act(hit);
+            return;
+          }
+          // Touch: first tap selects (elevates + shows name), second tap navigates
+          const hit = pick(e.clientX, e.clientY);
+          if (!hit) {
+            selected = null;
+          } else if (selected !== hit) {
+            selected = hit;
+          } else {
+            act(hit);
+          }
+          updateLabel();
+        });
+
+        // ---------- Keyboard: sr links drive the 3D highlight ----------
+        MENU.forEach((m) => {
+          const el = document.getElementById(m.sr);
+          const mesh = meshes.find((x) => x.userData.entry === m);
+          el.addEventListener('focus', () => {
+            focused = mesh;
+            updateLabel();
+          });
+          el.addEventListener('blur', () => {
+            if (focused === mesh) focused = null;
+            updateLabel();
+          });
+        });
+
+        // ---------- Parallax (subtle 3D feel) ----------
+        const targetRot = { x: 0, y: 0 };
+        if (!reducedMotion) {
+          window.addEventListener('pointermove', (e) => {
+            const nx = (e.clientX / window.innerWidth) * 2 - 1;
+            const ny = (e.clientY / window.innerHeight) * 2 - 1;
+            targetRot.y = nx * 0.16;
+            targetRot.x = ny * 0.1;
+          });
+        }
+
+        // ---------- Resize ----------
+        function resize() {
+          const w = wrap.clientWidth;
+          const h = wrap.clientHeight;
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        // ---------- Animation loop ----------
+        const ELEVATE = 0.32;
+        function tick() {
+          group.rotation.x += (targetRot.x - group.rotation.x) * 0.06;
+          group.rotation.y += (targetRot.y - group.rotation.y) * 0.06;
+
+          const active = activeMesh();
+          meshes.forEach((mesh) => {
+            const on = mesh === active;
+            const targetZ = on ? ELEVATE : 0;
+            mesh.position.z += (targetZ - mesh.position.z) * 0.16;
+            const s = on ? 1.04 : 1;
+            mesh.scale.x += (s - mesh.scale.x) * 0.16;
+            mesh.scale.y += (s - mesh.scale.y) * 0.16;
+            mesh.scale.z += (s - mesh.scale.z) * 0.16;
+            mesh.material.emissive.setHex(mesh.userData.entry.color);
+            mesh.material.emissiveIntensity = on ? 0.28 : 0;
+          });
+
+          renderer.render(scene, camera);
+          requestAnimationFrame(tick);
+        }
+        tick();
+      }
+    </script>
+  </body>
+</html>
