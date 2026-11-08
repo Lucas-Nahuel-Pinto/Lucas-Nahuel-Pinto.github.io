@@ -671,13 +671,6 @@
         fill.position.set(-4, -2, 3);
         scene.add(fill);
 
-        // Ceiling-lamp light source: warm spot hanging above the chart
-        const lamp = new THREE.SpotLight(0xfff2d8, 26, 0, 0.7, 0.7, 2);
-        lamp.position.set(0, 4.6, 2.6);
-        lamp.target.position.set(0, 0, 0);
-        scene.add(lamp);
-        scene.add(lamp.target);
-
         const group = new THREE.Group();
         // The canvas is 136% of the wrap (hover headroom); scale the scene so
         // the chart keeps exactly the same on-screen size and position.
