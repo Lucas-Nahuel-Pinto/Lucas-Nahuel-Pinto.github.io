@@ -325,14 +325,15 @@
       }
 
 
-      /* Hover/selection label below the chart */
+      /* Hover/selection label above the chart */
       #chart-label {
-        /* Sits just below the pie: absolute inside .chart-wrap, so the gap
-           scales with the chart size (pie bottom ~= 73% of the wrap height). */
+        /* Sits just above the pie with a clear gap: absolute inside
+           .chart-wrap, so the gap scales with the chart size
+           (pie top ~= 37% of the wrap height). */
         position: absolute;
         left: 0;
         right: 0;
-        top: 77%;
+        top: 21%;
         z-index: 2;
         display: flex;
         justify-content: center;
