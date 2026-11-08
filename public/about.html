@@ -725,6 +725,14 @@
           });
         });
 
+        // Auto-open the glass panel for the main menu option (wheel slot 0,
+        // the solid center item) on load - no click required.
+        var initialMain = activeWheelItem();
+        if (initialMain) {
+          panelReturnFocus = initialMain;
+          openPanel(initialMain.getAttribute('href'));
+        }
+
         panelClose.addEventListener('click', closePanel);
 
         // Contact actions inside the glass panel: send mail (anti-scraping
