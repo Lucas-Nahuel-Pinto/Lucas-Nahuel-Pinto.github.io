@@ -247,8 +247,8 @@
         position: absolute;
         /* Centered on the circular platform painted in the background:
            x 50.8%, y 55.3% of the image; 34.5% of its width. */
-        left: 50.8%;
-        top: 55.3%;
+        left: 50%;
+        top: 52.5%;
         width: 34.5%;
         aspect-ratio: 1 / 1;
         transform: translate(-50%, -50%);
@@ -451,12 +451,12 @@
         <!-- Minimalist side arrows (rotate menu) -->
         <button type="button" class="chart-arrow chart-arrow--left" aria-label="Seccion anterior">
           <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
-            <path d="M9 1 L1 5 L9 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M13 1 L5 5 L13 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </button>
         <button type="button" class="chart-arrow chart-arrow--right" aria-label="Seccion siguiente">
           <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
-            <path d="M1 1 L9 5 L1 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M5 1 L13 5 L5 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </button>
 
@@ -634,27 +634,21 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-        // Camera in front of the chart, at ~20deg elevation to match the
-        // foreshortening of the circular platform in the background image.
-        // The target is the chart's visual mid-height (base 2.0 .. top 2.96),
-        // so the chart is centered in the canvas and the arrows align with it.
-        camera.position.set(0, 5.38, 7.6);
-        camera.lookAt(0, 2.48, 0);
+        // Camera at the previous 3/4 angle, aimed at the chart's mid-height
+        // so it reads centered on screen (arrows align with its center).
+        camera.position.set(5.5, 4.5, 5.5);
+        camera.lookAt(0, 2.4, 0);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-        const key = new THREE.DirectionalLight(0xffffff, 1.25);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const key = new THREE.DirectionalLight(0xffffff, 1.15);
         key.position.set(3, 5, 6);
         scene.add(key);
-        const fill = new THREE.DirectionalLight(0xaaccff, 0.45);
+        const fill = new THREE.DirectionalLight(0xaaccff, 0.5);
         fill.position.set(-4, -2, 3);
         scene.add(fill);
-        // Cool rim light from behind, typical of cel-shaded artwork
-        const rim = new THREE.DirectionalLight(0x8fe6ff, 0.7);
-        rim.position.set(-2, 3, -6);
-        scene.add(rim);
 
         // Ceiling-lamp light source: warm spot hanging above the chart
-        const lamp = new THREE.SpotLight(0xfff2d8, 22, 0, 0.7, 0.7, 2);
+        const lamp = new THREE.SpotLight(0xfff2d8, 26, 0, 0.7, 0.7, 2);
         lamp.position.set(0, 4.6, 2.6);
         lamp.target.position.set(0, 0, 0);
         scene.add(lamp);
@@ -668,8 +662,11 @@
         // rotation.x = -π/2 the disc plane becomes vertical; local +z (the STRETCH
         // axis) maps to world +y, so hovered sectors stretch UPWARD from the floor.
         const BASE_TILT = -Math.PI / 2;
-        group.rotation.x = BASE_TILT;
-        group.position.y = 2.0; // R_OUT ≈ 2.0 -> bottom of standing disc rests on y=0
+        // Lean the pie 10deg toward the viewer so its plane matches the
+        // perspective of the background artwork.
+        const LEAN = (10 * Math.PI) / 180;
+        group.rotation.x = BASE_TILT + LEAN;
+        group.position.y = 2.0; // R_OUT ≈ 2.0 -> bottom of the disc rests on y=0
         scene.add(group);
 
         const DEG = Math.PI / 180;
@@ -703,29 +700,6 @@
           curveSegments: 64
         };
 
-        // ---------- Cartoon look: cel shading + ink outline ----------
-        // A 3-step gradient map turns the lighting into flat bands.
-        const toonGradient = new THREE.DataTexture(new Uint8Array([70, 150, 255]), 3, 1, THREE.RedFormat);
-        toonGradient.needsUpdate = true;
-        toonGradient.minFilter = THREE.NearestFilter;
-        toonGradient.magFilter = THREE.NearestFilter;
-        toonGradient.generateMipmaps = false;
-
-        // Inverted-hull outline: a slightly scaled copy rendered back-faces
-        // only, which leaves a thin dark rim around the silhouette.
-        const outlineMat = new THREE.MeshBasicMaterial({
-          color: 0x04152f,
-          side: THREE.BackSide
-        });
-
-        function withOutline(mesh, scale = 1.02) {
-          const outline = new THREE.Mesh(mesh.geometry, outlineMat);
-          outline.scale.setScalar(scale);
-          outline.raycast = () => {}; // picking only uses the real meshes
-          mesh.add(outline);
-          return mesh;
-        }
-
         const meshes = [];
 
         // 3 outer segments (interactive)
@@ -733,15 +707,13 @@
           const a1 = (m.center - 60) * DEG + GAP / 2;
           const a2 = (m.center + 60) * DEG - GAP / 2;
           const geo = new THREE.ExtrudeGeometry(sectorShape(R_IN, R_OUT, a1, a2), extrude);
-          const mat = new THREE.MeshToonMaterial({
+          const mat = new THREE.MeshStandardMaterial({
             color: m.color,
-            gradientMap: toonGradient,
-            emissive: m.color,
-            emissiveIntensity: 0.15
+            roughness: 1,
+            metalness: 0.04
           });
           const mesh = new THREE.Mesh(geo, mat);
-          mesh.userData = { entry: m, baseEmissive: 0.15 }; // neon glow at rest
-          withOutline(mesh);
+          mesh.userData = { entry: m, baseEmissive: 0.2 }; // neon glow at rest
           group.add(mesh);
           meshes.push(mesh);
         });
@@ -752,12 +724,9 @@
           sectorShape(WHITE_IN, WHITE_OUT, 0, Math.PI * 2),
           { ...extrude, depth: DEPTH - 0.07 }
         );
-        const ringMesh = new THREE.Mesh(
-          ringGeo,
-          new THREE.MeshToonMaterial({ color: 0x0a2a55, gradientMap: toonGradient })
+        group.add(
+          new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({ color: 0x0a2a55, roughness: 0.5 }))
         );
-        withOutline(ringMesh, 1.01);
-        group.add(ringMesh);
 
         // Center disc (interactive)
         const centerEntry = MENU.find((m) => m.kind === 'center');
@@ -766,9 +735,10 @@
         // CylinderGeometry's axis is +Y; rotate 90deg so the axis becomes local +Z,
         // which the standing group maps to world +Y -> the center extrudes upward.
         blueGeo.rotateX(Math.PI / 2);
-        const blueMat = new THREE.MeshToonMaterial({
+        const blueMat = new THREE.MeshStandardMaterial({
           color: 0x0059bf,
-          gradientMap: toonGradient,
+          roughness: 0.55,
+          metalness: 0.08,
           emissive: centerEntry.color,
           emissiveIntensity: 0
         });
@@ -778,7 +748,6 @@
         // Same base plane, same upward face as the rest of the chart.
         blueMesh.position.z = CENTER_H / 2;
         blueMesh.userData = { entry: centerEntry, baseEmissive: 0.2 };
-        withOutline(blueMesh, 1.02);
         group.add(blueMesh);
         meshes.push(blueMesh);
 
@@ -879,10 +848,10 @@
 
         // ---------- Scroll / arrow keys / side arrows: rotate the menu ----------
         const MENU_STEP = (Math.PI * 2) / 3; // one sector position per click
-        // Camera sits on the +Z axis (front-on), so "toward the user" is +Z.
+        // Camera sits at (5.5, 4.5, 5.5): horizontal direction +X/+Z (45deg).
         // A sector with local center angle C points at world angle C+z, so
-        // z = -90deg - C puts it exactly in front of the user.
-        const FACE_USER = -Math.PI / 2;
+        // z = -45deg - C puts it exactly in front of the user.
+        const FACE_USER = -Math.PI / 4;
 
         // Start with the first sector exactly facing the user.
         const firstSegment = MENU.find((m) => m.kind === 'segment');
