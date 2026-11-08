@@ -222,6 +222,32 @@
         line-height: 1.65;
         color: rgba(255, 255, 255, 0.92);
       }
+      #option-panel-actions {
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 8px;
+        width: 100%;
+      }
+      #option-panel-actions a {
+        display: block;
+        text-align: center;
+        padding: 14px 16px;
+        font-family: var(--font-heading);
+        font-size: clamp(16px, 1.4vw, 18px);
+        color: #fff;
+        text-decoration: none;
+        background: rgba(10, 40, 80, 0.55);
+        border: 1px solid rgba(120, 220, 255, 0.35);
+        border-radius: 10px;
+        transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+      }
+      #option-panel-actions a:hover,
+      #option-panel-actions a:focus-visible {
+        background: rgba(20, 60, 110, 0.7);
+        border-color: rgba(160, 235, 255, 0.8);
+        outline: none;
+      }
       @media (max-width: 767px) {
         /* Nearly full screen: only a thin strip of video stays visible. */
         #option-panel {
@@ -309,6 +335,10 @@
         <div id="option-panel-body">
           <h2 id="option-panel-title"></h2>
           <p id="option-panel-text"></p>
+          <div id="option-panel-actions">
+            <a id="option-panel-mail" href="#">Enviar mail</a>
+            <a id="option-panel-linkedin" href="https://www.linkedin.com/in/pinto-lucas-nahuel/" target="_blank" rel="noopener noreferrer">Ir a LinkedIn</a>
+          </div>
         </div>
       </aside>
 
@@ -400,7 +430,7 @@
             <a class="wheel-item" data-slot="0" href="#experiencia">Experiencia</a>
             <a class="wheel-item" data-slot="1" href="#resueltos" inert aria-hidden="true" tabindex="-1">Logros</a>
             <a class="wheel-item" data-slot="2" href="#herramientas" inert aria-hidden="true" tabindex="-1">Herramientas</a>
-            <a class="wheel-item" data-slot="-2" href="#" data-contact rel="nofollow noopener">Contactar</a>
+            <a class="wheel-item" data-slot="-2" href="#contacto">Contactar</a>
             <a class="wheel-item" data-slot="-1" href="#proyectos" inert aria-hidden="true" tabindex="-1">Mis Proyectos</a>
           </nav>
           <button type="button" class="wheel-hint wheel-hint--down" aria-label="Sección siguiente">
@@ -600,12 +630,22 @@
         var panelBody = document.getElementById('option-panel-body');
         var panelTitle = document.getElementById('option-panel-title');
         var panelText = document.getElementById('option-panel-text');
+        var panelActions = document.getElementById('option-panel-actions');
+        var panelMail = document.getElementById('option-panel-mail');
+        var panelLinkedin = document.getElementById('option-panel-linkedin');
+        var CONTACT_MAILTO = ['pinto', 'lucas', 'nahuel'].join('.') + String.fromCharCode(64) + ['gmail', 'com'].join('.');
+        var CONTACT_LINKEDIN = 'https://www.linkedin.com/in/pinto-lucas-nahuel/';
         var panelClose = document.getElementById('option-panel-close');
         var panelOpen = false;
         var panelReturnFocus = null;
         var panelSwapTimer = null;
 
         var PANEL_COPY = {
+          '#contacto': {
+            title: 'Contactar',
+            color: '#ffffff',
+            text: 'Elegí el canal que más te convenga.'
+          },
           '#experiencia': {
             title: 'Experiencia',
             color: '#facc15',
@@ -638,6 +678,13 @@
           panelTitle.textContent = copy.title;
           panelTitle.style.color = copy.color;
           panelText.textContent = copy.text;
+          if (key === '#contacto') {
+            panelActions.style.display = 'flex';
+            panelText.style.display = 'none';
+          } else {
+            panelText.style.display = 'block';
+            panelActions.style.display = 'none';
+          }
           return true;
         }
 
@@ -672,8 +719,6 @@
 
         wheelItems.forEach(function (el) {
           el.addEventListener('click', function (e) {
-            // Contactar is wired to the anti-scraping mailto handler instead.
-            if (el.hasAttribute('data-contact')) return;
             e.preventDefault();
             panelReturnFocus = el;
             openPanel(el.getAttribute('href'));
@@ -681,6 +726,17 @@
         });
 
         panelClose.addEventListener('click', closePanel);
+
+        // Contact actions inside the glass panel: send mail (anti-scraping
+        // assembled address) or open the LinkedIn profile in a new tab.
+        panelMail.addEventListener('click', function (e) {
+          e.preventDefault();
+          window.location.href = 'mailto:' + CONTACT_MAILTO;
+        });
+        panelLinkedin.addEventListener('click', function (e) {
+          e.preventDefault();
+          window.open(CONTACT_LINKEDIN, '_blank', 'noopener,noreferrer');
+        });
 
         // Click outside the panel closes it (wheel/hints excluded: they
         // manage the panel themselves via their own handlers).
