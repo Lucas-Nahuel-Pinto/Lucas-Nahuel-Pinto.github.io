@@ -591,7 +591,7 @@
           label: 'QA Checklist',
           href: '#',
           color: 0xff3355, // neon red
-          css: '#ff3355',
+          css: '#ffb5b5',
           sr: 'sr-p1',
           center: 90
         },
@@ -631,18 +631,42 @@
       function init(renderer) {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setClearAlpha(0);
+        // Soft shadows: the chart drops a shadow onto an invisible floor so it
+        // reads as resting on the desk painted in the background image.
+        // (r186 removed PCFSoftShadowMap; PCFShadowMap + radius gives the blur.)
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
         // Camera at the previous 3/4 angle, aimed at the chart's mid-height
         // so it reads centered on screen (arrows align with its center).
-        camera.position.set(5.5, 4.5, 5.5);
+        camera.position.set(5.5, 5.5, 7);
         camera.lookAt(0, 2.4, 0);
 
         scene.add(new THREE.AmbientLight(0xffffff, 0.7));
         const key = new THREE.DirectionalLight(0xffffff, 1.15);
-        key.position.set(3, 5, 6);
+        // Almost overhead but biased toward the camera, so the shading on the
+        // front faces stays nice (the shadow itself comes from the back light).
+        key.position.set(1.5, 9, 4);
         scene.add(key);
+        // Back light: casts the shadow toward the viewer so the pool of shade
+        // lands on the desk in front of the chart where it is visible.
+        const sun = new THREE.DirectionalLight(0xffffff, 0.6);
+        sun.position.set(-4, 7, -8);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(1024, 1024);
+        sun.shadow.camera.left = -5;
+        sun.shadow.camera.right = 5;
+        sun.shadow.camera.top = 5;
+        sun.shadow.camera.bottom = -5;
+        sun.shadow.camera.near = 0.5;
+        sun.shadow.camera.far = 30;
+        sun.shadow.bias = -0.0006;
+        sun.shadow.normalBias = 0.03;
+        sun.shadow.radius = 5; // soft penumbra
+        sun.shadow.camera.updateProjectionMatrix();
+        scene.add(sun);
         const fill = new THREE.DirectionalLight(0xaaccff, 0.5);
         fill.position.set(-4, -2, 3);
         scene.add(fill);
@@ -662,10 +686,7 @@
         // rotation.x = -π/2 the disc plane becomes vertical; local +z (the STRETCH
         // axis) maps to world +y, so hovered sectors stretch UPWARD from the floor.
         const BASE_TILT = -Math.PI / 2;
-        // Lean the pie 10deg toward the viewer so its plane matches the
-        // perspective of the background artwork.
-        const LEAN = (10 * Math.PI) / 180;
-        group.rotation.x = BASE_TILT + LEAN;
+        group.rotation.x = BASE_TILT;
         group.position.y = 2.0; // R_OUT ≈ 2.0 -> bottom of the disc rests on y=0
         scene.add(group);
 
@@ -675,7 +696,7 @@
         const WHITE_IN = 0.94; // white ring inner radius
         const WHITE_OUT = 1.2; // white ring outer (tucked under the colored ring)
         const BLUE_R = 0.9; // center disc radius
-        const DEPTH = 0.6; // extrusion depth: sections extrude upward from the pie base
+        const DEPTH = 0.7; // extrusion depth: sections extrude upward from the pie base
         // Bevels grow each sector by bevelSize on every side, so the real gap
         // at the inner radius must stay wider than 2 * bevelSize: otherwise
         // neighbouring sectors intersect (visible overlap at the seams).
@@ -750,6 +771,26 @@
         blueMesh.userData = { entry: centerEntry, baseEmissive: 0.2 };
         group.add(blueMesh);
         meshes.push(blueMesh);
+
+        // ---------- Shadows ----------
+        // Every chart piece casts; an invisible plane catches the shadow so the
+        // chart reads as resting on the desk painted in the background image.
+        group.traverse((obj) => {
+          if (obj.isMesh) obj.castShadow = true;
+        });
+
+        // The floor sits exactly at the chart's lowest point (computed from the
+        // real bounding box, so it follows any future geometry changes).
+        group.updateMatrixWorld(true);
+        const baseY = new THREE.Box3().setFromObject(group).min.y;
+        const floor = new THREE.Mesh(
+          new THREE.PlaneGeometry(60, 60),
+          new THREE.ShadowMaterial({ opacity: 0.62, color: 0x00040c })
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = baseY + 0.02;
+        floor.receiveShadow = true;
+        scene.add(floor);
 
         // ---------- Interaction state ----------
         let hovered = null; // mesh under the pointer (mouse)
