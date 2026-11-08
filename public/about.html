@@ -72,17 +72,15 @@
         --dy: calc(var(--wheel-slot) * -2);
         --sc: 0.7;
         filter: blur(6px);
-        opacity: 0.7;
+        opacity: 0;
         pointer-events: none;
-        color: #64748b;
       }
       .wheel-item[data-slot="-1"] {
         --dy: calc(var(--wheel-slot) * -1);
-        --sc: 1;
-        filter: none;
-        opacity: 1;
-        pointer-events: auto;
-        color: #ff3355;
+        --sc: 0.82;
+        filter: blur(3.5px);
+        opacity: 0.7;
+        pointer-events: none;
       }
       .wheel-item[data-slot="0"] {
         --dy: 0px;
@@ -98,14 +96,12 @@
         filter: blur(3.5px);
         opacity: 0.7;
         pointer-events: none;
-        color: #2bff88;
       }
       .wheel-item[data-slot="2"] {
         --dy: calc(var(--wheel-slot) * 2);
         --sc: 0.7;
         opacity: 0;
         pointer-events: none;
-        color: #facc15;
       }
       .wheel-item[data-slot="0"]:focus-visible {
         outline: 2px solid #facc15;
@@ -404,7 +400,7 @@
             <a class="wheel-item" data-slot="0" href="#experiencia">Experiencia</a>
             <a class="wheel-item" data-slot="1" href="#resueltos" inert aria-hidden="true" tabindex="-1">Logros</a>
             <a class="wheel-item" data-slot="2" href="#herramientas" inert aria-hidden="true" tabindex="-1">Herramientas</a>
-            <a class="wheel-item" data-slot="-2" href="#contacto">Contactar</a>
+            <a class="wheel-item" data-slot="-2" href="#" data-contact rel="nofollow noopener">Contactar</a>
             <a class="wheel-item" data-slot="-1" href="#proyectos" inert aria-hidden="true" tabindex="-1">Mis Proyectos</a>
           </nav>
           <button type="button" class="wheel-hint wheel-hint--down" aria-label="Sección siguiente">
@@ -676,6 +672,8 @@
 
         wheelItems.forEach(function (el) {
           el.addEventListener('click', function (e) {
+            // Contactar is wired to the anti-scraping mailto handler instead.
+            if (el.hasAttribute('data-contact')) return;
             e.preventDefault();
             panelReturnFocus = el;
             openPanel(el.getAttribute('href'));
