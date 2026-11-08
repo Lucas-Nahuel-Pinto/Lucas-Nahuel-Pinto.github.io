@@ -555,6 +555,12 @@
           var n = wheelItems.length;
           wheelCenter = (wheelCenter + dir + n) % n;
           renderWheel();
+          // Auto-open the glass panel for the newly active option - no click needed.
+          var active = activeWheelItem();
+          if (active) {
+            panelReturnFocus = active;
+            openPanel(active.getAttribute('href'));
+          }
         }
 
         function activeWheelItem() {
@@ -724,14 +730,6 @@
             openPanel(el.getAttribute('href'));
           });
         });
-
-        // Auto-open the glass panel for the main menu option (wheel slot 0,
-        // the solid center item) on load - no click required.
-        var initialMain = activeWheelItem();
-        if (initialMain) {
-          panelReturnFocus = initialMain;
-          openPanel(initialMain.getAttribute('href'));
-        }
 
         panelClose.addEventListener('click', closePanel);
 
