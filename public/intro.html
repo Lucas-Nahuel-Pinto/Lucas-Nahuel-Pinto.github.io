@@ -97,21 +97,138 @@
           inset 0 0 22px rgba(120, 240, 255, 0.5),
           inset 0 1px 0 rgba(255, 255, 255, 0.45);
       }
-      .site-nav a:focus-visible {
+      .site-nav a:focus-visible,
+      .site-nav button:focus-visible {
         outline: 2px solid var(--focus);
         outline-offset: 4px;
+        border-radius: 12px;
+      }
+
+      /* ---------- Hamburger menu (top-right) ---------- */
+      .site-nav .menu {
+        position: relative;
+      }
+      .hamburger {
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 4px;
+        width: 47px;
+        height: 47px;
+        padding: 0 11px;
+        cursor: pointer;
+        border: 2.5px solid rgba(120, 240, 255, 1);
+        border-radius: 12px;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 30%, rgba(255, 255, 255, 0) 50%),
+          linear-gradient(180deg, rgba(0, 96, 170, 0.92) 0%, rgba(2, 26, 74, 0.96) 55%, rgba(1, 8, 28, 0.98) 100%);
+        box-shadow:
+          0 0 0 1.5px rgba(2, 14, 40, 0.75),
+          0 0 16px rgba(80, 215, 255, 0.85),
+          0 0 42px rgba(0, 150, 255, 0.45),
+          inset 0 0 18px rgba(80, 215, 255, 0.35);
+        transition: filter 0.15s ease;
+      }
+      .hamburger:hover {
+        filter: brightness(1.2);
+      }
+      .hamburger span {
+        display: block;
+        width: 100%;
+        height: 2.5px;
         border-radius: 2px;
+        background: #eaffff;
+        box-shadow: 0 0 6px rgba(150, 240, 255, 0.95);
+        transition: transform 0.2s ease, opacity 0.15s ease;
+      }
+      .hamburger[aria-expanded="true"] span:nth-child(1) {
+        transform: translateY(6.5px) rotate(45deg);
+      }
+      .hamburger[aria-expanded="true"] span:nth-child(2) {
+        opacity: 0;
+      }
+      .hamburger[aria-expanded="true"] span:nth-child(3) {
+        transform: translateY(-6.5px) rotate(-45deg);
+      }
+
+      .menu-panel {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 10px);
+        min-width: 216px;
+        display: grid;
+        gap: 0.55rem;
+        padding: 0.7rem;
+        border: 2.5px solid rgba(120, 240, 255, 1);
+        border-radius: 14px;
+        background:
+          linear-gradient(112deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 30%, rgba(255, 255, 255, 0) 50%),
+          linear-gradient(180deg, rgba(0, 96, 170, 0.94) 0%, rgba(2, 26, 74, 0.97) 55%, rgba(1, 8, 28, 0.99) 100%);
+        box-shadow:
+          0 0 0 1.5px rgba(2, 14, 40, 0.75),
+          0 0 20px rgba(80, 215, 255, 0.8),
+          0 14px 40px rgba(1, 8, 28, 0.55),
+          inset 0 0 18px rgba(80, 215, 255, 0.28);
+      }
+      .menu-panel[hidden] {
+        display: none;
+      }
+      .lang-switch {
+        display: flex;
+        gap: 0.3rem;
+        padding: 0.25rem;
+        border: 1px solid rgba(120, 240, 255, 0.4);
+        border-radius: 10px;
+        background: rgba(1, 10, 30, 0.65);
+      }
+      .lang-switch button {
+        flex: 1;
+        padding: 0.35rem 0;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: #cfefff;
+        font: inherit;
+        font-size: 0.95rem;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+      }
+      .lang-switch button[aria-pressed="true"] {
+        color: #fff;
+        background: linear-gradient(180deg, rgba(0, 190, 255, 0.6), rgba(0, 90, 190, 0.7));
+        box-shadow: inset 0 0 10px rgba(120, 240, 255, 0.55);
+      }
+      .lang-switch button:hover {
+        color: #fff;
+      }
+      .menu-contact {
+        display: block;
+        padding: 0.5em 0.9em;
+        text-align: center;
+        text-decoration: none;
+        color: #fff;
+        border-radius: 10px;
+        background: linear-gradient(180deg, rgba(0, 150, 255, 0.5), rgba(0, 60, 150, 0.6));
+        box-shadow: inset 0 0 12px rgba(120, 240, 255, 0.35);
+        text-shadow: 0 0 8px rgba(150, 240, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8);
+      }
+      .menu-contact:hover {
+        filter: brightness(1.2);
       }
 
       /* ---------- Stage ---------- */
+      /* The stage mirrors the background "cover" geometry exactly (same
+         aspect ratio, same centering). Everything positioned in % of this
+         frame scales and moves together with the background image, so the
+         chart never drifts when the viewport changes size. */
       .stage {
-        min-height: 100vh;
-        min-height: 100dvh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 4.5rem 1rem 2rem;
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        width: max(100vw, calc(100dvh * 1672 / 941));
+        aspect-ratio: 1672 / 941;
+        transform: translate(-50%, -50%);
       }
 
       .sr-only {
@@ -127,10 +244,16 @@
       }
 
       .chart-wrap {
-        position: relative;
-        /* 30% bigger than the previous 378px */
-        width: min(71vmin, 491px);
+        position: absolute;
+        /* Centered on the circular platform painted in the background:
+           x 50.8%, y 55.3% of the image; 34.5% of its width. */
+        left: 50.8%;
+        top: 55.3%;
+        width: 34.5%;
         aspect-ratio: 1 / 1;
+        transform: translate(-50%, -50%);
+        /* Children can size in cqw so text scales with the chart itself */
+        container-type: size;
       }
       .chart-wrap canvas {
         /* The canvas is larger than the wrap: the hovered segment pops out
@@ -155,8 +278,9 @@
         top: 50%;
         display: grid;
         place-items: center;
-        width: 40px;
-        height: 40px;
+        /* Sizes in % of the chart frame so the buttons scale with the scene */
+        width: 8.15%;
+        aspect-ratio: 1 / 1;
         padding: 0;
         cursor: pointer;
         transform: translateY(-50%);
@@ -184,33 +308,22 @@
       }
       .chart-arrow svg {
         display: block;
-        width: 18px;
-        height: 10px;
+        width: 45%;
+        height: auto;
         filter: drop-shadow(0 0 5px rgba(150, 240, 255, 0.95));
       }
       .chart-arrow--left {
-        left: -56px;
+        left: -11.4%;
       }
       .chart-arrow--right {
-        right: -56px;
+        right: -11.4%;
       }
       .chart-arrow:focus-visible {
         outline: 2px solid var(--focus);
         outline-offset: 3px;
         border-radius: 12px;
       }
-      @media (max-width: 480px) {
-        .chart-arrow {
-          width: 34px;
-          height: 34px;
-        }
-        .chart-arrow--left {
-          left: -44px;
-        }
-        .chart-arrow--right {
-          right: -44px;
-        }
-      }
+
 
       /* Hover/selection label below the chart */
       #chart-label {
@@ -243,7 +356,7 @@
         display: inline-block;
         max-width: 100%;
         padding: 0.38em 1em 0.44em;
-        font-size: clamp(1rem, 2.7vw, 1.45rem);
+        font-size: clamp(0.85rem, 4.7cqw, 1.7rem);
         line-height: 1.25;
         text-align: center;
         letter-spacing: 0.02em;
@@ -303,7 +416,30 @@
     <!-- Navbar (same as about.html) -->
     <nav class="site-nav">
       <a class="logo" href="#">Lucas Pinto</a>
-      <a class="contact" href="#" data-contact rel="nofollow noopener">Contactar</a>
+
+      <div class="menu">
+        <button
+          id="menu-toggle"
+          class="hamburger"
+          type="button"
+          aria-expanded="false"
+          aria-controls="menu-panel"
+          aria-label="Abrir menú"
+          data-i18n-aria="menu"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
+        <div id="menu-panel" class="menu-panel" hidden>
+          <div class="lang-switch" role="group" aria-label="Idioma" data-i18n-aria="language">
+            <button type="button" data-lang="es" aria-pressed="true">ES</button>
+            <button type="button" data-lang="en" aria-pressed="false">EN</button>
+          </div>
+          <a class="menu-contact" href="#" data-contact rel="nofollow noopener" data-i18n="contact">Contactar</a>
+        </div>
+      </div>
     </nav>
 
     <main class="stage">
@@ -326,7 +462,7 @@
 
         <!-- Visible fallback when WebGL is unavailable -->
         <div id="fallback">
-          <a href="about.html">About Me</a>
+          <a href="about.html" data-i18n="about">About Me</a>
           <a href="#">QA Checklist</a>
           <a href="#">Jira Traceability Manager</a>
           <a href="#">Harness Manager</a>
@@ -359,6 +495,74 @@
             window.location.href = 'mailto:' + addr;
           });
         });
+      })();
+    </script>
+
+    <script>
+      // ---------- Hamburger menu + ES/EN language switch ----------
+      (function () {
+        var toggle = document.getElementById('menu-toggle');
+        var panel = document.getElementById('menu-panel');
+
+        var I18N = {
+          es: { menu: 'Abrir menú', language: 'Idioma', contact: 'Contactar', about: 'Sobre mí' },
+          en: { menu: 'Open menu', language: 'Language', contact: 'Contact', about: 'About Me' }
+        };
+
+        var lang = 'es';
+        try {
+          lang = localStorage.getItem('portfolio-lang') || 'es';
+        } catch (e) {}
+
+        function setOpen(open) {
+          toggle.setAttribute('aria-expanded', String(open));
+          panel.hidden = !open;
+        }
+
+        toggle.addEventListener('click', function () {
+          setOpen(panel.hidden);
+        });
+
+        document.addEventListener('click', function (e) {
+          if (!panel.hidden && !e.target.closest('.menu')) setOpen(false);
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape' && !panel.hidden) {
+            setOpen(false);
+            toggle.focus();
+          }
+        });
+
+        function applyLang(next) {
+          lang = next;
+          try {
+            localStorage.setItem('portfolio-lang', next);
+          } catch (e) {}
+          document.documentElement.lang = next;
+          var t = I18N[next] || I18N.es;
+          Array.prototype.forEach.call(document.querySelectorAll('[data-i18n]'), function (el) {
+            var key = el.getAttribute('data-i18n');
+            if (t[key]) el.textContent = t[key];
+          });
+          Array.prototype.forEach.call(document.querySelectorAll('[data-i18n-aria]'), function (el) {
+            var key = el.getAttribute('data-i18n-aria');
+            if (t[key]) el.setAttribute('aria-label', t[key]);
+          });
+          Array.prototype.forEach.call(document.querySelectorAll('.lang-switch button'), function (b) {
+            b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === next));
+          });
+          // The 3D menu listens for this to swap its own labels.
+          window.dispatchEvent(new CustomEvent('langchange', { detail: { lang: next } }));
+        }
+
+        Array.prototype.forEach.call(document.querySelectorAll('.lang-switch button'), function (b) {
+          b.addEventListener('click', function () {
+            applyLang(b.getAttribute('data-lang'));
+          });
+        });
+
+        applyLang(lang);
       })();
     </script>
 
@@ -430,21 +634,27 @@
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-        // Camera at a pleasing 3/4 angle so we see the chart from the side,
-        // aimed at the chart's mid-height so it reads centered on screen.
-        camera.position.set(5.5, 4.5, 5.5);
-        camera.lookAt(0, 2.4, 0);
+        // Camera in front of the chart, at ~20deg elevation to match the
+        // foreshortening of the circular platform in the background image.
+        // The target is the chart's visual mid-height (base 2.0 .. top 2.96),
+        // so the chart is centered in the canvas and the arrows align with it.
+        camera.position.set(0, 5.38, 7.6);
+        camera.lookAt(0, 2.48, 0);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-        const key = new THREE.DirectionalLight(0xffffff, 1.15);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+        const key = new THREE.DirectionalLight(0xffffff, 1.25);
         key.position.set(3, 5, 6);
         scene.add(key);
-        const fill = new THREE.DirectionalLight(0xaaccff, 0.5);
+        const fill = new THREE.DirectionalLight(0xaaccff, 0.45);
         fill.position.set(-4, -2, 3);
         scene.add(fill);
+        // Cool rim light from behind, typical of cel-shaded artwork
+        const rim = new THREE.DirectionalLight(0x8fe6ff, 0.7);
+        rim.position.set(-2, 3, -6);
+        scene.add(rim);
 
         // Ceiling-lamp light source: warm spot hanging above the chart
-        const lamp = new THREE.SpotLight(0xfff2d8, 26, 0, 0.7, 0.7, 2);
+        const lamp = new THREE.SpotLight(0xfff2d8, 22, 0, 0.7, 0.7, 2);
         lamp.position.set(0, 4.6, 2.6);
         lamp.target.position.set(0, 0, 0);
         scene.add(lamp);
@@ -493,6 +703,29 @@
           curveSegments: 64
         };
 
+        // ---------- Cartoon look: cel shading + ink outline ----------
+        // A 3-step gradient map turns the lighting into flat bands.
+        const toonGradient = new THREE.DataTexture(new Uint8Array([70, 150, 255]), 3, 1, THREE.RedFormat);
+        toonGradient.needsUpdate = true;
+        toonGradient.minFilter = THREE.NearestFilter;
+        toonGradient.magFilter = THREE.NearestFilter;
+        toonGradient.generateMipmaps = false;
+
+        // Inverted-hull outline: a slightly scaled copy rendered back-faces
+        // only, which leaves a thin dark rim around the silhouette.
+        const outlineMat = new THREE.MeshBasicMaterial({
+          color: 0x04152f,
+          side: THREE.BackSide
+        });
+
+        function withOutline(mesh, scale = 1.02) {
+          const outline = new THREE.Mesh(mesh.geometry, outlineMat);
+          outline.scale.setScalar(scale);
+          outline.raycast = () => {}; // picking only uses the real meshes
+          mesh.add(outline);
+          return mesh;
+        }
+
         const meshes = [];
 
         // 3 outer segments (interactive)
@@ -500,13 +733,15 @@
           const a1 = (m.center - 60) * DEG + GAP / 2;
           const a2 = (m.center + 60) * DEG - GAP / 2;
           const geo = new THREE.ExtrudeGeometry(sectorShape(R_IN, R_OUT, a1, a2), extrude);
-          const mat = new THREE.MeshStandardMaterial({
+          const mat = new THREE.MeshToonMaterial({
             color: m.color,
-            roughness: 1,
-            metalness: 0.04
+            gradientMap: toonGradient,
+            emissive: m.color,
+            emissiveIntensity: 0.15
           });
           const mesh = new THREE.Mesh(geo, mat);
-          mesh.userData = { entry: m, baseEmissive: 0.2 }; // neon glow at rest
+          mesh.userData = { entry: m, baseEmissive: 0.15 }; // neon glow at rest
+          withOutline(mesh);
           group.add(mesh);
           meshes.push(mesh);
         });
@@ -517,9 +752,12 @@
           sectorShape(WHITE_IN, WHITE_OUT, 0, Math.PI * 2),
           { ...extrude, depth: DEPTH - 0.07 }
         );
-        group.add(
-          new THREE.Mesh(ringGeo, new THREE.MeshStandardMaterial({ color: 0x0a2a55, roughness: 0.5 }))
+        const ringMesh = new THREE.Mesh(
+          ringGeo,
+          new THREE.MeshToonMaterial({ color: 0x0a2a55, gradientMap: toonGradient })
         );
+        withOutline(ringMesh, 1.01);
+        group.add(ringMesh);
 
         // Center disc (interactive)
         const centerEntry = MENU.find((m) => m.kind === 'center');
@@ -528,12 +766,9 @@
         // CylinderGeometry's axis is +Y; rotate 90deg so the axis becomes local +Z,
         // which the standing group maps to world +Y -> the center extrudes upward.
         blueGeo.rotateX(Math.PI / 2);
-        const blueMat = new THREE.MeshStandardMaterial({
-          // White drum: a light diffuse base + white emissive keeps it reading
-          // white under the warm lamp instead of turning grey.
+        const blueMat = new THREE.MeshToonMaterial({
           color: 0x0059bf,
-          roughness: 0.55,
-          metalness: 0.08,
+          gradientMap: toonGradient,
           emissive: centerEntry.color,
           emissiveIntensity: 0
         });
@@ -543,6 +778,7 @@
         // Same base plane, same upward face as the rest of the chart.
         blueMesh.position.z = CENTER_H / 2;
         blueMesh.userData = { entry: centerEntry, baseEmissive: 0.2 };
+        withOutline(blueMesh, 1.02);
         group.add(blueMesh);
         meshes.push(blueMesh);
 
@@ -565,6 +801,15 @@
             labelEl.classList.remove('is-visible');
           }
         }
+
+        // The "About Me" label follows the ES/EN switch (product names stay).
+        function applyChartLang(lang) {
+          const about = MENU.find((m) => m.id === 'about');
+          if (about) about.label = lang === 'en' ? 'About Me' : 'Sobre mí';
+          if (labelEl.classList.contains('is-visible')) updateLabel();
+        }
+        applyChartLang(document.documentElement.lang || 'es');
+        window.addEventListener('langchange', (e) => applyChartLang(e.detail.lang));
 
         function act(mesh) {
           const href = mesh.userData.entry.href;
@@ -634,10 +879,10 @@
 
         // ---------- Scroll / arrow keys / side arrows: rotate the menu ----------
         const MENU_STEP = (Math.PI * 2) / 3; // one sector position per click
-        // Camera sits at (5.5, 4.5, 5.5): horizontal direction +X/+Z (45deg).
+        // Camera sits on the +Z axis (front-on), so "toward the user" is +Z.
         // A sector with local center angle C points at world angle C+z, so
-        // z = -45deg - C puts it exactly in front of the user.
-        const FACE_USER = -Math.PI / 4;
+        // z = -90deg - C puts it exactly in front of the user.
+        const FACE_USER = -Math.PI / 2;
 
         // Start with the first sector exactly facing the user.
         const firstSegment = MENU.find((m) => m.kind === 'segment');
