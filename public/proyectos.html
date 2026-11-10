@@ -57,13 +57,56 @@
         pointer-events: auto;
         transition: opacity 420ms ease, visibility 0s linear 0s;
       }
+      /* ============ SLIDE VIDEO (mouse-scrub controlled) ============ */
+      .slide-media {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        /* Yellow field: matches the hero video's baked-in background
+           (sampled #FCC714), so the pre-load frame blends seamlessly. */
+        background: #fcc714;
+      }
+      .slide-media video {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+      /* Dots sit on the yellow band on this slide: flip them to dark ink. */
+      #proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-dot {
+        background: rgba(4, 6, 15, 0.35);
+      }
+      #proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-dot.is-active {
+        background: #04060f;
+      }
+      /* Arrows: translucent navy turns olive on yellow — go solid ink here. */
+      #proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow {
+        background: #04060f;
+        border-color: rgba(4, 6, 15, 0.6);
+      }
+      #proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow:hover,
+      #proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow:focus-visible {
+        background: rgba(4, 6, 15, 0.82);
+        border-color: rgba(4, 6, 15, 0.9);
+      }
       .slide-inner {
+        position: relative;
+        z-index: 1;
         max-width: 900px;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 18px;
       }
+      /* Video slides carry their own visual: drop the duplicate SVG icon. */
+      .slide:has(.slide-media) .slide-icon { display: none; }
+      /* Alpha video: no scrim, so the text flips from light to dark ink to
+         stay legible on the yellow field and on the light clipboard. */
+      .slide:has(.slide-media) .slide-title { color: #04060f; }
+      .slide:has(.slide-media) .slide-tagline { color: rgba(4, 6, 15, 0.85); }
       .slide-icon {
         width: clamp(90px, 16vw, 150px);
         height: auto;
@@ -205,6 +248,12 @@
     <main>
       <section id="proyectos-carousel" aria-label="Proyectos">
         <div class="slide is-active" data-slug="qa-flow-checklists">
+          <div class="slide-media" aria-hidden="true">
+            <video id="slide-scrub-video" muted playsinline preload="auto">
+              <!-- Full-bleed hero: the yellow background is baked into the video. -->
+              <source src="/assets/aistudio/QA-checklist-hero.mp4" type="video/mp4" />
+            </video>
+          </div>
           <div class="slide-inner">
             <svg class="slide-icon" viewBox="0 0 100 100" aria-hidden="true">
               <rect x="32" y="24" width="36" height="52" rx="4" />
@@ -397,6 +446,61 @@
           if (Math.abs(dy) > 50) { goTo(current + (dy > 0 ? 1 : -1)); touchStartY = null; }
         }, { passive: false });
         carousel.addEventListener('touchend', function () { touchStartY = null; });
+
+        // ---- QA slide video: mouse-scrub controller (same effect as about.html) ----
+        var scrubVideo = document.getElementById('slide-scrub-video');
+        var scrubTargetTime = 0;
+        var scrubSeeking = false;
+        var scrubPrevX = null;
+        var SCRUB_SENSITIVITY = 0.8;
+
+        function qaSlideActive() {
+          return slides[0] && slides[0].classList.contains('is-active');
+        }
+
+        function scrubTo(clientX) {
+          if (!scrubVideo || !qaSlideActive()) {
+            scrubPrevX = clientX;
+            return;
+          }
+          if (!scrubVideo.duration || Number.isNaN(scrubVideo.duration)) {
+            scrubPrevX = clientX;
+            return;
+          }
+          if (scrubPrevX === null) {
+            scrubPrevX = clientX;
+            return;
+          }
+          var delta = clientX - scrubPrevX;
+          scrubPrevX = clientX;
+          var timeOffset = (delta / window.innerWidth) * SCRUB_SENSITIVITY * scrubVideo.duration;
+          var newTarget = Math.max(0, Math.min(scrubVideo.duration, scrubTargetTime + timeOffset));
+          scrubTargetTime = newTarget;
+          if (!scrubSeeking) {
+            scrubSeeking = true;
+            scrubVideo.currentTime = newTarget;
+          }
+        }
+
+        window.addEventListener('mousemove', function (e) { scrubTo(e.clientX); });
+        window.addEventListener('mouseleave', function () { scrubPrevX = null; });
+        window.addEventListener('touchmove', function (e) {
+          var t = e.touches[0];
+          if (t) scrubTo(t.clientX);
+        }, { passive: true });
+        window.addEventListener('touchend', function () { scrubPrevX = null; });
+
+        scrubVideo.addEventListener('seeked', function () {
+          if (Math.abs(scrubVideo.currentTime - scrubTargetTime) > 0.02) {
+            scrubVideo.currentTime = scrubTargetTime;
+          } else {
+            scrubSeeking = false;
+          }
+        });
+
+        scrubVideo.addEventListener('loadedmetadata', function () {
+          scrubTargetTime = scrubVideo.currentTime || 0;
+        });
       })();
     </script>
   </body>
