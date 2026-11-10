@@ -111,6 +111,22 @@
       .wheel-hint--down {
         margin-top: 18px;
       }
+      /* Navbar back arrow: force the chevron to sit dead-center in the 44px
+         square (tall 10x18 viewBox, inline baseline can nudge it off). */
+      .nav-back {
+        display: grid;
+        place-items: center;
+        line-height: 0;
+        flex: none;
+        margin-inline: 0;
+      }
+      .nav-back svg {
+        display: block;
+        width: 45%;
+        height: auto;
+        /* Same glyph as the wheel hints, only rotated to point left */
+        transform: rotate(-90deg);
+      }
       /* Infinite-loop depth wheel menu: 3 slots, only the center item is selectable */
       #wheel {
         --wheel-slot: clamp(42px, 9vw, 62px);
@@ -125,8 +141,8 @@
         top: 50%;
         display: block;
         font-family: var(--font-heading);
-        font-size: clamp(22px, 5.5vw, 38px);
-        line-height: 0.5;
+        font-size: clamp(19px, 2vw, 32px);
+        line-height: 1;
         color: #fff;
         text-align: center;
         text-decoration: none;
@@ -143,12 +159,12 @@
           linear-gradient(112deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 30%, rgba(255, 255, 255, 0) 50%),
           linear-gradient(180deg, rgba(0, 170, 255, 0.30) 0%, rgba(0, 70, 175, 0.55) 55%, rgba(1, 22, 74, 0.84) 100%);
         box-shadow:
-          0 0 12px rgba(80, 215, 255, 0.65),
-          0 0 30px rgba(0, 150, 255, 0.35),
-          inset 0 0 18px rgba(80, 215, 255, 0.35),
+          0 0 8px rgba(80, 215, 255, 0.45),
+          0 0 18px rgba(0, 150, 255, 0.22),
+          inset 0 0 14px rgba(80, 215, 255, 0.3),
           inset 0 1px 0 rgba(255, 255, 255, 0.35);
         text-shadow:
-          0 0 8px currentColor,
+          0 0 1px currentColor,
           0 0 2px rgba(255, 255, 255, 0.65),
           0 1px 3px rgba(0, 0, 0, 0.8);
       }
@@ -214,7 +230,7 @@
         /* Keeps the transparent edge + window frame on screen center so the
            person in the left half of the video is never covered. */
         object-position: left center;
-        filter: brightness(0.8) saturate(0.9);
+        filter: brightness(0.7) saturate(1);
         pointer-events: none;
         /* Cut the left extreme with a gradient so the artwork melts into the
            video background instead of ending on a hard vertical seam. */
@@ -429,14 +445,13 @@
 
       <!-- NAVBAR (fixed, z-index: 10) -->
       <nav class="fixed top-0 left-0 right-0 z-10 w-full px-5 sm:px-8 py-4 sm:py-5 flex flex-row justify-between items-center bg-transparent">
-        <!-- Logo (left) -->
+        <!-- Back arrow (left) — same holographic HUD style as the wheel hints -->
         <div class="flex flex-row items-center gap-3">
-          <a
-            href="intro.html"
-            class="about-logo"
-            style="font-family: var(--font-heading)"
-          >
-            Lucas Pinto
+          <a href="intro.html" class="wheel-hint nav-back" aria-label="Volver a la intro">
+            <!-- Identical chevron to the wheel's up hint, rotated to point left -->
+            <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+              <path d="M1 9 L9 1 L17 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
           </a>
         </div>
 
