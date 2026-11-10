@@ -1,0 +1,11 @@
+/* About page: layout helpers that the compiled Tailwind build does not
+   provide. */
+.wheel-wrap {
+  margin-inline: auto;
+  align-items: center;
+  text-align: center;
+}
+
+.color-neutral {
+  color: #fff;
+}

@@ -1,0 +1,118 @@
+/* Board overlays: interactive screens laid over the boards painted in the
+   background artwork. The overlay SVG uses the background image's viewBox
+   (1672x941), so it registers with the scene at every viewport size. */
+.board-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  /* Only the links take the pointer; the rest of the stage must stay
+     interactive for the 3D pie behind it. */
+  pointer-events: none;
+}
+
+.board-menu a {
+  pointer-events: auto;
+  cursor: pointer;
+  outline: none;
+}
+
+/* --- Project board: menu rows --- */
+.board-menu .row-bg {
+  fill: transparent;
+  stroke: transparent;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+.board-menu a:hover .row-bg {
+  fill: rgba(120, 240, 255, 0.18);
+  stroke: rgba(140, 245, 255, 0.55);
+}
+
+.board-menu a:focus-visible .row-bg {
+  fill: rgba(120, 240, 255, 0.2);
+  stroke: #facc15;
+}
+
+.board-menu .row-label {
+  fill: #eaf9ff;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  letter-spacing: 0.01em;
+}
+
+.board-menu a:hover .row-label,
+.board-menu a:focus-visible .row-label {
+  fill: #ffffff;
+}
+
+.board-menu .row-chev {
+  opacity: 0.4;
+  transition: opacity 0.15s ease;
+}
+
+.board-menu a:hover .row-chev,
+.board-menu a:focus-visible .row-chev {
+  opacity: 1;
+}
+
+.board-menu .panel-title {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  letter-spacing: 0.02em;
+}
+
+/* --- Logros board: whole-board link --- */
+.board-menu .board-hit {
+  fill: transparent;
+}
+
+.board-menu .board-link-bg {
+  fill: transparent;
+  transition: fill 0.15s ease, filter 0.15s ease;
+}
+
+.board-menu a:hover .board-link-bg,
+.board-menu a:focus-visible .board-link-bg {
+  fill: rgba(126, 240, 255, 0.22);
+  filter: drop-shadow(0 0 9px rgba(126, 240, 255, 0.9));
+}
+
+.board-menu .board-link-title {
+  fill: #eaf9ff;
+  font-family: var(--font-heading);
+  font-size: 34px;
+  letter-spacing: 0.06em;
+  transition: fill 0.15s ease, filter 0.15s ease;
+}
+
+.board-menu a:hover .board-link-title,
+.board-menu a:focus-visible .board-link-title {
+  fill: #ffffff;
+  filter: drop-shadow(0 0 6px rgba(160, 245, 255, 0.9));
+}
+
+.board-menu .board-link-rule {
+  stroke: rgba(126, 240, 255, 0.5);
+  stroke-width: 1.6;
+  transition: stroke 0.15s ease;
+}
+
+.board-menu a:hover .board-link-rule,
+.board-menu a:focus-visible .board-link-rule {
+  stroke: #7ef0ff;
+}
+
+.board-menu .board-link-chev {
+  fill: none;
+  stroke: #eaf9ff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+}
+
+.board-menu a:hover .board-link-chev,
+.board-menu a:focus-visible .board-link-chev {
+  opacity: 1;
+}

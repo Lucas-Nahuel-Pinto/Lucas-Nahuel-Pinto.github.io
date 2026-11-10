@@ -1,0 +1,12 @@
+/* Shared reset: identical declarations across every page. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}

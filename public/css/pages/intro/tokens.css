@@ -1,0 +1,27 @@
+/* Design tokens and page-level defaults for the intro scene. */
+:root {
+  --font-heading: "HelveticaNowDisplay-Medium", "Helvetica Neue", Arial, sans-serif;
+  --chrome-red: #ea4335;
+  --chrome-yellow: #fbbc05;
+  --chrome-green: #34a853;
+  --chrome-blue: #4285f4;
+  --focus: #facc15;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-heading);
+  color: #fff;
+  background-color: #030a14; /* fallback while the image loads */
+  /* Same artwork as mainPage-bg.jpg with the baked board text removed,
+     so the interactive overlays can draw their own labels. */
+  background-image: url("/mainPage-bg-menu.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}

@@ -1,0 +1,23 @@
+/* Tokens and page defaults for the projects carousel. */
+:root {
+  --font-heading: 'HelveticaNowDisplay-Medium', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-body: 'HelveticaNowDisplayW01-Rg', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --bg: #04060f;
+  --panel: rgba(10, 40, 80, 0.55);
+  --panel-border: rgba(120, 220, 255, 0.35);
+  --text: #fff;
+  --muted: rgba(255, 255, 255, 0.72);
+  --accent: #facc15;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+main {
+  display: block;
+}
