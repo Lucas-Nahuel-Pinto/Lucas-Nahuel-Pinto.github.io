@@ -35,7 +35,9 @@
         font-family: var(--font-heading);
         color: #fff;
         background-color: #030a14; /* fallback while / while the image loads */
-        background-image: url("/mainPage-bg.jpg");
+        /* Same artwork as mainPage-bg.jpg with the baked board text removed,
+           so the interactive overlays can draw their own labels. */
+        background-image: url("/mainPage-bg-menu.jpg");
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
@@ -59,14 +61,10 @@
         letter-spacing: -0.02em;
         user-select: none;
       }
-      .site-nav .contact {
-        font-size: clamp(17px, 3vw, 23px);
-      }
       /* Holographic chips: dark, near-opaque glass (the page background is a
          bright illustration, so translucent blue would blend into it) with a
          bright cyan rim and a glowing white text. */
-      .site-nav .logo,
-      .site-nav .contact {
+      .site-nav .logo {
         color: #fff;
         text-decoration: none;
         padding: 0.26em 0.66em 0.3em;
@@ -87,7 +85,6 @@
           0 1px 4px rgba(0, 0, 0, 0.95);
         transition: filter 0.15s ease, box-shadow 0.15s ease;
       }
-      .site-nav .contact:hover,
       .site-nav .logo:hover {
         filter: brightness(1.25);
         box-shadow:
@@ -104,74 +101,12 @@
         border-radius: 12px;
       }
 
-      /* ---------- Hamburger menu (top-right) ---------- */
+      /* ---------- Navbar right cluster: ES/EN switch ---------- */
       .site-nav .menu {
         position: relative;
-      }
-      .hamburger {
-        display: grid;
-        justify-items: center;
-        align-content: center;
-        gap: 4px;
-        width: 47px;
-        height: 47px;
-        padding: 0 11px;
-        cursor: pointer;
-        border: 2.5px solid rgba(120, 240, 255, 1);
-        border-radius: 12px;
-        background:
-          linear-gradient(112deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 30%, rgba(255, 255, 255, 0) 50%),
-          linear-gradient(180deg, rgba(0, 96, 170, 0.92) 0%, rgba(2, 26, 74, 0.96) 55%, rgba(1, 8, 28, 0.98) 100%);
-        box-shadow:
-          0 0 0 1.5px rgba(2, 14, 40, 0.75),
-          0 0 16px rgba(80, 215, 255, 0.85),
-          0 0 42px rgba(0, 150, 255, 0.45),
-          inset 0 0 18px rgba(80, 215, 255, 0.35);
-        transition: filter 0.15s ease;
-      }
-      .hamburger:hover {
-        filter: brightness(1.2);
-      }
-      .hamburger span {
-        display: block;
-        width: 100%;
-        height: 2.5px;
-        border-radius: 2px;
-        background: #eaffff;
-        box-shadow: 0 0 6px rgba(150, 240, 255, 0.95);
-        transition: transform 0.2s ease, opacity 0.15s ease;
-      }
-      .hamburger[aria-expanded="true"] span:nth-child(1) {
-        transform: translateY(6.5px) rotate(45deg);
-      }
-      .hamburger[aria-expanded="true"] span:nth-child(2) {
-        opacity: 0;
-      }
-      .hamburger[aria-expanded="true"] span:nth-child(3) {
-        transform: translateY(-6.5px) rotate(-45deg);
-      }
-
-      .menu-panel {
-        position: absolute;
-        right: 0;
-        top: calc(100% + 10px);
-        min-width: 216px;
-        display: grid;
-        gap: 0.55rem;
-        padding: 0.7rem;
-        border: 2.5px solid rgba(120, 240, 255, 1);
-        border-radius: 14px;
-        background:
-          linear-gradient(112deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.03) 30%, rgba(255, 255, 255, 0) 50%),
-          linear-gradient(180deg, rgba(0, 96, 170, 0.94) 0%, rgba(2, 26, 74, 0.97) 55%, rgba(1, 8, 28, 0.99) 100%);
-        box-shadow:
-          0 0 0 1.5px rgba(2, 14, 40, 0.75),
-          0 0 20px rgba(80, 215, 255, 0.8),
-          0 14px 40px rgba(1, 8, 28, 0.55),
-          inset 0 0 18px rgba(80, 215, 255, 0.28);
-      }
-      .menu-panel[hidden] {
-        display: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
       }
       .lang-switch {
         display: flex;
@@ -201,20 +136,6 @@
       }
       .lang-switch button:hover {
         color: #fff;
-      }
-      .menu-contact {
-        display: block;
-        padding: 0.5em 0.9em;
-        text-align: center;
-        text-decoration: none;
-        color: #fff;
-        border-radius: 10px;
-        background: linear-gradient(180deg, rgba(0, 150, 255, 0.5), rgba(0, 60, 150, 0.6));
-        box-shadow: inset 0 0 12px rgba(120, 240, 255, 0.35);
-        text-shadow: 0 0 8px rgba(150, 240, 255, 0.9), 0 1px 3px rgba(0, 0, 0, 0.8);
-      }
-      .menu-contact:hover {
-        filter: brightness(1.2);
       }
 
       /* ---------- Stage ---------- */
@@ -269,6 +190,109 @@
       }
       .chart-wrap canvas:focus-visible {
         outline: none;
+      }
+
+      /* ---------- Board menu: interactive screen over the painted
+         "QA METRICS" panel on the desk. The overlay is an SVG whose
+         viewBox is the background image (1672x941), so it registers
+         exactly with the scene at every viewport size. ---------- */
+      .board-menu {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        /* Only the links take the pointer; the rest of the stage must
+           stay interactive for the 3D pie behind it. */
+        pointer-events: none;
+      }
+      .board-menu a {
+        pointer-events: auto;
+        cursor: pointer;
+        outline: none;
+      }
+      .board-menu .row-bg {
+        fill: transparent;
+        stroke: transparent;
+        transition: fill 0.15s ease, stroke 0.15s ease;
+      }
+      .board-menu a:hover .row-bg {
+        fill: rgba(120, 240, 255, 0.18);
+        stroke: rgba(140, 245, 255, 0.55);
+      }
+      .board-menu a:focus-visible .row-bg {
+        fill: rgba(120, 240, 255, 0.2);
+        stroke: #facc15;
+      }
+      .board-menu .row-label {
+        fill: #eaf9ff;
+        font-family: var(--font-heading);
+        font-size: 20px;
+        letter-spacing: 0.01em;
+      }
+      .board-menu a:hover .row-label,
+      .board-menu a:focus-visible .row-label {
+        fill: #ffffff;
+      }
+      .board-menu .row-chev {
+        opacity: 0.4;
+        transition: opacity 0.15s ease;
+      }
+      .board-menu a:hover .row-chev,
+      .board-menu a:focus-visible .row-chev {
+        opacity: 1;
+      }
+      .board-menu .panel-title {
+        font-family: var(--font-heading);
+        font-size: 24px;
+        letter-spacing: 0.02em;
+      }
+
+      /* Whole-board link (Logros): transparent panel, hover lights the
+         painted neon frame and brightens the label. */
+      .board-menu .board-hit {
+        fill: transparent;
+      }
+      .board-menu .board-link-bg {
+        fill: transparent;
+        transition: fill 0.15s ease, filter 0.15s ease;
+      }
+      .board-menu a:hover .board-link-bg,
+      .board-menu a:focus-visible .board-link-bg {
+        fill: rgba(126, 240, 255, 0.22);
+        filter: drop-shadow(0 0 9px rgba(126, 240, 255, 0.9));
+      }
+      .board-menu .board-link-title {
+        fill: #eaf9ff;
+        font-family: var(--font-heading);
+        font-size: 34px;
+        letter-spacing: 0.06em;
+        transition: fill 0.15s ease, filter 0.15s ease;
+      }
+      .board-menu a:hover .board-link-title,
+      .board-menu a:focus-visible .board-link-title {
+        fill: #ffffff;
+        filter: drop-shadow(0 0 6px rgba(160, 245, 255, 0.9));
+      }
+      .board-menu .board-link-rule {
+        stroke: rgba(126, 240, 255, 0.5);
+        stroke-width: 1.6;
+        transition: stroke 0.15s ease;
+      }
+      .board-menu a:hover .board-link-rule,
+      .board-menu a:focus-visible .board-link-rule {
+        stroke: #7ef0ff;
+      }
+      .board-menu .board-link-chev {
+        fill: none;
+        stroke: #eaf9ff;
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        opacity: 0.45;
+        transition: opacity 0.15s ease;
+      }
+      .board-menu a:hover .board-link-chev,
+      .board-menu a:focus-visible .board-link-chev {
+        opacity: 1;
       }
 
       /* Side arrows: holographic HUD buttons (same glass recipe as the
@@ -416,29 +440,12 @@
   <body>
     <!-- Navbar (same as about.html) -->
     <nav class="site-nav">
-      <a class="logo" href="#">Lucas Pinto</a>
+      <a class="logo" href="/about.html">Lucas Pinto</a>
 
       <div class="menu">
-        <button
-          id="menu-toggle"
-          class="hamburger"
-          type="button"
-          aria-expanded="false"
-          aria-controls="menu-panel"
-          aria-label="Abrir menú"
-          data-i18n-aria="menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-
-        <div id="menu-panel" class="menu-panel" hidden>
-          <div class="lang-switch" role="group" aria-label="Idioma" data-i18n-aria="language">
-            <button type="button" data-lang="es" aria-pressed="true">ES</button>
-            <button type="button" data-lang="en" aria-pressed="false">EN</button>
-          </div>
-          <a class="menu-contact" href="#" data-contact rel="nofollow noopener" data-i18n="contact">Contactar</a>
+        <div class="lang-switch" role="group" aria-label="Idioma" data-i18n-aria="language">
+          <button type="button" data-lang="es" aria-pressed="true">ES</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
         </div>
       </div>
     </nav>
@@ -473,6 +480,69 @@
         <p id="chart-label" aria-live="polite"><span id="chart-label-text"></span></p>
       </div>
 
+      <!-- Interactive overlays over the boards painted in the background.
+           viewBox matches the background image (1672x941) so both keep the
+           boards' perspective at any viewport size. -->
+      <svg
+        class="board-menu"
+        viewBox="0 0 1672 941"
+        preserveAspectRatio="none"
+        role="group"
+        aria-label="Seleccionar proyecto"
+      >
+        <!-- Projects board: project menu.
+             Panel-local coordinates (340x216) mapped onto the board's quad. -->
+        <g transform="matrix(0.915,-0.021,0.111,0.898,246.5,220)">
+          <circle cx="30" cy="30" r="14" fill="none" stroke="#7ef0ff" stroke-width="2.4" />
+          <path
+            d="M23 30.5 L27.5 35.5 L37 25"
+            fill="none"
+            stroke="#7ef0ff"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <text class="panel-title" x="52" y="37" fill="#ffffff">Proyectos</text>
+          <line x1="50" y1="49" x2="306" y2="49" stroke="#7ef0ff" stroke-opacity="0.5" stroke-width="1.6" />
+
+          <a href="proyectos.html#jira-traceability" aria-label="Ir a Jira Traceability Manager">
+            <rect class="row-bg" x="12" y="58" width="318" height="40" rx="8" />
+            <circle cx="30" cy="78" r="8.5" fill="#43e05a" />
+            <text class="row-label" x="47" y="86">Jira T. Manager</text>
+            <path class="row-chev" d="M309 72 L315 78 L309 84" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </a>
+
+          <a href="proyectos.html#qa-flow-checklists" aria-label="Ir a QA Checklist">
+            <rect class="row-bg" x="12" y="100" width="318" height="40" rx="8" />
+            <circle cx="30" cy="120" r="8.5" fill="#ffd22b" />
+            <text class="row-label" x="47" y="128">QA Checklist</text>
+            <path class="row-chev" d="M309 114 L315 120 L309 126" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </a>
+
+          <a href="proyectos.html#harness-manager" aria-label="Ir a Harness Manager">
+            <rect class="row-bg" x="12" y="142" width="318" height="40" rx="8" />
+            <circle cx="30" cy="162" r="8.5" fill="#ff5545" />
+            <text class="row-label" x="47" y="170">Harness Manager</text>
+            <path class="row-chev" d="M309 156 L315 162 L309 168" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </a>
+        </g>
+
+        <!-- Logros board: the painted "Test Execution" screen is a link.
+             Transparent overlay — the artwork shows through untouched. -->
+        <a class="board-link" href="#" aria-label="Ir a Logros">
+          <!-- Invisible full-board hit area (frame included) -->
+          <polygon class="board-hit" points="1083,199 1402,176 1421,365 1080,386" />
+          <!-- Screen halo: drawn in panel-local space so it follows the
+               board's perspective exactly -->
+          <g transform="matrix(0.858,-0.057,0.033,0.850,1097.5,208.3)">
+            <rect class="board-link-bg" x="-15" y="-19" width="370" height="232" rx="20" />
+            <text class="board-link-title" x="170" y="58" text-anchor="middle">Logros</text>
+            <line class="board-link-rule" x1="64" y1="72" x2="276" y2="72" />
+            <path class="board-link-chev" d="M294 42 L306 54 L294 66" />
+          </g>
+        </a>
+      </svg>
+
       <!-- Real links: keyboard, SEO and semantic layer over the 3D canvas -->
       <nav class="sr-only" aria-label="Secciones del portfolio">
         <a id="sr-about" href="about.html">About Me</a>
@@ -483,57 +553,17 @@
     </main>
 
     <script>
-      // Anti-scraping contact: the address never appears in the HTML source;
-      // it is assembled at runtime only when the user clicks Contactar.
+      // ---------- ES/EN language switch ----------
       (function () {
-        var addr =
-          ['pinto', 'lucas', 'nahuel'].join('.') +
-          String.fromCharCode(64) +
-          ['gmail', 'com'].join('.');
-        Array.prototype.forEach.call(document.querySelectorAll('[data-contact]'), function (el) {
-          el.addEventListener('click', function (e) {
-            e.preventDefault();
-            window.location.href = 'mailto:' + addr;
-          });
-        });
-      })();
-    </script>
-
-    <script>
-      // ---------- Hamburger menu + ES/EN language switch ----------
-      (function () {
-        var toggle = document.getElementById('menu-toggle');
-        var panel = document.getElementById('menu-panel');
-
         var I18N = {
-          es: { menu: 'Abrir menú', language: 'Idioma', contact: 'Contactar', about: 'Sobre mí' },
-          en: { menu: 'Open menu', language: 'Language', contact: 'Contact', about: 'About Me' }
+          es: { language: 'Idioma', about: 'Sobre mí' },
+          en: { language: 'Language', about: 'About Me' }
         };
 
         var lang = 'es';
         try {
           lang = localStorage.getItem('portfolio-lang') || 'es';
         } catch (e) {}
-
-        function setOpen(open) {
-          toggle.setAttribute('aria-expanded', String(open));
-          panel.hidden = !open;
-        }
-
-        toggle.addEventListener('click', function () {
-          setOpen(panel.hidden);
-        });
-
-        document.addEventListener('click', function (e) {
-          if (!panel.hidden && !e.target.closest('.menu')) setOpen(false);
-        });
-
-        document.addEventListener('keydown', function (e) {
-          if (e.key === 'Escape' && !panel.hidden) {
-            setOpen(false);
-            toggle.focus();
-          }
-        });
 
         function applyLang(next) {
           lang = next;
@@ -592,7 +622,7 @@
           label: 'Harness Manager',
           href: 'proyectos.html#harness-manager',
           color: 0xff3355, // neon red
-          css: '#ffd9d9',
+          css: '#ffffff',
           sr: 'sr-p1',
           center: 90
         },
@@ -602,7 +632,7 @@
           label: 'QA Checklist',
           href: 'proyectos.html#qa-flow-checklists',
           color: 0xffe600, // neon yellow
-          css: '#ffe600',
+          css: '#ffffff',
           sr: 'sr-p2',
           center: -30
         },
@@ -612,7 +642,7 @@
           label: 'Jira Traceability Manager',
           href: 'proyectos.html#jira-traceability',
           color: 0x2bff88, // neon green
-          css: '#2bff88',
+          css: '#ffffff',
           sr: 'sr-p3',
           center: 210
         }
@@ -795,6 +825,10 @@
 
         // ---------- Interaction state ----------
         let hovered = null; // mesh under the pointer (mouse)
+
+        // Sectors that present a "clickable" hand cursor on hover.
+        // Keep in sync with MENU entries that are meant to read as links.
+        const POINTER_HOVER_IDS = new Set(['about', 'p1', 'p2', 'p3']);
         let selected = null; // mesh tapped (touch)
         let focused = null; // mesh whose sr link has keyboard focus
 
@@ -840,6 +874,11 @@
           return hits.length ? hits[0].object : null;
         }
 
+        function updateHoverCursor(hit) {
+          // Hand cursor only over the sections that are meant to read as links.
+          canvas.style.cursor = hit && POINTER_HOVER_IDS.has(hit.userData.entry.id) ? 'pointer' : 'default';
+        }
+
         canvas.addEventListener('pointermove', (e) => {
           if (e.pointerType !== 'mouse') return;
           const hit = pick(e.clientX, e.clientY);
@@ -847,6 +886,7 @@
             hovered = hit;
             updateLabel();
           }
+          updateHoverCursor(hit);
         });
 
         canvas.addEventListener('pointerleave', () => {
@@ -854,6 +894,7 @@
             hovered = null;
             updateLabel();
           }
+          updateHoverCursor(null);
         });
 
         canvas.addEventListener('pointerup', (e) => {
