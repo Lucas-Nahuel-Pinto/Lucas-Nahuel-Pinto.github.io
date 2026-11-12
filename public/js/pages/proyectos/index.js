@@ -5,6 +5,11 @@
 import { PROJECTS } from '/js/pages/proyectos/data.js';
 import { createCarousel } from '/js/pages/proyectos/carousel.js';
 import { createVideoScrub } from '/js/lib/video-scrub.js';
+import { initPageLoader } from '/js/lib/loader.js';
+import { initPageTransitions } from '/js/lib/transitions.js';
+
+initPageLoader();
+initPageTransitions();
 
 const carousel = createCarousel({ projects: PROJECTS });
 

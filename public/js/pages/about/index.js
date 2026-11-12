@@ -4,9 +4,14 @@
  */
 import { createVideoScrub } from '/js/lib/video-scrub.js';
 import { initContactLinks } from '/js/lib/contact-link.js';
+import { initPageLoader } from '/js/lib/loader.js';
+import { initPageTransitions } from '/js/lib/transitions.js';
 import { createOptionPanel } from '/js/pages/about/option-panel.js';
 import { createWheel } from '/js/pages/about/wheel.js';
 import { initMobileMenu } from '/js/pages/about/mobile-menu.js';
+
+initPageLoader();
+initPageTransitions();
 
 const video = document.getElementById('scrub-video');
 createVideoScrub({ video, sensitivity: 0.8 });
