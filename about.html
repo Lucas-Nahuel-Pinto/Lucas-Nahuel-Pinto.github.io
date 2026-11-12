@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lucas Pinto | Portfolio</title>
+    <meta name="description" content="Full-screen interactive hero landing page for creative agency Mainframe featuring mouse-scrubbed cinematic video background and an infinite-loop depth wheel menu." />
+    <meta property="og:title" content="Lucas Pinto | Portfolio" />
+    <meta property="og:description" content="Full-screen interactive hero landing page for creative agency Mainframe featuring mouse-scrubbed cinematic video background and an infinite-loop depth wheel menu." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <!-- Loading veil: inline critical CSS — no fetch, so the very first
+         paint is always the opaque veil even if Firefox forces layout
+         before the other stylesheets load (bug 1404468). -->
+    <style>
+      /* Full-screen loading veil. js/lib/loader.js adds .is-done once the
+         critical resources are ready; the transition layer toggles the
+         same veil around same-origin navigations.
+         html/body background: any paint that happens between the first
+         bytes of <body> and the veil div being parsed comes out dark
+         instead of the default white canvas. */
+      html,
+      body {
+        background: #030a14;
+      }
+
+      #page-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #030a14;
+        opacity: 1;
+        transition: opacity 0.45s ease, visibility 0s linear 0s;
+      }
+
+      #page-loader.is-done {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        /* Keep covering (and blocking) until the fade finishes. */
+        transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+      }
+
+      /* Indeterminate spinner: thin cyan ring with the site's glow recipe. */
+      .loader-spinner {
+        width: 46px;
+        height: 46px;
+        border: 3px solid rgba(120, 240, 255, 0.16);
+        border-top-color: #7ef0ff;
+        border-radius: 50%;
+        box-shadow:
+          0 0 14px rgba(80, 215, 255, 0.55),
+          inset 0 0 10px rgba(80, 215, 255, 0.14);
+        animation: loader-spin 0.8s linear infinite;
+      }
+
+      @keyframes loader-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #page-loader,
+        #page-loader.is-done {
+          transition: none;
+        }
+
+        .loader-spinner {
+          animation: none;
+        }
+      }
+    </style>
+    <noscript><style>#page-loader { display: none; }</style></noscript>
+    <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/5ac3fe7c6abd2f62067f266d89671492?family=HelveticaNowDisplay-Medium" type="text/css" />
+    <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/1aa3377e489837a26d019bba501e779d?family=HelveticaNowDisplayW01-Rg" type="text/css" />
+    <link rel="stylesheet" href="/css/vendor/tailwind.css" />
+    <link rel="stylesheet" href="/css/pages/about/base.css" />
+    <link rel="stylesheet" href="/css/pages/about/nav.css" />
+    <link rel="stylesheet" href="/css/pages/about/wheel.css" />
+    <link rel="stylesheet" href="/css/pages/about/layers.css" />
+    <link rel="stylesheet" href="/css/pages/about/panel.css" />
+  </head>
+  <body>
+    <!-- Loading veil: paints on the first frame, hidden by js/lib/loader.js -->
+    <div id="page-loader" role="status" aria-label="Loading">
+      <span class="loader-spinner" aria-hidden="true"></span>
+    </div>
+
+    <div class="relative min-h-screen w-full bg-black text-white select-none overflow-hidden">
+      <!-- BACKGROUND VIDEO (mouse-scrub controlled) -->
+      <video
+        id="scrub-video"
+        muted
+        playsinline
+        preload="auto"
+        class="pointer-events-none fixed inset-0 z-0 h-full w-full object-cover [object-position:70%_center]"
+      >
+        <source src="/assets/aistudio/face-aboutMe_030dc440.mp4" type="video/mp4" />
+      </video>
+
+      <!-- OVERLAY IMAGE (right half only, above the video, below the UI).
+           pointer-events:none + window-level scrub listeners => the mouse-scrub
+           animation keeps working exactly as before. object-position:left keeps
+           the transparent edge + window frame on screen center and never covers
+           the person (who sits in the left half of the video). -->
+      <img
+        id="about-overlay"
+        src="/about-bg.png"
+        alt=""
+        aria-hidden="true"
+        class="pointer-events-none"
+      />
+
+      <!-- TOP SCRIM: the navbar's white "Contactar" lands on the overlay's
+           bright cyan frame strip; this gradient restores WCAG contrast
+           (measured 1.03:1 before it) without hiding the artwork. -->
+      <div id="top-scrim" aria-hidden="true" class="pointer-events-none"></div>
+
+      <!-- OPTION PANEL (glass, slides in from the right over the artwork) -->
+      <aside
+        id="option-panel"
+        role="dialog"
+        aria-modal="false"
+        aria-labelledby="option-panel-title"
+        aria-hidden="true"
+        inert
+      >
+        <button type="button" id="option-panel-close" aria-label="Cerrar panel">
+          <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true">
+            <path d="M2 2 L14 14 M14 2 L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+        <div id="option-panel-body">
+          <h2 id="option-panel-title"></h2>
+          <p id="option-panel-text"></p>
+          <div id="option-panel-actions">
+            <a id="option-panel-mail" href="#">Enviar mail</a>
+            <a id="option-panel-linkedin" href="https://www.linkedin.com/in/pinto-lucas-nahuel/" target="_blank" rel="noopener noreferrer">Ir a LinkedIn</a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- NAVBAR (fixed, z-index: 10) -->
+      <nav class="fixed top-0 left-0 right-0 z-10 w-full px-5 sm:px-8 py-4 sm:py-5 flex flex-row justify-between items-center bg-transparent">
+        <!-- Back arrow (left) — same holographic HUD style as the wheel hints -->
+        <div class="flex flex-row items-center gap-3">
+          <a href="intro.html" class="wheel-hint nav-back" aria-label="Volver a la intro">
+            <!-- Identical chevron to the wheel's up hint, rotated to point left -->
+            <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+              <path d="M1 9 L9 1 L17 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </a>
+        </div>
+
+        <!-- Mobile hamburger (visible below md) -->
+        <button
+          type="button"
+          id="menu-toggle"
+          aria-label="Open Menu"
+          class="md:hidden flex flex-col justify-center items-center w-8 h-8 gap-[5px] focus:outline-none cursor-pointer z-20"
+        >
+          <span
+            id="burger-1"
+            class="w-6 h-[2px] bg-white transition-all duration-300 origin-center rotate-0 translate-y-0"
+          ></span>
+          <span
+            id="burger-2"
+            class="w-6 h-[2px] bg-white transition-all duration-300 opacity-100"
+          ></span>
+          <span
+            id="burger-3"
+            class="w-6 h-[2px] bg-white transition-all duration-300 origin-center rotate-0 translate-y-0"
+          ></span>
+        </button>
+      </nav>
+
+      <!-- MOBILE OVERLAY (z-index: 9) -->
+      <div
+        id="mobile-menu"
+        class="fixed inset-0 z-[9] bg-black/90 backdrop-blur-md flex flex-col justify-center px-8 gap-8 transition-opacity duration-300 md:hidden opacity-0 pointer-events-none"
+      >
+        <a
+          href="about.html"
+          class="mobile-link text-[32px] font-medium text-white underline underline-offset-2 hover:opacity-60 transition-opacity"
+        >
+          Sobre mí
+        </a>
+        <a
+          href="#"
+          class="mobile-link text-[32px] font-medium text-white underline underline-offset-2 hover:opacity-60 transition-opacity"
+        >
+          Proyectos
+        </a>
+        <a
+          href="#"
+          data-contact
+          rel="nofollow noopener"
+          class="mobile-link text-[32px] font-medium text-white underline underline-offset-2 hover:opacity-60 transition-opacity"
+        >
+          Contactar
+        </a>
+      </div>
+
+      <!-- HERO SECTION (z-index: 1) -->
+      <main class="relative z-[1] h-screen w-full flex flex-col justify-end pb-12 md:justify-center md:pb-0 px-5 sm:px-8 md:px-10 lg:px-16 overflow-hidden items-end">
+        <div class="wheel-wrap max-w-xl w-full relative z-10 flex flex-col">
+          <!-- Minimalist scroll hints (clickable) -->
+          <button type="button" class="wheel-hint wheel-hint--up" aria-label="Sección anterior">
+            <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+              <path d="M1 9 L9 1 L17 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <!-- DEPTH WHEEL MENU (3 slots, only the center item is selectable) -->
+          <nav
+            id="wheel"
+            class="relative w-full overflow-hidden"
+            lang="es"
+            aria-label="Menú de secciones"
+            tabindex="0"
+          >
+            <a class="wheel-item" data-slot="0" href="#experiencia">Experiencia</a>
+            <a class="wheel-item" data-slot="1" href="#resueltos" inert aria-hidden="true" tabindex="-1">Logros</a>
+            <a class="wheel-item" data-slot="2" href="#herramientas" inert aria-hidden="true" tabindex="-1">Herramientas</a>
+            <a class="wheel-item" data-slot="-1" href="#proyectos" inert aria-hidden="true" tabindex="-1">Mis Proyectos</a>
+            <a class="wheel-item" data-slot="-2" href="#contacto">Contactar</a>
+          </nav>
+          <button type="button" class="wheel-hint wheel-hint--down" aria-label="Sección siguiente">
+            <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+              <path d="M1 1 L9 9 L17 1" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </main>
+
+    </div>
+
+    <script type="module" src="/js/pages/about/index.js"></script>
+  </body>
+</html>

@@ -1,0 +1,138 @@
+/* Glass option panel: slides in from the right over the artwork and fills
+   its whole area. z-3 sits above the overlay (1) and scrim (2) but below
+   the navbar (10). Dark translucent glass + blur keeps the white copy
+   readable over the artwork (WCAG AA). */
+#option-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  width: 35%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 96px clamp(28px, 5vw, 72px) 56px;
+  background: rgba(4, 14, 34, 0.55);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border-left: 1px solid rgba(120, 220, 255, 0.35);
+  box-shadow: -18px 0 48px rgba(0, 0, 0, 0.45);
+  transform: translateX(100%);
+  visibility: hidden;
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 520ms;
+  pointer-events: none;
+}
+
+#option-panel.is-open {
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s linear 0s;
+}
+
+#option-panel-close {
+  position: absolute;
+  top: 88px;
+  left: clamp(24px, 5vw, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(4, 14, 34, 0.5);
+  border: 1px solid rgba(120, 220, 255, 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+#option-panel-close:hover,
+#option-panel-close:focus-visible {
+  color: #fff;
+  border-color: rgba(160, 235, 255, 0.8);
+  outline: none;
+}
+
+#option-panel-body {
+  max-width: 45ch;
+  opacity: 1;
+  transition: opacity 120ms ease;
+}
+
+#option-panel-title {
+  margin: 0 0 18px;
+  font-family: var(--font-heading);
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.15;
+  color: #facc15; /* overwritten per option from JS */
+}
+
+#option-panel-text {
+  margin: 0;
+  font-size: clamp(16px, 1.4vw, 18px);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+#option-panel-actions {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+#option-panel-actions a {
+  display: block;
+  text-align: center;
+  padding: 14px 16px;
+  font-family: var(--font-heading);
+  font-size: clamp(16px, 1.4vw, 18px);
+  color: #fff;
+  text-decoration: none;
+  background: rgba(10, 40, 80, 0.55);
+  border: 1px solid rgba(120, 220, 255, 0.35);
+  border-radius: 10px;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+
+#option-panel-actions a:hover,
+#option-panel-actions a:focus-visible {
+  background: rgba(20, 60, 110, 0.7);
+  border-color: rgba(160, 235, 255, 0.8);
+  outline: none;
+}
+
+@media (max-width: 767px) {
+  /* Nearly full screen: only a thin strip of video stays visible. */
+  #option-panel {
+    width: calc(100% - 16px);
+    padding: 96px 24px 40px;
+  }
+
+  #option-panel-close {
+    top: 84px;
+    left: auto;
+    right: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No slide: fade only. */
+  #option-panel {
+    transform: none;
+    opacity: 0;
+    transition: opacity 150ms ease, visibility 0s linear 150ms;
+  }
+
+  #option-panel.is-open {
+    opacity: 1;
+    transition: opacity 150ms ease, visibility 0s linear 0s;
+  }
+}

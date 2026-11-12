@@ -1,0 +1,222 @@
+/* Full-viewport carousel: one slide per project. */
+#proyectos-carousel {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 96px 24px 80px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 420ms ease, visibility 0s linear 420ms;
+  pointer-events: none;
+}
+
+.slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 420ms ease, visibility 0s linear 0s;
+}
+
+/* Slide video (mouse-scrub controlled) */
+.slide-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  /* Yellow field: matches the hero video's baked-in background
+     (sampled #FCC714), so the pre-load frame blends seamlessly. */
+  background: #fcc714;
+}
+
+.slide-media video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Dots sit on the yellow band on this slide: flip them to dark ink. */
+#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-dot {
+  background: rgba(4, 6, 15, 0.35);
+}
+
+#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-dot.is-active {
+  background: #04060f;
+}
+
+/* Arrows: translucent navy turns olive on yellow — go solid ink here. */
+#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow {
+  background: #04060f;
+  border-color: rgba(4, 6, 15, 0.6);
+}
+
+#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow:hover,
+#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow:focus-visible {
+  background: rgba(4, 6, 15, 0.82);
+  border-color: rgba(4, 6, 15, 0.9);
+}
+
+.slide-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Video slides carry their own visual: drop the duplicate SVG icon. */
+.slide:has(.slide-media) .slide-icon {
+  display: none;
+}
+
+/* No scrim: flip the copy from light to dark ink so it stays legible on the
+   yellow field and on the light clipboard. */
+.slide:has(.slide-media) .slide-title {
+  color: #04060f;
+}
+
+.slide:has(.slide-media) .slide-tagline {
+  color: rgba(4, 6, 15, 0.85);
+}
+
+.slide-icon {
+  width: clamp(90px, 16vw, 150px);
+  height: auto;
+  stroke: var(--accent, #facc15);
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 18px rgba(120, 220, 255, 0.35));
+}
+
+.slide-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(38px, 7.5vw, 84px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: var(--accent, #facc15);
+}
+
+.slide-tagline {
+  margin: 0;
+  font-size: clamp(16px, 2vw, 22px);
+  color: var(--muted);
+  max-width: 56ch;
+}
+
+/* Navigation: arrows + dots */
+.car-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid rgba(120, 220, 255, 0.35);
+  background: rgba(10, 40, 80, 0.55);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 5;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.car-arrow:hover,
+.car-arrow:focus-visible {
+  background: rgba(20, 60, 110, 0.7);
+  border-color: rgba(160, 235, 255, 0.8);
+  outline: none;
+}
+
+.car-arrow--prev {
+  left: 20px;
+}
+
+.car-arrow--next {
+  right: 20px;
+}
+
+.car-arrow svg {
+  width: 22px;
+  height: 22px;
+}
+
+.car-dots {
+  position: absolute;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 5;
+}
+
+.car-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  transition: all 300ms ease;
+}
+
+.car-dot.is-active {
+  width: 28px;
+  background: #fff;
+}
+
+@media (max-width: 767px) {
+  .slide {
+    padding: 120px 20px 90px;
+  }
+
+  .car-arrow {
+    width: 48px;
+    height: 48px;
+    top: auto;
+    bottom: 90px;
+    transform: none;
+  }
+
+  .car-arrow--prev {
+    left: 14px;
+  }
+
+  .car-arrow--next {
+    right: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide {
+    transition: none;
+  }
+
+  .car-dot {
+    transition: none;
+  }
+}

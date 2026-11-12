@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lucas Pinto — Portfolio</title>
+    <meta
+      name="description"
+      content="Menú principal 3D en forma de gráfico de torta: About Me y proyectos personales de Lucas Pinto."
+    />
+    <!-- Loading veil: inline critical CSS — no fetch, so the very first
+         paint is always the opaque veil even if Firefox forces layout
+         before the other stylesheets load (bug 1404468). -->
+    <style>
+      /* Full-screen loading veil. js/lib/loader.js adds .is-done once the
+         critical resources are ready; the transition layer toggles the
+         same veil around same-origin navigations.
+         html/body background: any paint that happens between the first
+         bytes of <body> and the veil div being parsed comes out dark
+         instead of the default white canvas. */
+      html,
+      body {
+        background: #030a14;
+      }
+
+      #page-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #030a14;
+        opacity: 1;
+        transition: opacity 0.45s ease, visibility 0s linear 0s;
+      }
+
+      #page-loader.is-done {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        /* Keep covering (and blocking) until the fade finishes. */
+        transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+      }
+
+      /* Indeterminate spinner: thin cyan ring with the site's glow recipe. */
+      .loader-spinner {
+        width: 46px;
+        height: 46px;
+        border: 3px solid rgba(120, 240, 255, 0.16);
+        border-top-color: #7ef0ff;
+        border-radius: 50%;
+        box-shadow:
+          0 0 14px rgba(80, 215, 255, 0.55),
+          inset 0 0 10px rgba(80, 215, 255, 0.14);
+        animation: loader-spin 0.8s linear infinite;
+      }
+
+      @keyframes loader-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #page-loader,
+        #page-loader.is-done {
+          transition: none;
+        }
+
+        .loader-spinner {
+          animation: none;
+        }
+      }
+    </style>
+    <noscript><style>#page-loader { display: none; }</style></noscript>
+    <link rel="stylesheet" href="/css/base/reset.css" />
+    <link rel="stylesheet" href="/css/pages/intro/tokens.css" />
+    <link rel="stylesheet" href="/css/pages/intro/nav.css" />
+    <link rel="stylesheet" href="/css/pages/intro/stage.css" />
+    <link rel="stylesheet" href="/css/pages/intro/board.css" />
+  </head>
+  <body>
+    <!-- Loading veil: paints on the first frame, hidden by js/lib/loader.js -->
+    <div id="page-loader" role="status" aria-label="Cargando">
+      <span class="loader-spinner" aria-hidden="true"></span>
+    </div>
+
+    <!-- Page scene: everything the exit dive scales together. The loading
+         veil above stays OUTSIDE this wrapper so it covers at normal scale. -->
+    <div id="page-zoom">
+    <!-- Navbar (same as about.html) -->
+    <nav class="site-nav">
+      <a class="logo" href="/about.html">Lucas Pinto</a>
+
+      <div class="menu">
+        <div class="lang-switch" role="group" aria-label="Idioma" data-i18n-aria="language">
+          <button type="button" data-lang="es" aria-pressed="true">ES</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
+    </nav>
+
+    <main class="stage">
+      <h1 class="sr-only">Lucas Pinto — Portfolio</h1>
+
+      <div id="chart-wrap" class="chart-wrap">
+        <canvas id="chart"></canvas>
+
+        <!-- Minimalist side arrows (rotate menu) -->
+        <button type="button" class="chart-arrow chart-arrow--left" aria-label="Seccion anterior">
+          <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+            <path d="M13 1 L5 5 L13 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+        <button type="button" class="chart-arrow chart-arrow--right" aria-label="Seccion siguiente">
+          <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+            <path d="M5 1 L13 5 L5 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+
+        <!-- Visible fallback when WebGL is unavailable -->
+        <div id="fallback">
+          <a href="about.html" data-i18n="about">About Me</a>
+          <a href="proyectos.html#qa-flow-checklists">QA Checklist</a>
+          <a href="proyectos.html#jira-traceability">Jira Traceability Manager</a>
+          <a href="proyectos.html#harness-manager">Harness Manager</a>
+        </div>
+
+        <!-- Name of the active section, right below the chart -->
+        <p id="chart-label" aria-live="polite"><span id="chart-label-text"></span></p>
+      </div>
+
+      <!-- Interactive overlays over the boards painted in the background.
+           viewBox matches the background image (1672x941) so both keep the
+           boards' perspective at any viewport size. -->
+      <svg
+        class="board-menu"
+        viewBox="0 0 1672 941"
+        preserveAspectRatio="none"
+        role="group"
+        aria-label="Seleccionar proyecto"
+      >
+        <!-- Projects board: project menu.
+             Panel-local coordinates (340x216) mapped onto the board's quad. -->
+        <g transform="matrix(0.915,-0.021,0.111,0.898,246.5,220)">
+          <circle cx="30" cy="30" r="14" fill="none" stroke="#7ef0ff" stroke-width="2.4" />
+          <path
+            d="M23 30.5 L27.5 35.5 L37 25"
+            fill="none"
+            stroke="#7ef0ff"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <text class="panel-title" x="52" y="37" fill="#ffffff">Proyectos</text>
+          <line x1="50" y1="49" x2="306" y2="49" stroke="#7ef0ff" stroke-opacity="0.5" stroke-width="1.6" />
+
+          <a href="proyectos.html#jira-traceability" aria-label="Ir a Jira Traceability Manager">
+            <rect class="row-bg" x="12" y="58" width="318" height="40" rx="8" />
+            <circle cx="30" cy="78" r="8.5" fill="#43e05a" />
+            <text class="row-label" x="47" y="86">Jira T. Manager</text>
+            <path class="row-chev" d="M309 72 L315 78 L309 84" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </a>
+
+          <a href="proyectos.html#qa-flow-checklists" aria-label="Ir a QA Checklist">
+            <rect class="row-bg" x="12" y="100" width="318" height="40" rx="8" />
+            <circle cx="30" cy="120" r="8.5" fill="#ffd22b" />
+            <text class="row-label" x="47" y="128">QA Checklist</text>
+            <path class="row-chev" d="M309 114 L315 120 L309 126" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </a>
+
+          <a href="proyectos.html#harness-manager" aria-label="Ir a Harness Manager">
+            <rect class="row-bg" x="12" y="142" width="318" height="40" rx="8" />
+            <circle cx="30" cy="162" r="8.5" fill="#ff5545" />
+            <text class="row-label" x="47" y="170">Harness Manager</text>
+            <path class="row-chev" d="M309 156 L315 162 L309 168" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          </a>
+        </g>
+
+        <!-- Logros board: the painted "Test Execution" screen is a link.
+             Transparent overlay — the artwork shows through untouched. -->
+        <a class="board-link" href="#" aria-label="Ir a Logros">
+          <!-- Invisible full-board hit area (frame included) -->
+          <polygon class="board-hit" points="1083,199 1402,176 1421,365 1080,386" />
+          <!-- Screen halo: drawn in panel-local space so it follows the
+               board's perspective exactly -->
+          <g transform="matrix(0.858,-0.057,0.033,0.850,1097.5,208.3)">
+            <rect class="board-link-bg" x="-15" y="-19" width="370" height="232" rx="20" />
+            <text class="board-link-title" x="170" y="58" text-anchor="middle">Logros</text>
+            <line class="board-link-rule" x1="64" y1="72" x2="276" y2="72" />
+            <path class="board-link-chev" d="M294 42 L306 54 L294 66" />
+          </g>
+        </a>
+      </svg>
+
+      <!-- Real links: keyboard, SEO and semantic layer over the 3D canvas -->
+      <nav class="sr-only" aria-label="Secciones del portfolio">
+        <a id="sr-about" href="about.html">About Me</a>
+        <a id="sr-p1" href="proyectos.html#harness-manager">Harness Manager</a>
+        <a id="sr-p2" href="proyectos.html#qa-flow-checklists">QA Checklist</a>
+        <a id="sr-p3" href="proyectos.html#jira-traceability">Jira Traceability Manager</a>
+      </nav>
+    </main>
+    </div><!-- /#page-zoom -->
+
+    <script type="module" src="/js/pages/intro.js"></script>
+
+    <script type="module" src="/js/pages/intro-chart.js"></script>
+  </body>
+</html>

@@ -1,0 +1,73 @@
+/* Holographic HUD buttons: the scroll hints that bookend the wheel and the
+   navbar back arrow. Same recipe as intro.html's chart arrows. */
+.wheel-hint {
+  position: relative;
+  top: auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+  padding: 0;
+  cursor: pointer;
+  border: 2px solid rgba(126, 232, 255, 0.95);
+  border-radius: 12px;
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 32%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(180deg, rgba(0, 170, 255, 0.32) 0%, rgba(0, 70, 175, 0.55) 55%, rgba(1, 22, 74, 0.85) 100%);
+  box-shadow:
+    0 0 10px rgba(80, 215, 255, 0.6),
+    0 0 24px rgba(0, 150, 255, 0.3),
+    inset 0 0 14px rgba(80, 215, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wheel-hint:hover,
+.wheel-hint:focus-visible {
+  filter: brightness(1.25);
+  box-shadow:
+    0 0 14px rgba(120, 230, 255, 0.9),
+    0 0 32px rgba(0, 170, 255, 0.5),
+    inset 0 0 18px rgba(120, 230, 255, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.wheel-hint svg {
+  display: block;
+  width: 45%;
+  height: auto;
+  filter: drop-shadow(0 0 5px rgba(150, 240, 255, 0.95));
+}
+
+.wheel-hint:focus-visible {
+  outline: 2px solid #facc15;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.wheel-hint--up {
+  margin-bottom: 18px;
+}
+
+.wheel-hint--down {
+  margin-top: 18px;
+}
+
+/* Navbar back arrow: force the chevron to sit dead-center in the 44px
+   square (tall 10x18 viewBox, inline baseline can nudge it off). */
+.nav-back {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+  flex: none;
+  margin-inline: 0;
+}
+
+.nav-back svg {
+  display: block;
+  width: 45%;
+  height: auto;
+  /* Same glyph as the wheel hints, only rotated to point left */
+  transform: rotate(-90deg);
+}

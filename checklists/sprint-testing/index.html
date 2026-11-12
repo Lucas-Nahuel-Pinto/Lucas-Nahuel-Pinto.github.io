@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist — Sprint Testing (manual QA)</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2129;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --cyan: #39c5cf;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    padding: 2rem 1rem 4rem;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  a { color: var(--accent); }
+  a:hover { color: #79c0ff; }
+  header { margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1.25rem; }
+  h1 { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  header p { color: var(--muted); margin-top: .35rem; font-size: .95rem; }
+  .progress-bar {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: .6rem .9rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; row-gap: .45rem;
+  }
+  .progress-track { flex: 1; height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; min-width: 120px; }
+  .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width .3s; }
+  .progress-label { font-size: .85rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .search { display: flex; align-items: center; gap: .3rem; }
+  .search input {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 6px; padding: .3rem .55rem; font-size: .82rem; width: 160px; outline: none;
+    transition: border-color .15s;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search input::-webkit-search-cancel-button { cursor: pointer; }
+  .search-count {
+    font-size: .74rem; color: var(--muted); min-width: 42px; text-align: center;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .search-count.none { color: var(--red); font-weight: 700; }
+  .search button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; width: 26px; height: 26px; font-size: .8rem; line-height: 1;
+    cursor: pointer; transition: background .15s;
+  }
+  .search button:hover { background: var(--border); }
+  mark.hit { background: rgba(210,153,34,.45); color: var(--text); border-radius: 3px; padding: 0 1px; }
+  mark.hit.hit-current { background: var(--accent); color: var(--bg); font-weight: 700; }
+  section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.1rem 1.3rem; margin-bottom: 1.1rem;
+  }
+  h2 {
+    font-size: 1.05rem; font-weight: 700; margin-bottom: .8rem;
+    display: flex; align-items: center; gap: .5rem;
+  }
+  h2 .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .c-prep .dot { background: var(--accent); }
+  .c-ent .dot { background: var(--cyan); }
+  .c-plan .dot { background: var(--purple); }
+  .c-exec .dot { background: var(--orange); }
+  .c-rep .dot { background: var(--green); }
+  .c-bug .dot { background: var(--red); }
+  .c-ref .dot { background: var(--muted); }
+  .c-no .dot { background: var(--red); }
+  ul { list-style: none; }
+  li.item { padding: .3rem 0; }
+  li.item label {
+    display: flex; align-items: flex-start; gap: .6rem;
+    cursor: pointer; padding: .35rem .5rem; border-radius: 6px;
+    transition: background .15s;
+  }
+  li.item label:hover { background: var(--surface2); }
+  input[type="checkbox"] {
+    accent-color: var(--green); width: 16px; height: 16px;
+    margin-top: .28rem; flex-shrink: 0; cursor: pointer;
+  }
+  li.item.done .txt { color: var(--muted); text-decoration: line-through; }
+  li.item.done .ex .ex-body { opacity: .65; }
+  .sub { margin-left: 1.5rem; margin-top: .15rem; border-left: 2px solid var(--border); padding-left: .7rem; }
+  .sub li.item label { padding: .22rem .4rem; font-size: .92rem; }
+  details.ex { margin: .1rem 0 .45rem 2.2rem; }
+  .sub details.ex { margin-left: 1.6rem; }
+  details.ex summary {
+    cursor: pointer; list-style: none;
+    font-size: .74rem; color: var(--muted); user-select: none;
+    padding: .1rem .45rem; border: 1px dashed var(--border);
+    border-radius: 999px; display: inline-block;
+    transition: color .15s, border-color .15s;
+  }
+  details.ex summary::-webkit-details-marker { display: none; }
+  details.ex summary::before { content: "+ "; font-weight: 700; }
+  details.ex[open] summary::before { content: "− "; }
+  details.ex summary:hover { color: var(--accent); border-color: var(--accent); }
+  details.ex[open] summary { color: var(--accent); border-color: var(--accent); border-style: solid; }
+  .ex-body {
+    margin-top: .4rem; background: var(--surface2);
+    border: 1px solid var(--border); border-left: 3px solid var(--accent);
+    border-radius: 6px; padding: .6rem .8rem;
+    font-size: .87rem; color: var(--muted);
+  }
+  .ex-body p + p, .ex-body p + ul, .ex-body ul + p { margin-top: .45rem; }
+  .ex-body ul { padding-left: 1.1rem; list-style: disc; }
+  .ex-body li { margin: .15rem 0; }
+  code {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: .05rem .35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: .85em; color: var(--accent);
+  }
+  .ex-body code { background: var(--bg); }
+  strong { color: var(--text); }
+  .warn {
+    background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.4);
+    border-radius: 6px; padding: .55rem .8rem; margin: .6rem 0 .3rem;
+    font-size: .9rem; color: var(--orange);
+  }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700;
+    padding: .08rem .45rem; border-radius: 999px; vertical-align: middle;
+  }
+  .tag-field { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.4); }
+  .tag-desc { background: rgba(188,140,255,.15); color: var(--purple); border: 1px solid rgba(188,140,255,.4); }
+  .tag-epic { background: rgba(57,197,207,.15); color: var(--cyan); border: 1px solid rgba(57,197,207,.4); }
+  table { border-collapse: collapse; width: 100%; margin: .6rem 0 .3rem; font-size: .88rem; }
+  th, td { border: 1px solid var(--border); padding: .4rem .6rem; text-align: left; }
+  th { background: var(--surface2); color: var(--muted); font-weight: 600; }
+  td code { font-size: .82em; }
+  .ref-grid { display: grid; grid-template-columns: 1fr; gap: .6rem; }
+  .ref-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: .6rem .8rem; }
+  .ref-item h3 { font-size: .88rem; color: var(--cyan); margin-bottom: .3rem; }
+  .ref-item table { margin: 0; font-size: .82rem; }
+  .actions { display: flex; gap: .6rem; margin-top: 1rem; }
+  .actions button {
+    background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: .45rem .9rem; font-size: .85rem; cursor: pointer;
+    transition: background .15s;
+  }
+  .actions button:hover { background: var(--border); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Checklist — Sprint Testing</h1>
+  <p>Flujo manual del QA · un ticket por vez · Stage 1 Planning → Stage 2 Execution → Stage 3 Reporting</p>
+</header>
+
+<div class="progress-bar">
+  <div class="progress-track"><div class="progress-fill" id="fill"></div></div>
+  <span class="progress-label" id="label">0 / 0</span>
+  <div class="search">
+    <input type="search" id="searchInput" placeholder="Buscar…" autocomplete="off" spellcheck="false" aria-label="Buscar en el documento">
+    <span class="search-count" id="searchCount"></span>
+    <button type="button" id="searchPrev" title="Anterior (Shift+Enter)" aria-label="Anterior">↑</button>
+    <button type="button" id="searchNext" title="Siguiente (Enter)" aria-label="Siguiente">↓</button>
+  </div>
+</div>
+
+<section class="c-prep">
+  <h2><span class="dot"></span>Preparación</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="p1"><span class="txt">Verificar contextos: <code>.context/business/*</code> + <code>.context/master-test-plan.md</code> existen (si no → parar, correr <code>/project-discovery</code>)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="atp-context.jpg" alt="Infografía: contextos antes que ATP — business maps + master test plan, sin ellos el ATP se redacta a ciegas, regla del skill: parar y correr /project-discovery" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Son los mapas de negocio (features, entidades, endpoints) y el plan maestro de pruebas. Sin ellos el ATP se redacta "a ciegas": los nombres de entidades no coinciden con el dominio, no sabes qué módulos ya están priorizados para regresión y las preguntas al PO salen genéricas.</p>
+        <p>El skill exige parar y derivar a <code>/project-discovery</code> en vez de improvisar — un ATP escrito sin contexto es el desperdicio más caro del ciclo.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="c-ent">
+  <h2><span class="dot"></span>Entrada</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="e1"><span class="txt">Leer el ticket vía <code>bun run jira:sync-issues get &lt;KEY&gt; --include-comments</code> (ACs, descripción, comments, parent épica) — nunca <code>acli workitem view</code> para custom fields</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="read-ticket.jpg" alt="Infografía: Jira es la fuente de verdad, sync a PBI/*.md como lectura canónica, acli workitem view devuelve null en custom fields, los comments contienen la Team Discussion" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Jira es la fuente de verdad; el script genera archivos <code>.md</code> sincronizados en la carpeta PBI que son la lectura canónica. <code>acli workitem view</code> devuelve <code>null</code> para custom fields (ACs, ATP, campos QA) — leer por ahí produce tickets "vacíos" falsos.</p>
+        <p>Los <code>comments</code> importan: ahí vive la Team Discussion (decisiones del PO, notas técnicas, edge cases ya debatidos) que evita re-preguntar lo resuelto.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="e2"><span class="txt">Primer ticket del sprint: crear el STP <code>STP: Sprint#{N}: {objective}</code> colgando de la épica <strong>QA Master Test Plan</strong> <span class="tag tag-epic">épica</span> (si ya existe, no crear otro). Cada ticket probado después se vincula a ese STP y actualiza su avance</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El STP (Sprint Test Plan) es el planificador vivo del sprint: qué tickets se probaron, cuál va el estado, cuál falta. Se crea solo en el <strong>primer ticket</strong> del sprint; los siguientes lo actualizan (añaden el ticket + progreso).</p>
+        <p>Se parenta a la épica de proceso <strong>QA Master Test Plan</strong> (nunca a una épica de producto) para que todos los planes de prueba del proyecto cuelguen del mismo bucket y el resto de QA pueda encontrarlos. Si la instancia no tiene work type <code>Test Plan</code> — el caso típico es <strong>no usar Xray</strong>, porque los tipos <code>Test Plan</code> / <code>Test Execution</code> / <code>Test Set</code> los añade la app de Xray —, se salta con nota (no bloquea): a altura de sprint no hay campo custom donde volcar el STP, así que se documenta el warning y el plan del sprint sigue en el archivo local <code>plan.md</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="e3"><span class="txt">Tomar el ticket en testing: transición <code>start_testing</code> (<strong>Ready For QA → In Test</strong>) + setear <code>qa_assignee</code> = yo (solo si vacío)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Dos acciones que hacen visible el trabajo de QA en el tablero:</p>
+        <ul>
+          <li><strong><code>start_testing</code></strong> mueve la Story de <em>Ready For QA</em> a <em>In Test</em> — el equipo ve que QA la tomó. Nunca hacerlo sin antes explicar la historia al usuario y recibir su OK (es un gate de contexto, no un trámite).</li>
+          <li><strong><code>qa_assignee</code></strong> es el custom field del dueño QA de la Story o del ticket del bug — distinto del <code>assignee</code> nativo (que queda para dev). Regla <em>read-before-write</em>: solo se escribe si está vacío; jamás pisar un owner existente salvo handover explícito y justificado.</li>
+        </ul>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="c-plan">
+  <h2><span class="dot"></span>Planificación (Stage 1)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="s1"><span class="txt">Chequear short-circuit shift-left: label <code>shift-left-reviewed</code> + <code>shift-left-{fecha}</code> &lt;30 días y ACs vigentes → saltar análisis, ir a detalle ejecutable (parametrización + pasos + datos)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Si la Story pasó por <code>/shift-left-testing</code> pre-sprint, el análisis crítico, la calidad de la Story y las ACs refinadas <strong>ya están escritos en el campo ATP de Jira</strong>. Rehacerlos in-sprint es trabajo duplicado.</p>
+        <p>Condiciones del atajo: label <code>shift-left-reviewed</code> + label datado con menos de 30 días + que las ACs sigan coincidiendo con la descripción actual (si la Story cambió, se invalida y se re-ejecuta el análisis completo — barato comparado con actuar sobre refinamiento viejo). Se lee el ATP sincronizado <code>acceptance-test-plan.md</code>, nunca un archivo local.</p>
+        <p>Lo que SÍ se completa in-sprint es lo que shift-left dejó a propósito con "solo nombres" (solo los <strong>nombres de los outlines</strong>, sin ejecutarlos todavía): tablas de parametrización, pasos numerados, test-data JSON y estrategia de datos con Faker.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s2"><span class="txt">Triage: veto (CSS/docs/sin cambio de comportamiento → solo code review; money/auth/integridad/integraciones → Full obligatorio) + risk score (0-3 LOW → code review, 4-7 MEDIUM, 8+ HIGH). En tickets del bug: <strong>siempre antes</strong> de escribir el ATP</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El triage decide <em>cuánta QA</em> merece el ticket antes de invertir en planificar:</p>
+        <ul>
+          <li><strong>Veto</strong> (gana siempre sobre el score): cambios sin comportamiento (CSS, docs, copy, refactor limpio) → solo revisión de código + comentario. No hay bug que encontrar porque no hay comportamiento nuevo.</li>
+          <li><strong>Fuerza Full</strong>: dinero, integridad de datos, auth, integraciones externas, cálculos → Full obligatorio aunque el score salga bajo. Aquí un escape cuesta caro.</li>
+          <li><strong>Risk score</strong> (si no hay veto): factores como funcionalidad nueva (+3), datos dinámicos (+3), ACs explícitas (+2), UI visible (+2)… El score define la profundidad, no si se prueba.</li>
+        </ul>
+        <p><strong>Notación:</strong> <strong>ticket</strong> = contenedor en Jira (issue): <strong>ticket del bug</strong> (post-release) o <strong>ticket de defecto</strong> (pre-release). <strong>defecto</strong> = el problema encontrado pre-release; <strong>bug</strong> = el problema encontrado post-release. <strong>reportar</strong> = el verbo. En los tickets del bug el flujo de decisión (veto → score) corre <strong>antes</strong> de escribir el ATP. Tres puntos para no confundirse:</p>
+        <ul>
+          <li><strong>El ATP va en el ticket del bug/defect, no en la Story vinculada.</strong> Cada ticket del bug/defect a retestear tiene su propio ATP y su propia ATR (retest Execution <code>ReTest: {BUG-KEY}</code>), guardados en ese ticket: campo <code>acceptance_test_plan</code> del bug/defect / ítem <code>ATP: {BUG-KEY}</code>. La Story mantiene el suyo. El link Story↔bug/defect es solo trazabilidad, no hereda planes.</li>
+          <li><strong>Al ATP de ese ticket se le agrega el Bug Analysis</strong>: pasos de reproducción, expected vs actual, y chequeo de integridad de datos si el defecto tocó estado persistido.</li>
+          <li><strong>No confundir con el defecto que tú reportas</strong> al probar una Story: al reportarlo solo creas un ticket de defecto nuevo (repro + severidad + evidencia), todavía sin ATP. El ATP de ese ticket nace cuando el fix llega a staging y entra a QA para retest.</li>
+        </ul>
+        <p>Por eso el veto va primero: si el fix es solo un typo, CSS o docs sin cambio de comportamiento, se resuelve con code review y no se gasta un ATP completo en verificarlo.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s3"><span class="txt">Data feasibility por AC: Discover / Modify / Generate — sin path de datos → blocker antes de outlines</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Antes de diseñar tests, verificar que para cada AC existan <strong>datos con los que realmente poder probarla</strong> en staging. Un AC no es testeable si no puedes llevar el sistema al estado previo que exige.</p>
+        <ul>
+          <li><strong>Discover</strong> — el dato ya existe tal cual (hay pedidos pagados → probar filtro "pagados").</li>
+          <li><strong>Modify</strong> — existe base y hay que alterarla (promover un usuario a Admin).</li>
+          <li><strong>Generate</strong> — crearlo desde cero (crear cupón vía API/DB/UI para probar cobro).</li>
+        </ul>
+        <p>Si ninguno aplica, el AC queda <strong>blocked</strong>. El check corre <strong>antes de los outlines</strong> porque diseñar tests para un AC sin path de datos es trabajo tirado — no podrías ejecutarlos. Un AC veto-level sin datos se escala al usuario de inmediato; los menores se registran como <code>DATA-FEASIBILITY</code> en el ATP para que PO lo vea al estimar (puede mover la story o pedir pre-work).</p>
+        <p><em>Ejemplo:</em> AC "reembolso parcial calcula 70%" — si staging no tiene pagos ni endpoint de pasarela, el outline "Should refund 70% correctly" es papel mojado.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s4"><span class="txt">Análisis crítico: contexto business + técnico + complejidad + herencia de épica (respuestas ya dadas arriba → citar, no re-preguntar)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Ancla la Story a la realidad: qué persona/qué KPI toca (business), qué endpoints/tablas/componentes toca (técnico), y una tabla de complejidad (lógica, integración, datos, UI) que <strong>define las expectativas de cobertura</strong> y estima el esfuerzo — insumo para la estimación de PO.</p>
+        <p>La <strong>herencia de épica</strong> evita duplicar: si en el feature plan ya se respondió un riesgo o una integración, se cita ("ver FTP de la épica"), no se re-deriva ni se vuelve a preguntar al PO. Las preguntas son el recurso más escaso de una sesión de grooming.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s5"><span class="txt">Análisis de calidad: ambigüedades, gaps, edge cases no listados, validación de testabilidad</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Es el corazón del valor de QA en planning: los defects nacen de requisitos ambiguos, no de código malo. Se buscan:</p>
+        <ul>
+          <li><strong>Ambigüedades</strong> — "el usuario puede iniciar sesión" ¿HTTP 200 o toast? Sin definir, no hay asersión posible.</li>
+          <li><strong>Gaps</strong> — AC sin camino de error, regla de negocio no escrita.</li>
+          <li><strong>Edge cases no en la Story</strong> — OTP después de expirar sesión, whitespace en inputs…</li>
+          <li><strong>Testabilidad</strong> — veredicto Yes/Partial/No: ¿el AC se puede verificar objetivamente? ("funciona rápido" sin métrica = No).</li>
+        </ul>
+        <p>Si la Story está clara, se dice "sin problemas" — inventar preguntas para llenar checklist es anti-patrón: entrena al equipo a ignorar la salida de QA.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s6"><span class="txt">ACs refinadas Given/When/Then con datos concretos + 1:N por defecto + inferencias marcadas <strong>NEEDS PO/DEV CONFIRMATION</strong></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Las ACs originales se reescriben como escenarios ejecutables: <strong>Given</strong> (estado inicial + rol + datos), <strong>When</strong> (acción con valores exactos — "john+test\@example.com", no "email válido"), <strong>Then</strong> (resultado UI + status/body API + cambio en DB).</p>
+        <p><strong>1:N por defecto</strong>: una AC no trivial implica varios escenarios (partición válida + cada inválida + fronteras). Colapsar a uno solo requiere justificación escrita <code>trivially atomic</code>. El número lo deciden las técnicas de diseño, no un mínimo fijo.</p>
+        <p>Todo comportamiento <strong>inferido</strong> (que QA dedujo, no está literal en la Story) se marca <strong>NEEDS PO/DEV CONFIRMATION</strong> — el marcador va literal al Jira para que PO lo vea en planning y decida.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s7"><span class="txt">Diseño de tests: técnicas por trigger (EP siempre, BVA en rangos, State-Transition en estados, Decision Table, Pairwise) + cobertura + <strong>tablas de parametrización</strong> + outlines con pasos numerados y test-data JSON</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Las técnicas se aplican por <em>trigger</em> del AC (no a elección arbitraria):</p>
+        <ul>
+          <li><strong>EP</strong> (equivalencia) — siempre, todo input tiene particiones válidas/inválidas.</li>
+          <li><strong>BVA</strong> — si hay rango/límite/longitud/ventana de fechas (min-1, min, min+1…).</li>
+          <li><strong>State-Transition</strong> — campos con estado/ciclo de vida (cada transición válida e inválida).</li>
+          <li><strong>Decision Table</strong> — +2 condiciones que interactúan (rol × flag × estado).</li>
+          <li><strong>Pairwise</strong> — +3 factores combinables (browser × locale × plan), con log de la reducción.</li>
+        </ul>
+        <p>Un AC con rango sin outlines BVA = plan incompleto. La <strong>parametrización</strong> agrupa el mismo comportamiento con datos variados (evita duplicar steps), los <strong>pasos numerados con datos exactos</strong> y el <strong>test-data JSON</strong> hacen el outline ejecutable por cualquier tester — esto es lo que el ATP pre-sprint solo esbozó con nombres.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s8"><span class="txt">Consultar <code>domain-glossary.md</code> si existe (términos canónicos en nombres de tests)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El glosario define el vocabulario canónico del dominio ("pedido" no "orden", "socio" no "partner"). Usarlo en nombres de tests/ACs evita que Xray se llene de sinónimos que rompen búsquedas y comparaciones.</p>
+        <p>Si aparece un término nuevo o ambiguo durante la prueba, se marca en el comentario QA para que PM lo agregue por el protocolo de cambio del glosario — <strong>nunca editar el glosario desde una sesión de QA</strong>.</p>
+      </div></details>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="s9"><span class="txt">Agregar sección <code>QA Refinements (Shift-Left Analysis)</code> al final del description (leer antes, nunca sobrescribir) <span class="tag tag-desc">Description</span></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Es el extracto que PO ve de un vistazo en el UI de Jira durante planning — el ATP completo está en su campo/ítem, esto es el resumen accionable. Regla de oro: <strong>leer la descripción actual primero y agregar la sección al final</strong>; sobrescribir destruye el contenido original del equipo.</p>
+        <p>Si la Story ya venía de shift-left, se <em>actualiza</em> la sección (mismo heading, fecha nueva), no se duplica.</p>
+      </div></details>
+      <div class="sub">
+        <ul>
+          <li class="item">
+            <label><input type="checkbox" data-k="s9a"><span class="txt"><code>Refined Acceptance Criteria</code> — ACs en Given/When/Then</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>La versión ejecutable de las ACs — es lo que Dev usa para implementar y PO para aceptar. Es canónica: vive también en el campo <code>acceptance_criteria</code> si existe.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s9b"><span class="txt"><code>Edge Cases Identified</code> — casos edge con criticidad</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Copia de la tabla de edge cases detectados (escenario / ¿en la Story? / criticidad / acción). PO decide aquí si se agrega al AC o solo se prueba — es el primer filtro de scope.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s9c"><span class="txt"><code>Clarified Business Rules</code> — reglas que la Story original no enunciaba</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Reglas que QA extrajo del análisis y que la Story no decía literalmente (ej. "los cupones no son acumulables con puntos"). Cerradas aquí, no se rediscuten en ejecución.</p></div></details>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="s10"><span class="txt">Escribir ATP completo en su contenedor según modalidad <span class="tag tag-field">ATP</span></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El ATP (Acceptance Test Plan) es <strong>el</strong> artefacto de planning: lo que PO/Dev usan para estimar, lo que Stage 2 (Ejecución) ejecuta y lo que <code>fix-traceability</code> valida después. Contenedor según modalidad:</p>
+        <ul>
+          <li><strong>jira-xray</strong> → ítem <code>Test Plan</code> <code>ATP: {KEY}: {title}</code> (find-or-create desde el campo), descripción = cuerpo completo.</li>
+          <li><strong>jira-native</strong> → campo <code>acceptance_test_plan</code> de la Story; si el campo no existe, comentario <code>## Acceptance Test Plan (ATP)</code> (fallback, nunca bloquear).</li>
+        </ul>
+        <p><strong>Un solo ATP por Story</strong> — si shift-left ya escribió el campo, se expande ese mismo ATP (superset), nunca se crea una segunda versión "(DRAFT)" que después haya que reconciliar.</p>
+      </div></details>
+      <div class="sub">
+        <ul>
+          <li class="item">
+            <label><input type="checkbox" data-k="s10a"><span class="txt">Encabezado: <code>{KEY} — {Title}</code> + Status (<code>Test Analysis — Ready for Execution</code>), fecha, tester, modalidad</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>El flag de estado distingue el ATP in-sprint del pre-sprint (shift-left usa "Refined — Awaiting PO Estimation"). Marca en qué fase de vida está la planificación para quien lo abre frío.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s10b"><span class="txt"><code>Phase 1 — Critical Analysis</code>: contexto business (persona, value prop, KPIs, journey) + contexto técnico (frontend, backend, servicios externos) + tabla de complejidad + esfuerzo estimado + herencia de épica</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Responde "¿por qué importa probar esto y qué tan difícil es?". La tabla de complejidad y el esfuerzo estimado son los números que PO usa para decidir si el ticket entra al sprint con este alcance.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s10c"><span class="txt"><code>Phase 2 — Story Quality Analysis</code>: ambigüedades, gaps, edge cases no listados, contradicciones, veredicto de testabilidad</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Las 4 tablas (ambigüedades / gaps / edge cases / contradicciones) + veredicto Yes-Partial-No. Es lo que convierte "testear la Story" en "arreglar los requisitos antes de que Dev codee sobre supuestos".</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s10d"><span class="txt"><code>Phase 3 — Refined Acceptance Criteria</code>: escenarios con tipo/prioridad + marcador <strong>NEEDS PO/DEV CONFIRMATION</strong></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Cada AC original explotada en escenarios Given/When/Then con Type (Positive/Negative/Boundary/Edge) y Priority. El tipo/prioridad determinan el orden de ejecución en Stage 2 (Ejecución); el marcador de confirmación filtra lo inferido.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s10e"><span class="txt"><code>Phase 4 — Test Design</code>: cobertura (con 0 explícitos) + tablas de parametrización + outlines con precondición, pasos numerados con datos exactos, esperado (UI/API/DB) + test-data JSON + outlines de integración</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body">
+              <p>El motor ejecutable del ATP. La tabla de cobertura debe mostrar <strong>0 explícitos</strong> en tipos vacíos — ocultar ceros sesga la estimación de PO.</p>
+              <p>Cada outline = título "Should &lt;comportamiento&gt; &lt;condición&gt;" + precondición + pasos con datos exactos + esperado por capa (UI mensaje, API status+body, DB fila/campos). Esto es exactamente lo que shift-left dejó como "solo nombres".</p>
+            </div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s10f"><span class="txt"><code>Phase 5 — Edge Cases + Test Data</code>: tabla de edge cases + categorías de datos + estrategia de generación (estática/Faker) + cleanup</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Define <em>con qué</em> se prueba: datos estáticos (críticos, hardcodeados a propósito), dinámicos con Faker (masivos), y <strong>cleanup</strong> para que los tests sean idempotentes e independientes de orden — sin esto, la segunda corrida falla por datos sucios.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s10g"><span class="txt"><code>Story Quality Assessment</code> + <code>Critical Questions for PO</code> + <code>Technical Questions for Dev</code></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Veredicto (Good / Needs Improvement / Significant Issues) + las preguntas separadas por audiencia: las de PO <strong>bloquean sprint planning</strong>, las de Dev bloquean implementación. Cada pregunta lleva contexto + impacto si no se responde + sugerencia.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s10h"><span class="txt"><code>Data feasibility flags</code> + <code>Recommended testing strategy</code> + <code>Risks &amp; mitigation</code> + <code>Next steps</code></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Cierre operativo: bloqueos de datos (con pre-work requerido), estrategia pre/durante/post-implementación, matriz riesgo→mitigación (qué outlines cubren qué riesgo) y los pasos siguientes con puntero a <code>/test-documentation</code>.</p></div></details>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="s11"><span class="txt">Label <code>shift-left-reviewed</code> añadida a la Story</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Marker suave del ecosistema QA: indica que la Story ya pasó por refinamiento QA. Junto con el label datado <code>shift-left-{fecha}</code> es lo que permite detectar frescura (&lt;30 días) para el short-circuit de la próxima pasada. Los labels se <strong>añaden</strong>, nunca se reemplazan — los viejos documentan la línea de tiempo.</p>
+      </div></details>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="s12"><span class="txt">Contenedores y vínculos según modalidad <span class="tag tag-epic">épicas</span></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El grafo de Jira tiene 3 roles distintos y mezclarlos rompe la trazabilidad:</p>
+        <ul>
+          <li><strong>Parent (épica de proceso)</strong> — agrupa los artefactos QA por tipo (plan / ejecución / tests / defects). Nunca una épica de producto.</li>
+          <li><strong>Link <code>test</code> ATS→Story</strong> — el <strong>único</strong> que llena el panel de cobertura de Xray. Sin él, Xray cree que la Story no está cubierta aunque haya 20 TCs.</li>
+          <li><strong>Links ATP→Story y ATR→Story</strong> — trazabilidad administrativa (cero cobertura) pero obligatorios para que el grafo Jira esté completo.</li>
+        </ul>
+        <p>La membresía TC→ATS es interna de Xray (GraphQL), <strong>nunca</strong> issue links — ahí solo existe la excepción jira-native sin work type Test Set.</p>
+      </div></details>
+      <div class="sub">
+        <ul>
+          <li class="item">
+            <label><input type="checkbox" data-k="s12a"><span class="txt"><strong>jira-xray</strong>: find-or-create ATP item <strong>desde el campo</strong> <code>acceptance_test_plan</code> (vacío → autorar item + campo) → épica <strong>QA Master Test Plan</strong>; link <strong>ATP→Story</strong> (<code>test</code>)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Si shift-left ya pobló el campo, el ítem nace de ahí (sembrando su descripción) — el campo es la fuente pre-sprint, el ítem es su hogar in-sprint. Si el campo está vacío (Story sin shift-left), se crea el ATP completo automáticamente en ambos. El link <code>test</code> ATP→Story es administrativo: une Plan a Story en el grafo sin inflar cobertura.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s12b"><span class="txt"><strong>jira-xray</strong>: ATS <code>ATS: {KEY}: {title}</code> con <strong>TODOS</strong> los TCs como miembros → épica <strong>QA Test Artifacts</strong>, components heredados de la Story; link <strong>ATS→Story</strong> (<code>test</code> = cobertura)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>El ATS (Acceptance Test Set) es la columna vertebral de cobertura: obligatorio por Story aunque tenga 1 TC. Components heredados de la Story son mandatory (sin ellos los filtros por módulo no lo encuentran). Las listas del ATP y del ATR se <strong>derivan</strong> de la membresía ATS — nunca se mantienen 3 listas a mano: se desincronizan sin que nadie lo note y la cobertura queda corrupta.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s12c"><span class="txt"><strong>jira-xray</strong>: crear <code>Test</code> issues (formato <strong>una vez por batch</strong>: Manual vs Gherkin) → padre épica <strong>QA Test Repository</strong>; cada TC <strong>Draft → In Design</strong>; Manual = crear sin steps + add step uno por uno</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body">
+              <p>Se pregunta el formato <strong>una vez por batch</strong> (no por TC): <strong>Gherkin</strong> para flujos candidatos a automatización, <strong>Manual</strong> para exploración con juicio humano — la sugerencia es solo sugerencia, elige el usuario.</p>
+              <p>Gotcha de Xray Cloud: <strong>descarta silenciosamente</strong> los steps pasados inline en <code>test create</code> — por eso los Tests Manual se crean <em>sin</em> steps y cada step se agrega uno por uno (Gherkin no aplica, es un solo campo).</p>
+              <p>Parent = épica <strong>QA Test Repository</strong> (los TCs viven en el repositorio de pruebas, no en artefactos de ejecución). El workflow TC es <code>Draft → In Design → READY</code>: dejar TCs en Draft <strong>bloquea Stage 2 (Ejecución)</strong>.</p>
+            </div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s12d"><span class="txt"><strong>jira-xray</strong>: ATR <code>ATR: {KEY}: Story Testing</code> <strong>CON Test Environment</strong> (<code>active_env</code>) → épica <strong>QA Test Artifacts</strong>; lista derivada del ATS; link <strong>ATR→Story</strong> (<code>test</code>)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body">        <p>El ATR (Test Execution) es el registro de la corrida. Dos reglas:</p>
+        <ul>
+          <li><strong>El ambiente es obligatorio (hard gate)</strong>: crear la Execution sin ambiente significa que Stage 1 (Planificación) no está terminado (DoD = lista de condiciones que deben cumplirse para dar una etapa por hecha). El ambiente se toma de <code>active_env</code> en <code>.agents/project.yaml</code> al momento de crearla.</li>
+          <li><strong>Se crea UN ATR por Story</strong> — nombre fijo <code>ATR: {KEY}: Story Testing</code> — y se reutiliza durante todo el sprint: si la misma Story se prueba varias veces (sesiones, retest), se usa el mismo ATR, nunca se crea otro. Un sprint con 5 Stories tendrá 5 ATRs, uno por Story.</li>
+        </ul></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="s12e"><span class="txt"><strong>jira-native</strong>: ATP → campo <code>acceptance_test_plan</code> (fallback: comentario <code>## Acceptance Test Plan (ATP)</code>); ATR placeholder en <code>acceptance_test_results</code>; sin items <code>Test</code></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><p>Sin Xray no hay work types <code>Test Plan/Execution/Set</code>: todo vive en campos custom de la Story. El ATR se crea ahora como placeholder ("pending execution") y se llena en Stage 3 (Reporte). Los TCs no se crean como issues en sprint (un <code>Test</code> nativo es documentación, no unidad de ejecución) — se quedan como outlines y Stage 4 (test-documentation) decide cuáles merecen ser ítems de regresión.</p></div></details>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="s13"><span class="txt">ATP: transición <strong>Planning → READY</strong> (<code>Designed</code>) — prerequisito de Stage 2 (Ejecución)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El workflow del ATP es <code>Planning → READY → Completed</code>. Stage 2 (Ejecución) asume que el ATP está en READY: si queda en Planning, la fase de ejecución queda bloqueada (el equipo no sabe si el plan está cerrado o en borrador). El transition slug es <code>Designed</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s14"><span class="txt">ATS se queda en <strong>Designing</strong> (se cierra en Stage 4: test-documentation)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Cerrar el ATS requiere campos VCR (VCR Estimation, To Be Automated, In Regression Plan) que solo existen cuando <code>/test-documentation</code> calcula el ROI en Stage 4 (test-documentation). Cerrarla ahora provocaría que Stage 4 (test-documentation) no pueda completar la transición.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="s15"><span class="txt">Verificar traza (<code>trace {TICKET}</code> o campo ATP poblado): ATS→Story + membresía ATS + listas ATP/ATR derivadas + links ATP→Story y ATR→Story</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>Verificación post-escritura: un link mal creado (dirección invertida, slug equivocado) hace que Xray muestre cobertura 0% o que el grafo Jira tenga huérfanos — y nadie lo nota hasta que <code>fix-traceability</code> (o un manager) lo ve. Se verifica: los 3 links <code>test</code> con dirección correcta + membresía ATS completa + que las listas del Plan/Ejecución = ATS.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="c-exec">
+  <h2><span class="dot"></span>Ejecución (Stage 2)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="x1"><span class="txt"><strong>Smoke primero</strong> → Go/No-Go; No-Go = parar (bloqueo de ambiente, no seguir a exploración)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="smoke-testing.jpg" alt="Smoke testing visual" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>El smoke valida el <strong>ambiente</strong>; la trifuerza valida el <strong>ticket bajo prueba</strong> (la story y sus ACs). Si el ambiente está roto (login caído, 500s), cada intento de probar la story produce falsos positivos que terminan como defectos inventados — el No-Go ahorra ese ruido. Orden fijo: smoke → Go → exploración. Un smoke fallido siempre detiene; un FAIL dentro de la exploración no (va al protocolo graduado).</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x2"><span class="txt">Trifuerza más allá de los outlines: UI (<code>{{WEB_URL}}</code>) / API / DB según lo que cambió</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="trifuerza.jpg" alt="Trifuerza testing visual" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Trifuerza = probar las 3 capas: <strong>UI</strong> (qué ve el usuario), <strong>API</strong> (qué responde el contrato), <strong>DB</strong> (qué quedó persistido). "Más allá de los outlines" es el principle AC-floor: ejecutar el plan es el mínimo, explorar el riesgo fuera de él (particiones nuevas, transiciones, anomalías) es donde aparecen los defectos reales. Se elige el subconjunto según lo que cambió en el código, no las 3 siempre.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x3"><span class="txt">API: OpenAPI MCP solo-lectura (schema) → <code>bun run api:login</code> (token) → <strong>curl</strong> para ejecutar — nunca vía el MCP</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="api-testing.jpg" alt="API testing 3-step maneuver visual" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Maniobra de 3 pasos: el MCP OpenAPI solo <strong>lee</strong> esquemas (descubrir endpoints, shapes) pero no ejecuta requests autenticados. El token se acuña con <code>bun run api:login</code> → <code>.auth/tokens.env</code>. La ejecución autenticada es <strong>curl</strong> — nunca vía el MCP. Es doctrina fija: probar APIs "por el MCP" da 401s fantasma o peor, ejecuciones sin traza.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x4"><span class="txt">Evidencia en <code>evidence/</code> con naming <code>{KEY}-step{NN}-{action}.{ext}</code> (máx 1-4 shots útiles)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="evidence.jpg" alt="Evidence folder structure and naming visual" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Carpeta: <code>.context/PBI/epics/EPIC-…/stories/STORY-…/evidence/</code>. El token <code>step{NN}</code> ata cada archivo al paso de reproducción — el reporte de defecto referencia "step3" y el reviewer abre exacta esa imagen. Curar, no volcar: 1-4 shots con caption de negocio ("descuento ahora es línea propia, total sin cambio"), nunca capturas de navegación intermedia. Verificar en disco cada archivo antes de referenciarlo.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x5"><span class="txt">Actualizar estados de ejecución: outlines PASSED/FAILED (native) / Test Runs en el ATR (xray)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="report-stage3.jpg" alt="Stage 3 report: test run statuses feed ATR" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Stage 3 (Reporte) no puede reportar lo que Stage 2 (Ejecución) no registró. En xray cada TC corre como Test Run dentro del ATR (PASS/FAIL/BLOCKED/ABORTED) con comment opcional (key del defecto si FAIL); en native se actualiza el estado del outline. Este estado es lo que alimenta el <code>TEST CASES</code> del ATR y el pass-rate final.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x6"><span class="txt">TCs: <strong>In Design → READY</strong> tras ejecutarlos (nunca dejarlos en Draft/In Design)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="tc-workflow.jpg" alt="TC workflow states: Draft to In Design to READY to MANUAL" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Workflow TC: <code>Draft → In Design (Stage 1: Planificación) → READY (Stage 2: Ejecución) → MANUAL/In Review (Stage 4: test-documentation)</code>. Stage 2 (Ejecución) ejecuta TCs que están en In Design y los deja en READY. La transición final READY→MANUAL la decide Stage 4 (test-documentation) tras el ROI — sprint-testing no clasifica Candidate vs Manual, para eso está <code>/test-documentation</code>.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x7"><span class="txt">Hallazgos: bloqueantes (env down, integridad de datos, seguridad) → <strong>pausar y esperar decisión</strong>; no bloqueantes → continuar y registrar</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="findings.jpg" alt="Graduated protocol: blocking vs non-blocking findings" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Protocolo graduado que evita dos extremos:</p>
+        <ul>
+          <li><strong>Bloqueante</strong> (smoke fallido o ambiente caído, corrupción de datos, explotabilidad de seguridad) → pausar el dispatch, presentar el defecto, esperar decisión. Nunca seguir mientras esté sin resolver.</li>
+          <li><strong>No bloqueante</strong> (cosmético, validación menor, edge en TC no crítico) → el pass lo registra y <strong>continúa</strong>; se sube al cierre de Stage 2 (Ejecución). Parar por un padding roto destruye la cadencia.</li>
+        </ul>
+        <p>Un FAIL no es automáticamente Crítico — triage primero (severidad por matriz de reporting).</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="x8"><span class="txt">Antes de marcar FAIL por seguridad, auth o comportamiento por defecto del framework → gate de recalibración: hipótesis + 1 dato verificado + OK del PO. Si es comportamiento esperado → <code>PASSED WITH ISSUES</code> (GO con deuda)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="recalibration-gate.jpg" alt="Security recalibration gate: 3 steps before blocking" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Un FAIL en cookies/CSP/HSTS/SDK-by-design frecuentemente tiene explicación de framework ("Secure/HttpOnly son defaults bajo HSTS preload") — bloquear la Story ahí cuesta un ciclo de fix por un no-defecto.</p>
+        <p>El gate exige 3 pasos antes de cualquier transición bloqueante: (1) enunciar la hipótesis de mitigación, (2) citar <strong>un</strong> dato verificado (header observado, línea de config, doc del framework), (3) exponer al usuario — QA nunca degrada un hallazgo de seguridad en silencio. Si la hipótesis se confirma → <code>PASSED WITH ISSUES</code> (GO-with-debt), no bloquea; el resultado queda registrado en Observations del ATR como audit trail.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="c-rep">
+  <h2><span class="dot"></span>Reporte (Stage 3)</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="r1"><span class="txt">Precondiciones: todos los TCs en PASSED/FAILED (sin NOT RUN) + defectos ya confirmados</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="atr-integrity.jpg" alt="ATR integrity: no NOT RUN, defects referenced by key" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Un ATR con NOT RUN es un reporte que miente sobre el estado real — si hay TCs sin correr, se vuelve a Stage 2 (Ejecución), no se reporta. Los defectos deben estar confirmados y reportados porque el ATR los referencia por key.</p>
+      </div></details>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="r2"><span class="txt">ATR body con sus subsecciones <span class="tag tag-field">ATR</span></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="atr-body.jpg" alt="ATR body: audit record, same body both modalities, plain-text format" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>El ATR (Acceptance Test Results) es el <strong>registro de auditoría</strong> de la corrida — el comentario QA es el resumen, el ATR es la prueba. Mismo cuerpo en ambas modalidades, solo cambia el contenedor (campo vs Test Execution). Formato plain-text plano para que sobreviva la conversión a Jira renderer.</p>
+      </div></details>
+      <div class="sub">
+        <ul>
+          <li class="item">
+            <label><input type="checkbox" data-k="r2a"><span class="txt">Encabezado: <code>{KEY} TEST RESULTS</code> + Tested / Environment / Tester / Result (<code>PASSED | FAILED | PASSED WITH ISSUES</code> con ratio)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-test-results.jpg" alt="ATR Result values and pass-rate ratio" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>Los 3 valores de Result: <code>PASSED</code> (todo verde), <code>FAILED</code> (al menos uno rojo), <code>PASSED WITH ISSUES</code> (todo verde pero con observaciones relevantes o resultado del gate de recalibración). El ratio (ej. 11/12) da el pass-rate de un vistazo.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r2b"><span class="txt"><code>SUMMARY</code> — qué se probó y resultado global</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-summary.jpg" alt="ATR SUMMARY: first thing the PM reads" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>2-4 líneas para quien no va a leer los TCs uno por uno: alcance probado + veredicto. Es lo primero que lee PM en el reporte.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r2c"><span class="txt"><code>TEST CASES</code> — cada TC con status</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-test-cases.jpg" alt="ATR TEST CASES list: canonical format and status source" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>Lista plana <code>{US_ID}: TC#: should {outcome} [when/if {condition}] ... {status}</code> (solo modalidad Xray — en jira-native los TCs viven como outlines en Stage 2). Los statuses vienen del campo de Execution Status (Run), no del workflow del Test — en native, de la actualización de Stage 2 (Ejecución).</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r2d"><span class="txt"><code>TEST DATA</code> — entidades usadas (nombre + ID)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-test-data.jpg" alt="ATR TEST DATA: concrete data for repro and false-positive debugging" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>Qué datos concretos se usaron (pedido #12345, usuario juan.test\@…). Permite reproducir la corrida y depurar falsos positivos ("¿falló o el dato ya estaba corrupto?").</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r2e"><span class="txt"><code>BUGS FOUND</code> — lista con keys + severidad</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-bugs-found.jpg" alt="ATR BUGS FOUND: clickable keys + severity, explicit None" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>Keys clicables de los defectos reportados + su severidad. Si no hay defectos: "None" explícito — sección vacía genera duda, no alivio.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r2f"><span class="txt"><code>OBSERVATIONS</code> — hallazgos, edge cases, UX (incluye resultado del gate de recalibración si corrió)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-observations.jpg" alt="ATR OBSERVATIONS: not-blocking notes + recalibration audit trail" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>El "no bloqueó pero vale anotar": feedback UX, edge cases observados, deuda detectada. Aquí también queda el <strong>audit trail del gate de recalibración</strong> (hipótesis + dato + decisión) — explica por qué un P1 no bloqueó la Story.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r2g"><span class="txt"><code>RECOMMENDATIONS</code> — candidatos a automatizar, mejoras</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-recommendations.jpg" alt="ATR RECOMMENDATIONS: bridge from QA informal candidates to Stage 4 ROI" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>Insumo directo para Stage 4 (test-documentation): candidatos informales a automatizar (juicio de QA, <strong>sin fórmula ROI</strong> — eso lo hace Stage 4), testing futuro, mejoras de proceso. Es el puente QA → <code>/test-documentation</code>.</p></div></details>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="r3"><span class="txt">Subir ATR según modalidad:</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p>El contenedor lo decide la modalidad resuelta en Session Start (quedó persistida en <code>test-session-memory.md</code>). No se mezclan ramas: subir al contenedor equivocado = ATR invisible para <code>fix-traceability</code>.</p>
+      </div></details>
+      <div class="sub">
+        <ul>
+          <li class="item">
+            <label><input type="checkbox" data-k="r3a"><span class="txt"><strong>jira-xray</strong>: descripción del Test Execution + Begin/End Date + Update Run por TC (PASS/FAIL/BLOCKED) + transición ATR <strong>ACTIVE → Close</strong></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-xray.jpg" alt="ATR Xray upload timeline: Stage 1 create, Stage 3 fill, close" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>El ATR es el ítem Test Execution (ya creado en Stage 1 (Planificación) con ambiente). Stage 3 (Reporte) lo llena: descripción = cuerpo ATR, Begin Date = fecha de test, End Date = ahora, un Update Run por TC con su resultado (comment opcional con la key del defecto si FAIL). Cierre: transición <code>Complete</code> → Close. Señal de completitud: todos los Runs en estado terminal (no TODO/EXECUTING).</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r3b"><span class="txt"><strong>jira-native</strong>: campo <code>acceptance_test_results</code> (fallback: comentario <code>## Acceptance Test Results (ATR)</code>) + estados de outlines vuelcos al cuerpo (<code>TEST CASES</code>)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-jira-native.jpg" alt="Subida del ATR en modalidad jira-native" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>Sin ítem Test Execution, el ATR va al campo custom de la Story (o al comentario fallback si el campo no existe). Los estados por TC viven en el <strong>cuerpo del ATR</strong> (sección <code>TEST CASES</code>): Stage 2 (Ejecución) marca los outlines PASSED/FAILED en <code>test-session-memory.md</code> — no son issues Jira — y Stage 3 (Reporte) los vuelca al ATR. El loop de <code>Test Status</code> por issue solo corre si hay <code>Test</code> issues linkados al ATR; en el flujo normal no los hay (se crean y linkean en Stage 4, <strong>después</strong>) → no-op. Señal de completitud: campo poblado con cuerpo completo (sin placeholder).</p></div></details>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="r4"><span class="txt">ATP: transición <strong>READY → Completed</strong> (<code>Complete</code>) — nada de Stage 3 (Reporte) con ATP en READY</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="atp-completed.jpg" alt="Cierre del ATP: Planning a READY a Completed" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Al cerrar Stage 3 (Reporte) el plan también cierra: <code>Planning → READY → Completed</code>. Dejar el ATP en READY tras reportar deja el artefacto "a medio cerrar" — el próximo lector no sabe si la ejecución se completó.</p>
+      </div></details>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="r5"><span class="txt">Defectos por fallo (uno por causa raíz, con confirmación humana previa + búsqueda de duplicados):</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="ticket-bug-by-confirm.jpg" alt="De FAIL a ticket: confirmación humana, retest y duplicados" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Cada FAIL se convierte en ticket <strong>solo tras</strong> confirmación humana de que es defecto real (jamás reportar automáticamente) + retest de reproducibilidad + búsqueda de duplicados con el patrón de título. El template de reporte comparte estructura para Bug/Defect/Improvement — lo que cambia es la clasificación y los campos.</p>
+      </div></details>
+      <div class="sub">
+        <ul>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5a"><span class="txt">Clasificar: ¿lo roto ya está en producción? <strong>Bug</strong> (sí — live &gt; Staging) / <strong>Defect</strong> (no — pre-release, normal en sprint) / <strong>Improvement</strong> (AC rota/no especificada) — vínculo garantizado: <strong>componente</strong> (obligatorio, puede no haber feature)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body">
+              <img src="issue-classification.jpg" alt="Clasificación Bug/Defect/Improvement por estado de release" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+              <p>La clasificación responde a si lo roto <strong>ya está en producción</strong> — no al lugar donde lo encontraste (puedes reproducir en localhost pero si aún es pre-release = Defect):</p>
+              <ul>
+                <li><strong>Bug</strong> — ya live sobre Staging (producción), visible para usuario final: escapó de la puerta del sprint.</li>
+                <li><strong>Defect</strong> — aún pre-release: salida normal del testing del sprint (contenido, no escapado).</li>
+                <li><strong>Improvement</strong> — nada roto: es una mejora o un AC sub-especificado que QA surfació yendo más allá del criterio.</li>
+              </ul>
+              <p>Usar "Bug" para todo distorsiona las métricas de calidad (escape rate vs defect rate).</p>
+            </div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5b"><span class="txt">Título <code>&lt;EPIC&gt;: &lt;COMPONENT&gt;: &lt;summary&gt;</code> + descripción (steps to reproduce / technical analysis / impact / related stories)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="ticket-bug-anatomy.jpg" alt="Anatomía de un ticket de defecto: título, secciones y campos" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p><strong>Título</strong> — <code>&lt;EPIC&gt;: &lt;COMPONENT&gt;: &lt;summary&gt;</code>: tres segmentos separados por <code>:</code>. En cualquier lista de defectos, el primer segmento agrupa por épica y el segundo por módulo — se sabe de qué zona es el defecto sin abrir el ticket. Ejemplo real: <code>CheckoutFlow: Payment: Error message not shown for incorrect password</code>.</p><p><strong>Descripción</strong> — 5 secciones, en este orden:</p><ul><li><code>SUMMARY</code> — un párrafo: qué falla y qué impacto tiene.</li><li><code>STEPS TO REPRODUCE</code> — pasos numerados; el paso 1 es siempre la <strong>precondición</strong> (usuario, login, estado de datos), luego navegación → acción que dispara → observación. "Le falló una vez" sin pasos reproducibles no es un defecto.</li><li><code>TECHNICAL ANALYSIS</code> — archivo, función, llamada de red, errores de consola (lo que se sepa al reportar).</li><li><code>IMPACT</code> — usuarios afectados, funcionalidad bloqueada, impacto de negocio.</li><li><code>RELATED STORIES</code> — stories relacionadas / issues que bloquea.</li></ul><p><strong>Campos del reporte</strong> — junto a la descripción: <strong>Actual Result</strong> y <strong>Expected Result</strong> (qué pasó vs qué debía pasar). Son custom fields (<code>actual_result</code> / <code>expected_result</code>); si la instancia no los tiene, se agregan al cuerpo como <code>## Actual Result</code> / <code>## Expected Result</code>.</p><p>Cada paso puede referenciar su evidencia con <code>{KEY}-step{NN}</code> (p. ej. <code>UPEX-512-step03</code>).</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5c"><span class="txt"><strong>Components</strong> obligatorios (módulo afectado, debe pre-existir)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="components.jpg" alt="Campo components: módulo afectado, debe pre-existir" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>El campo nativo <code>components</code> es mandatory: identifica el módulo de producto afectado y alimenta los filtros/dashboards por área. Debe pre-existir en el módulo Components de Jira — si el módulo no existe, se pide al admin, no se crea una component ad-hoc desde QA.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5d"><span class="txt"><strong>Parent = épica QA Defect Management</strong> (found-or-create; el Parent nunca es épica de producto ni la Story) <span class="tag tag-epic">épica</span></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body">
+              <img src="bugs-3-axes-model.jpg" alt="Modelo de 3 ejes: parent QA, link story, components" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+              <p>Modelo de 3 ejes — separarlos evita que el board de desarrollo se contamine con artefactos QA:</p>
+              <ul>
+                <li><strong>Parent</strong> = épica de proceso QA (bucket de defects). El campo Parent nunca apunta a una épica de producto ni a la Story — la Story sí se vincula, pero por el eje <strong>Link</strong>.</li>
+                <li><strong>Link</strong> = la Story fuente (trazabilidad del requisito que falló).</li>
+                <li><strong>Components</strong> = el módulo de producto.</li>
+              </ul>
+              <p>La épica <code>QA Defect Management</code> se busca y si no existe se crea — es el contenedor de todos los bugs/defects del proyecto.</p>
+            </div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5e"><span class="txt">Link <strong>Story <code>causa</code> Defect</strong> (<code>problem_incident</code>) + verificar dirección</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="story-bug-traceability.jpg" alt="Vínculo Story causa Defect: problem_incident y dirección verificada" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>La línea "Related Stories" en texto plano es solo documentación humana; el borde operativo es el issuelink real (Story es outward party = <em>causes</em>, Defect es inward = <em>is caused by</em>). Se resuelve el tipo por slug y se verifica la dirección tras crear — dirección invertida rompe los reportes de trazabilidad que caminan el grafo.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5f"><span class="txt"><code>qa_assignee</code> = yo (read-before-write) + <code>severity</code> → <code>priority</code> auto-derivada (override con 1 línea)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body">
+              <img src="qa-assignee.jpg" alt="qa_assignee read-before-write y derivación Severity a Priority" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+              <p><code>qa_assignee</code>: dueño QA del reporte (quien lo fileó) — distinto del <code>assignee</code> nativo que queda libre para el triage de dev. Solo se escribe si está vacío.</p>
+              <p>Priority se <strong>deriva</strong> de Severity para que la cola sea consistente: Critical→Highest, Major→High, Moderate→Medium, Minor→Low, Trivial→Lowest. Es la regla por defecto, no la verdad: un defecto puede ser <strong>Trivial en severidad pero prioritario para el negocio</strong> (campaña lanzando hoy, cliente clave) — en ese caso se hace override de Priority con justificación de 1 línea (urgencia de negocio ≠ severidad técnica).</p>
+            </div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5g"><span class="txt">Campos: actual/expected result, error type, test environment, root cause, evidence; labels <code>bug</code> + <code>exploratory-testing</code></span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="bug-mandatory-fields.jpg" alt="Campos obligatorios: custom fields con fallback a Description y labels de QA" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>La matriz de campos obligatorios va a custom fields si los slugs existen en <code>jira-fields.json</code>; si un slug no existe, el valor cae a una sección de la Description con heading estandarizado (degradación documentada, no error). Los labels <code>bug</code> + <code>exploratory-testing</code> alimentan los filtros de QA.</p></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5h"><span class="txt">Evidencia adjunta vía <code>bun .agents/skills/acli/scripts/jira-attach-media.ts</code> — la imagen queda inline en un <strong>comment</strong> del defecto (no <code>![](path)</code>, no solo en Adjuntos)</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="evidence-comment.jpg" alt="Evidencia vía helper: imagen inline en comment, una llamada por archivo, caption = business outcome" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p><code>![](ruta)</code> en Jira <strong>no</strong> incrusta la imagen — queda como link muerto. El helper sube el archivo y la postea inline en un comment como imagen real: el reviewer ve la pantalla rota de un vistazo sin abrir el panel de adjuntos.</p><ul><li><strong>Una llamada por archivo</strong> — el helper adjunta un solo archivo por ejecución; 3 screenshots = 3 llamadas al script.</li><li><strong><code>--caption</code> = business outcome</strong> — el caption dice <strong>qué falló para el usuario</strong>, no el nombre del archivo. El reviewer lee el caption antes que la imagen: es el título del hallazgo. ✗ <code>screenshot3.png</code> · ✗ <code>defecto evidencia</code> → ✓ <code>Paso 3 — no se muestra el mensaje de validación</code></li></ul></div></details>
+          </li>
+          <li class="item">
+            <label><input type="checkbox" data-k="r5i"><span class="txt"><strong>jira-xray</strong>: crear 1 repro <code>Test</code> en fix-verification → link <strong>Defect↔Test</strong> (<code>test</code>) → ejecutar en <code>ReTest: {BUG_KEY}: {summary}</code> (con ambiente) → PASSED/FAILED</span></label>
+            <details class="ex"><summary>detalles</summary><div class="ex-body">
+              <img src="bugfix-verification.jpg" alt="Verificación del fix: repro Test en Xray en 4 pasos" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+              <p>Los defectos son "coverable": en Xray el fix se verifica con un Test de reproducción. Flujo en 4 pasos:</p>
+              <ol>
+                <li><strong>Cuándo se crea</strong> — en fix-verification (al verificar el fix), <strong>no antes</strong>. Antes de esa fase, las trazas de "TC faltante" en el defecto son esperadas — no se corrigen.</li>
+                <li><strong>Cuántos Tests</strong> — <strong>1</strong> por defecto. Solo se planean más (1:N) si el alcance cubre condiciones genuinamente distintas, con justificación escrita de test-design.</li>
+                <li><strong>Vínculo</strong> — Defect↔Test con link type <code>test</code>.</li>
+                <li><strong>Ejecución</strong> — correr en la Execution <code>ReTest: {BUG_KEY}: {summary}</code>, <strong>siempre con ambiente</strong> (Test Environment), y registrar PASSED/FAILED.</li>
+              </ol>
+              <p><strong>jira-native</strong>: no hay TCs en sprint — el <strong>ticket del defecto</strong> (con sus pasos de repro) es el caso de retest; no se crea un Test aparte.</p>
+            </div></details>
+          </li>
+        </ul>
+      </div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="r6"><span class="txt">Comentario QA en el ticket: Template <strong>A</strong> (PASSED) / <strong>B</strong> (FAILED) / <strong>C</strong> (defecto VERIFIED) / <strong>D</strong> (defecto NOT FIXED) — keys mencionadas como links reales, nunca texto plano</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="qa-comment-templates.jpg" alt="4 templates de comentario QA y regla de links clickeables" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>4 templates cubren los caminos (Story/defecto × pass/fail) — estandarizan lo que PM/Dev leen al llegar al ticket. Estructura común: Environment + Result + test data + behaviours verificados/fracasados + artefactos (ATP/ATR/TC keys).</p>
+        <p><strong>Regla de link real (binding)</strong>: cualquier key que el comentario nombre como blocker o defecto reportado (<code>DEFECT: KEY</code>, back-references) debe ser un link clickeable — las keys en texto plano no se auto-linkean en ADF y un blocker no clicable derrota el propósito de nombrarlo. La traza en el grafo (issuelink) es aparte y también obligatoria: el link sirve al lector, el issuelink sirve al grafo.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r7"><span class="txt">Evidencia recomendada: ofrecer auto-embed al ticket (1-4 shots rankeadas con captions de negocio)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="evidence-handoff.jpg" alt="Evidence Handoff: lista rankeada de archivos hacia el ticket, en chat" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Evidence Handoff: lista corta y rankeada de qué archivos del <code>evidence/</code> van al ticket. La lista cumple 4 reglas:</p><ul><li><strong>La "money shot" va primero</strong> — si hubo anotación del defecto con <code>bug-screenshot-annotation</code>, esa PNG se pone al inicio de la lista.</li><li><strong>Cada imagen lleva caption de negocio</strong> — qué falló para el usuario (no el nombre del archivo).</li><li><strong>Skip list incluida</strong> — se lista qué archivos se capturaron pero <strong>no</strong> se mandan al ticket, con el motivo de descarte.</li><li><strong>Bloques API redactados</strong> — credenciales y tokens se sustituyen por <code>&lt;redacted&gt;</code> antes de incluirlos.</li></ul>
+        <p>La lista rankeada y la oferta <strong>van en chat</strong> — no en el cuerpo del comentario Jira. Se <strong>ofrece</strong> publicar las imágenes con el helper y el humano confirma antes de ejecutar.</p>
+      </div></details>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="r8"><span class="txt">Transiciones al reportar: <a href="pwi-scenarios-flowchart.html" target="_blank" rel="noopener" title="Ver el flujo completo de escenarios PASSED WITH ISSUES (PWI #1–#6)">ver flujo PWI</a></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="atr-transitions.jpg" alt="Tabla de transiciones finales: resultado a estado" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>La transición <strong>codifica el veredicto de QA en el workflow</strong> — sin ella el ticket queda mintiendo en el tablero (una Story FAIL en "In Test" para siempre). La tabla aplica el flujo de decisión: PASSED → sign-off; FAILED con defecto confirmado → bloqueado (+ link de dependencia); no bloqueante → queda en In Test con el defecto; recalibrada → sign-off con deuda.</p>
+        <p><a href="pwi-scenarios-flowchart.html" target="_blank" rel="noopener">Ver el flujo completo de escenarios PASSED WITH ISSUES (PWI #1–#6)</a></p>
+      </div></details>
+      <div class="warn">⚠ Nunca marcar QA Approved sin sign-off + ATR completo (anti-patrón S1/S3). Si la transición <code>defect_reported → BLOCKED</code> se dispara, el link <code>blocks</code> (Defect → Story) es obligatorio: el cambio de estado solo no crea la arista de dependencia.</div>
+    </li>
+
+    <li class="item">
+      <label><input type="checkbox" data-k="r9"><span class="txt">Resultados mixtos → ATR en <code>PASSED WITH ISSUES</code>; defecto por causa raíz; no bloquear handoff</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="atr-mixed-results.jpg" alt="Infografía de resultados mixtos: ATR en PASSED WITH ISSUES, un defecto por causa raíz, handoff a Stage 4 libre" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Cuando hay verdes y rojos (resultados mixtos): el ATR queda en <code>PASSED WITH ISSUES</code>. Se reporta <strong>un defecto por cada causa raíz distinta</strong>, no uno por cada TC rojo — si 3 TCs rojos comparten la misma causa raíz, va <strong>1 solo defecto</strong> (y antes se busca si ya existe un ticket con el mismo título). <strong>No se bloquea el handoff a Stage 4</strong> (test-documentation): los TCs que pasaron <strong>siguen siendo elegibles</strong> para evaluación de ROI — un fallo no anula el valor de lo que sí funcionó.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="r10"><span class="txt">Handoff: PASSED con TCs automatizables → <code>/test-documentation</code> (Stage 4: test-documentation)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="test-documentation.jpg" alt="Infografía del Stage 4: qué consumen de los Stages 1-3, cálculo de ROI, veredictos Candidate/Manual/Deferred y bucle de fix" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>Stage 4 (test-documentation) consume lo que Stages 1-3 (Planificación → Reporte) produjeron (outlines + evidencia de ejecución) para calcular ROI y decidir qué TCs persisten como regresión (Candidate/Manual/Deferred). Si todo es Manual-only y nada vale automatizar → cerrar sin handoff. Bucle: Story FAILED → esperar fix → re-ejecutar Stage 2 (Ejecución) en los TCs fallidos → Stage 3 (Reporte) otra vez.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="c-bug">
+  <h2><span class="dot"></span>Modo bug/defect (retest de fix)</h2>
+  <p class="note">Notación: <strong>ticket</strong> = contenedor en Jira (issue). <strong>defecto</strong> = el problema encontrado (pre-release); <strong>bug</strong> = el problema encontrado (post-release). <strong>reportar</strong> = el verbo.</p>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="b1"><span class="txt">Triage veto + risk <strong>antes</strong> del ATP; veto SKIP → code review + comentario · veto REQUIRE → ATP + ATR obligatorios</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="bug-veto-riskScore.jpg" alt="Infografía: veto (CSS/docs/config sin cambio funcional) gana sobre el risk score; sin veto, score 0-3 LOW, 4-7 MEDIUM, 8+ HIGH" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>El mismo flujo que en las Stories pero aplicado al ticket del bug/defect. <strong>Veto SKIP</strong> (solo CSS, docs, copy estático, infra o refactor sin cambio funcional → solo verificar el fix en código + comentario en el ticket, sin ATP/ATR) gana sobre el score. <strong>Veto REQUIRE</strong> (money/billing, integridad de datos en entidades core, auth, integraciones externas, fix en módulo crítico, cálculos) fuerza ATP + ATR completos aunque el score sea bajo. Si ningún veto aplica → risk score (0-3 LOW, 4-7 MEDIUM, 8+ HIGH). Reducir un typo a un ATP completo es el desperdicio que el veto evita; dar por bueno un fix de billing sin ATP es el riesgo que REQUIRE evita.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="b2"><span class="txt">ATP del ticket del bug/defect: reproducción original, hipótesis de root cause, plan de verificación del fix, superficie de regresión, chequeo de integridad de datos</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="bug-atp.jpg" alt="Infografía: ATP del bug/defect — el defecto reportado es la especificación; repro original (esperado vs actual), hipótesis de causa, pasos que deben pasar en staging, áreas adyacentes del fix y queries DB de integridad" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>El ATP del ticket del bug/defect reemplaza las fases de análisis de Story (el defecto reportado <strong>es</strong> la especificación): pasos exactos del ticket original (esperado vs actual), hipótesis de causa desde lectura de código, los pasos que ahora deben pasar en staging, qué áreas adyacentes podría haber roto el fix, y queries DB si tocó estado persistido (¿huérfanos, registros a medias?).</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="b3"><span class="txt">ATR = <code>ReTest: {BUG_KEY}: {summary}</code> <strong>siempre con ambiente</strong></span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="bug-atr.jpg" alt="Infografía: ATR del bug/defect — Test Execution propio ReTest: {BUG_KEY}: {summary}, no el ATR de la Story; hard gate sin ambiente no se crea, el ambiente resuelve de active_env" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>La ejecución de retest es un Test Execution propio del ticket del bug/defect (nombre <code>ReTest: …</code>), no el ATR de la Story. Mismo hard gate: <strong>sin ambiente no se crea</strong> — el ambiente resuelve de <code>active_env</code> al momento de creación.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="b4"><span class="txt">Ejecutar: reproducir → verificar fix → regresión adyacente → DB si tocó datos persistidos</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="bug-retest.jpg" alt="Infografía: orden del retest — (1) reproducir el bug original, (2) verificar el comportamiento esperado, no solo 'ya no truena', (3) regresión ligera en áreas vecinas, (4) validar en DB que no quedaron registros huérfanos" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p>El orden importa: (1) reproducir el bug/defect original — si ya no reproduce, el fix funciona; (2) verificar el comportamiento esperado correcto, no solo "ya no truena"; (3) regresión ligera en áreas vecinas que el fix pudo tocar; (4) si el bug/defect corrompía datos, validar en DB que no quedaron registros huérfanos.</p>
+      </div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="b5"><span class="txt">Reporte: Template C (VERIFIED) o D (NOT FIXED); si es regression-worthy → marcar para Stage 4 (regla golden: reusar o crear 1 Test persistente)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <img src="bug-close.jpg" alt="Infografía: cierre del bug/defect — Template C fix confirmado pasa a Closed, Template D sigue reproduciéndose vuelve a Ready For QA; regression-worthy → Stage 4 con regla golden reusar o crear 1 Test, nunca duplicar; no todo califica" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);">
+        <p><strong>Template C</strong> = fix confirmado → bug/defect pasa a Closed; <strong>Template D</strong> = sigue reproduciéndose → vuelve a dev en Ready For QA.</p>
+        <p>Si el bug/defect es regression-worthy (área crítica, ya escapó una vez), Stage 4 (test-documentation) debe garantizar un Test persistente que lo cubra — <strong>regla golden</strong>: reusar el Test fallido existente (o el repro de esta pasada) o crear uno. Nunca duplicar. No todo bug/defect califica: un typo one-time en área estable se trata como un test fallido, no como candidato de regresión.</p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="c-ref">
+  <h2><span class="dot"></span>Estados de artefactos</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="st1"><span class="txt">Todos los artefactos en sus estados correspondientes</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <table>
+          <thead><tr><th>Artefacto</th><th>Estado inicial</th><th>Estados</th></tr></thead>
+          <tbody>
+            <tr><td>Story</td><td>Ready For QA</td><td>→ In Test (<code>start_testing</code>) → QA Approved / BLOCKED</td></tr>
+            <tr><td>ATP (item)</td><td>Planning</td><td>→ READY (<code>Designed</code>) → Completed (<code>Complete</code>)</td></tr>
+            <tr><td>ATR (Execution)</td><td>ACTIVE</td><td>→ Close (<code>Complete</code>)</td></tr>
+            <tr><td>TC (Test)</td><td>Draft</td><td>→ In Design (Stage 1: Planificación) → READY (Stage 2: Ejecución) → Stage 4 (test-documentation)</td></tr>
+            <tr><td>ATS</td><td>Designing</td><td>queda así hasta Stage 4 (test-documentation) (→ Close con campos VCR)</td></tr>
+            <tr><td>ticket del bug</td><td>Open</td><td>→ In Progress/In Review (dev) → Ready For QA → Closed (VERIFIED)</td></tr>
+          </tbody>
+        </table>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="c-ref">
+  <h2><span class="dot"></span>Épicas y vínculos</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="ep1"><span class="txt">Todos los artefactos están vinculados a sus épicas correspondientes</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body">
+        <p><a href="jira-entity-model.html" target="_blank" rel="noopener">Ver el diagrama de relación entre los artefactos y sus épicas</a></p>
+      </div></details>
+    </li>
+  </ul>
+</section>
+
+<section class="c-no">
+  <h2><span class="dot"></span>No hacer</h2>
+  <ul>
+    <li class="item">
+      <label><input type="checkbox" data-k="n1"><span class="txt">No crear ATR sin Test Environment (regla dura, sin excepciones)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="atr-sin-testEnv.jpg" alt="Infografía: ATR sin Test Environment — la ejecución no dice dónde se probó, el FAIL es ambiguo y se incumple el DoD de Stage 1" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>Una Execution sin ambiente no dice <em>dónde</em> se probó — imposible saber si un FAIL es del fix o del entorno. Incumple el DoD (condiciones de cierre) de Stage 1 (Planificación) por diseño.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n2"><span class="txt">No marcar QA Approved sin sign-off + ATR completo</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="qa-approved.jpg" alt="Infografía: QA Approved como sello de responsabilidad, sin ATR firmado no hay registro de auditoría (anti-patrones S1/S3)" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>QA Approved es el sello de que QA se hizo responsable del resultado. Sin ATR firmado no hay registro de auditoría que respalde ese sello (anti-patrones S1/S3).</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n3"><span class="txt">No saltar el smoke antes de la trifuerza</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="no-saltar-smoke.jpg" alt="Infografía: smoke valida el ambiente, trifuerza ataca la story, ambiente roto genera falsos positivos que consumen ciclos de fix" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>Smoke = ambiente, trifuerza = ticket bajo prueba (la story). Explorar contra un ambiente roto genera falsos positivos que consumen ciclos de fix.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n4"><span class="txt">No reportar defecto no reproducible + evidencia + confirmación humana</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="reproducible-defect.jpg" alt="Infografía: qué exige un defecto reportable — reproducibilidad verificada, evidencia y OK explícito del humano" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>"Me falló una vez" no es defecto. Exige: reproducibilidad verificada, evidencia (screenshot/trace/log/HAR/fila DB) y OK explícito del humano de que es defecto real — reportar ruido entrena al equipo a ignorar QA.</p></div></details>
+    </li>
+    <li class="item">
+      <label><input type="checkbox" data-k="n5"><span class="txt">No mantener listas ATS/ATP/ATR independientes (derivar del ATS)</span></label>
+      <details class="ex"><summary>detalles</summary><div class="ex-body"><img src="derivar-del-ats.jpg" alt="Infografía: 3 listas a mano se desincronizan y corrompen la cobertura en Xray; la membresía ATS es la única fuente y Plan y Ejecución derivan" style="max-width:100%;height:auto;margin-top:0.6rem;border-radius:6px;border:1px solid var(--border);"><p>3 listas id mantenidas a mano se desincronizan sin que nadie lo note (agregas un TC al ATS y olvidas el ATP) → cobertura corrupta en Xray. La membresía ATS es la única fuente; Plan y Ejecución derivan.</p></div></details>
+    </li>
+  </ul>
+</section>
+
+<div class="actions">
+  <button id="reset">Reiniciar checklist</button>
+</div>
+
+</div>
+
+<script>
+(function () {
+  var KEY = 'sprint-checklist-v1';
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[type=checkbox]'));
+  var fill = document.getElementById('fill');
+  var label = document.getElementById('label');
+
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+
+  function refresh() {
+    var done = 0;
+    boxes.forEach(function (b) {
+      b.checked = !!state[b.dataset.k];
+      b.closest('.item').classList.toggle('done', b.checked);
+      if (b.checked) done++;
+    });
+    var pct = boxes.length ? Math.round(done / boxes.length * 100) : 0;
+    fill.style.width = pct + '%';
+    label.textContent = done + ' / ' + boxes.length + '  (' + pct + '%)';
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }
+
+  function syncParents() {
+    for (var i = boxes.length - 1; i >= 0; i--) {
+      var p = boxes[i];
+      var pli = p.closest('li.item');
+      if (!pli) continue;
+      var kids = pli.querySelectorAll('.sub input[type=checkbox]');
+      if (!kids.length) continue;
+      var all = true;
+      for (var j = 0; j < kids.length; j++) {
+        if (!state[kids[j].dataset.k]) { all = false; break; }
+      }
+      state[p.dataset.k] = all;
+    }
+  }
+
+  boxes.forEach(function (b) {
+    b.addEventListener('change', function () {
+      state[b.dataset.k] = b.checked;
+      var li = b.closest('li.item');
+      if (li) {
+        Array.prototype.slice.call(li.querySelectorAll('.sub input[type=checkbox]')).forEach(function (k) {
+          state[k.dataset.k] = b.checked;
+        });
+      }
+      syncParents();
+      refresh();
+    });
+  });
+
+  document.getElementById('reset').addEventListener('click', function () {
+    if (confirm('¿Reiniciar todo el checklist?')) {
+      state = {};
+      refresh();
+    }
+  });
+
+  refresh();
+})();
+</script>
+<script>
+(function () {
+  var input = document.getElementById('searchInput');
+  var count = document.getElementById('searchCount');
+  var btnPrev = document.getElementById('searchPrev');
+  var btnNext = document.getElementById('searchNext');
+  var root = document.querySelector('.wrap');
+  var marks = [], cur = -1, timer;
+
+  function clearMarks() {
+    var old = document.querySelectorAll('mark.hit');
+    for (var i = 0; i < old.length; i++) {
+      var m = old[i];
+      m.parentNode.replaceChild(document.createTextNode(m.textContent), m);
+    }
+    root.normalize();
+    marks = [];
+    cur = -1;
+  }
+
+  function highlight(term) {
+    clearMarks();
+    count.textContent = '';
+    count.classList.remove('none');
+    if (!term) return;
+    var lower = term.toLowerCase();
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        var p = n.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        var tag = p.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'MARK' || tag === 'INPUT' || tag === 'BUTTON') return NodeFilter.FILTER_REJECT;
+        if (p.closest && p.closest('.progress-bar')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [], n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    nodes.forEach(function (node) {
+      var txt = node.nodeValue, low = txt.toLowerCase(), i = low.indexOf(lower);
+      if (i < 0) return;
+      var frag = document.createDocumentFragment(), pos = 0;
+      while (i >= 0) {
+        if (i > pos) frag.appendChild(document.createTextNode(txt.slice(pos, i)));
+        var mk = document.createElement('mark');
+        mk.className = 'hit';
+        mk.textContent = txt.slice(i, i + term.length);
+        frag.appendChild(mk);
+        pos = i + term.length;
+        i = low.indexOf(lower, pos);
+      }
+      if (pos < txt.length) frag.appendChild(document.createTextNode(txt.slice(pos)));
+      node.parentNode.replaceChild(frag, node);
+    });
+    marks = Array.prototype.slice.call(root.querySelectorAll('mark.hit'));
+    if (marks.length) setCurrent(0);
+    else { count.textContent = '0'; count.classList.add('none'); }
+  }
+
+  function setCurrent(i) {
+    if (!marks.length) return;
+    for (var j = 0; j < marks.length; j++) marks[j].classList.remove('hit-current');
+    cur = ((i % marks.length) + marks.length) % marks.length;
+    var m = marks[cur];
+    m.classList.add('hit-current');
+    var d = m.closest('details');
+    if (d && !d.open) d.open = true;
+    m.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    count.textContent = (cur + 1) + ' / ' + marks.length;
+    count.classList.remove('none');
+  }
+
+  function run() { highlight(input.value.trim()); }
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(run, 150);
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (marks.length) setCurrent(cur + (e.shiftKey ? -1 : 1));
+    } else if (e.key === 'Escape') {
+      input.value = '';
+      run();
+    }
+  });
+  btnNext.addEventListener('click', function () { if (marks.length) setCurrent(cur + 1); });
+  btnPrev.addEventListener('click', function () { if (marks.length) setCurrent(cur - 1); });
+})();
+</script>
+</body>
+</html>
