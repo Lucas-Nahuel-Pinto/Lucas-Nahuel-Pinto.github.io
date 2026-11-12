@@ -7,6 +7,7 @@
  */
 
 import * as THREE from '/assets/vendor/three.module.min.js';
+import { navigateWithTransition } from '/js/lib/transitions.js';
 
 const canvas = document.getElementById('chart');
 const labelEl = document.getElementById('chart-label');
@@ -265,7 +266,9 @@ function init(renderer) {
 
   function act(mesh) {
     const href = mesh.userData.entry.href;
-    if (href && href !== '#') window.location.href = href;
+    // Same exit flow as link clicks (veil or the About dive), so canvas
+    // navigation never skips the page transition.
+    if (href && href !== '#') navigateWithTransition(href);
   }
 
   // ---------- Pointer (mouse hover + touch 2-tap) ----------

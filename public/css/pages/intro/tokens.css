@@ -17,11 +17,19 @@ body {
   font-family: var(--font-heading);
   color: #fff;
   background-color: #030a14; /* fallback while the image loads */
+  overflow: hidden;
+}
+
+/* Page scene: everything the exit dive scales together (background,
+   navbar, chart, board overlays). The loading veil lives OUTSIDE this
+   wrapper so it always covers at normal scale. */
+#page-zoom {
+  position: fixed;
+  inset: 0;
   /* Same artwork as mainPage-bg.jpg with the baked board text removed,
      so the interactive overlays can draw their own labels. */
   background-image: url("/mainPage-bg-menu.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  overflow: hidden;
 }
