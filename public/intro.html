@@ -102,17 +102,60 @@
     <!-- Page scene: everything the exit dive scales together. The loading
          veil above stays OUTSIDE this wrapper so it covers at normal scale. -->
     <div id="page-zoom">
-    <!-- Navbar (same as about.html) -->
-    <nav class="site-nav">
-      <a class="logo" href="/about.html">Lucas Pinto</a>
+    <!-- Corner HUD: a quarter-circle wedge welded to the top-left corner
+         with a concentric inner disc. The brand sits inside the core; the
+         ES/EN and dark/light switches ride the ring between the two arcs.
+         Geometry lives in the SVG viewBox (260x260) at a 1:1 pixel scale,
+         so the CSS slots below can use plain pixels. -->
+    <div class="corner-hud">
+      <svg class="corner-hud__shape" viewBox="0 0 260 260" aria-hidden="true">
+        <defs>
+          <!-- Diagonal sheen, same trick the artwork's holograms use -->
+          <linearGradient id="hud-sheen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#78f0ff" stop-opacity="0.2" />
+            <stop offset="0.55" stop-color="#78f0ff" stop-opacity="0.05" />
+            <stop offset="1" stop-color="#78f0ff" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <!-- Outer ring: quarter disc minus the inner quarter (evenodd) -->
+        <path
+          class="corner-hud__ring"
+          fill-rule="evenodd"
+          d="M0 0 H260 A260 260 0 0 1 0 260 Z M0 0 H150 A150 150 0 0 1 0 150 Z"
+        />
+        <!-- Inner concentric disc (clipped to the corner by the viewBox) -->
+        <circle class="corner-hud__core" cx="0" cy="0" r="150" />
+        <!-- Sheen over the whole wedge, on top of both fills -->
+        <path class="corner-hud__sheen" d="M0 0 H260 A260 260 0 0 1 0 260 Z" />
+      </svg>
 
-      <div class="menu">
+      <a class="corner-hud__brand" href="/about.html">Lucas<br/>Pinto</a>
+
+      <div class="corner-hud__controls">
         <div class="lang-switch" role="group" aria-label="Idioma" data-i18n-aria="language">
           <button type="button" data-lang="es" aria-pressed="true">ES</button>
           <button type="button" data-lang="en" aria-pressed="false">EN</button>
         </div>
+        <!-- Dark/light switch: icon shows the CURRENT mode (moon = dark,
+             sun = light); js/lib/theme.js owns the label and persistence. -->
+        <button type="button" class="theme-switch" aria-label="Cambiar a modo claro">
+          <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+        </button>
       </div>
-    </nav>
+    </div><!-- /.corner-hud -->
 
     <main class="stage">
       <h1 class="sr-only">Lucas Pinto — Portfolio</h1>

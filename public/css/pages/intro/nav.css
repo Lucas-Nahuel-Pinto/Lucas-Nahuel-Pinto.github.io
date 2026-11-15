@@ -1,70 +1,112 @@
-/* Fixed top bar: holographic logo chip and the ES/EN switch. */
-.site-nav {
+/* Fixed top-left HUD: a quarter-circle wedge welded into the corner with a
+   concentric inner disc. The brand sits inside the core, the ES/EN and
+   theme switches ride the ring (polar slots below). The fills mirror the
+   artwork's holograms: dark translucent glass, thin cyan rim, soft glow. */
+.corner-hud {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
   z-index: 10;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.25rem;
+  width: 260px;
+  height: 260px;
+  /* Only the brand and the switches take clicks; the wedge is decor. */
+  pointer-events: none;
+  /* The SVG and every slot below stay in the 260px coordinate space;
+     this renders the whole wedge at 50% of its drawn size. */
+  transform: scale(var(--hud-scale, 0.5));
+  transform-origin: top left;
 }
 
-.site-nav .logo {
-  font-size: clamp(21px, 4vw, 26px);
+.corner-hud__shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Clips the inner circle (and the glow) to the corner */
+  overflow: hidden;
+}
+
+.corner-hud__ring {
+  fill: rgba(2, 14, 38, 0.72);
+  stroke: rgba(140, 245, 255, 0.9);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 7px rgba(80, 215, 255, 0.55));
+}
+
+.corner-hud__core {
+  fill: rgba(4, 24, 60, 0.86);
+  stroke: rgba(140, 245, 255, 1);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 9px rgba(80, 215, 255, 0.5));
+}
+
+.corner-hud__sheen {
+  fill: url(#hud-sheen);
+}
+
+.corner-hud__brand {
+  position: absolute;
+  /* Centroid of the visible quarter disc, so the name reads centered */
+  left: 60px;
+  top: 60px;
+  transform: translate(-50%, -50%);
+  color: #cfefff;
+  font-size: 30px;
+  line-height: 1.12;
   letter-spacing: -0.02em;
-  user-select: none;
-}
-
-/* Holographic chip: dark, near-opaque glass (the page background is a
-   bright illustration, so translucent blue would blend into it) with a
-   bright cyan rim and a glowing white text. */
-.site-nav .logo {
-  color: #fff;
   text-decoration: none;
-  padding: 0.26em 0.66em 0.3em;
-  border: 2.5px solid rgba(120, 240, 255, 1);
-  border-radius: 12px;
-  background:
-    linear-gradient(112deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 30%, rgba(255, 255, 255, 0) 50%),
-    linear-gradient(180deg, rgba(0, 96, 170, 0.92) 0%, rgba(2, 26, 74, 0.96) 55%, rgba(1, 8, 28, 0.98) 100%);
-  box-shadow:
-    0 0 0 1.5px rgba(2, 14, 40, 0.75),
-    0 0 16px rgba(80, 215, 255, 0.85),
-    0 0 42px rgba(0, 150, 255, 0.45),
-    inset 0 0 18px rgba(80, 215, 255, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  text-shadow:
-    0 0 10px rgba(160, 245, 255, 1),
-    0 0 4px rgba(255, 255, 255, 0.9),
-    0 1px 4px rgba(0, 0, 0, 0.95);
-  transition: filter 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+  pointer-events: auto;
+  transition: color 0.15s ease;
 }
 
-.site-nav .logo:hover {
-  filter: brightness(1.25);
-  box-shadow:
-    0 0 0 1.5px rgba(2, 14, 40, 0.75),
-    0 0 22px rgba(120, 240, 255, 1),
-    0 0 52px rgba(0, 170, 255, 0.6),
-    inset 0 0 22px rgba(120, 240, 255, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+.corner-hud__brand:hover {
+  color: #fff;
 }
 
-.site-nav a:focus-visible,
-.site-nav button:focus-visible {
+/* Controls sit at fixed polar slots inside the 150–260 ring band: the
+   language switch at 60°, the theme switch at 30° (mirrored about the
+   diagonal), each centered on its radius. */
+.corner-hud__controls {
+  position: absolute;
+  inset: 0;
+}
+
+.corner-hud__controls .lang-switch {
+  position: absolute;
+  left: 90px;
+  top: 184px;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.corner-hud__controls .theme-switch {
+  position: absolute;
+  left: 175px;
+  top: 106px;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.corner-hud a:focus-visible,
+.corner-hud button:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 4px;
   border-radius: 12px;
 }
 
-/* Right cluster: language switch */
-.site-nav .menu {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+/* Shrink the wedge on narrow screens so it never swallows the board
+   (multipliers on top of the base 0.5). */
+@media (max-width: 900px) {
+  .corner-hud {
+    --hud-scale: 0.39;
+  }
+}
+
+@media (max-width: 560px) {
+  .corner-hud {
+    --hud-scale: 0.3;
+  }
 }
 
 .lang-switch {
@@ -84,7 +126,7 @@
   background: transparent;
   color: #cfefff;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   letter-spacing: 0.06em;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
@@ -98,4 +140,38 @@
 
 .lang-switch button:hover {
   color: #fff;
+}
+
+/* Dark/light switch: same glass chip as the language switch, holding a
+   single icon — the moon while dark (default), the sun while light. */
+.theme-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border: 1px solid rgba(120, 240, 255, 0.4);
+  border-radius: 10px;
+  background: rgba(1, 10, 30, 0.65);
+  color: #cfefff;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.theme-switch:hover {
+  color: #fff;
+  box-shadow: inset 0 0 10px rgba(120, 240, 255, 0.3);
+}
+
+.theme-icon {
+  display: none;
+  width: 33px;
+  height: 33px;
+}
+
+[data-theme="dark"] .theme-icon--moon {
+  display: block;
+}
+
+[data-theme="light"] .theme-icon--sun {
+  display: block;
 }
