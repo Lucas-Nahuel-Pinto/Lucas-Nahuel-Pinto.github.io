@@ -198,53 +198,61 @@
         aria-label="Seleccionar proyecto"
       >
         <!-- Projects board: project menu.
-             Panel-local coordinates (340x216) mapped onto the board's quad. -->
-        <g transform="matrix(0.915,-0.021,0.111,0.898,246.5,220)">
-          <circle cx="30" cy="30" r="14" fill="none" stroke="#7ef0ff" stroke-width="2.4" />
-          <path
-            d="M23 30.5 L27.5 35.5 L37 25"
-            fill="none"
-            stroke="#7ef0ff"
-            stroke-width="3"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <text class="panel-title" x="52" y="37" fill="#ffffff">Proyectos</text>
-          <line x1="50" y1="49" x2="306" y2="49" stroke="#7ef0ff" stroke-opacity="0.5" stroke-width="1.6" />
+             Panel-local coordinates (340x216) mapped onto the board's quad.
+             The painted frame has real perspective (its edges converge), so
+             each element gets its own best-fit affine of the homography —
+             one matrix per row keeps every row parallel to its own edge. -->
+        <g>
+          <g transform="matrix(0.9258,0.0082,0.0626,0.8358,269.6518,215.6371)">
+            <text class="panel-title" x="98" y="37" fill="#ffffff">Proyectos</text>
+          </g>
 
-          <a href="proyectos.html#jira-traceability" aria-label="Ir a Jira Traceability Manager">
-            <rect class="row-bg" x="12" y="58" width="318" height="40" rx="8" />
-            <circle cx="30" cy="78" r="8.5" fill="#43e05a" />
-            <text class="row-label" x="47" y="86">Jira T. Manager</text>
-            <path class="row-chev" d="M309 72 L315 78 L309 84" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-          </a>
+          <g transform="matrix(0.9299,-0.0282,0.0623,0.8483,264.5511,235.2481)">
+            <a href="proyectos.html#jira-traceability" aria-label="Ir a Jira Traceability Manager">
+              <rect class="row-bg" x="12" y="58" width="318" height="40" rx="8" />
+              <circle cx="30" cy="78" r="8.5" fill="#43e05a" />
+              <text class="row-label" x="47" y="86">Jira T. Manager</text>
+              <path class="row-chev" d="M309 72 L315 78 L309 84" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            </a>
+          </g>
 
-          <a href="proyectos.html#qa-flow-checklists" aria-label="Ir a QA Checklist">
-            <rect class="row-bg" x="12" y="100" width="318" height="40" rx="8" />
-            <circle cx="30" cy="120" r="8.5" fill="#ffd22b" />
-            <text class="row-label" x="47" y="128">QA Checklist</text>
-            <path class="row-chev" d="M309 114 L315 120 L309 126" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-          </a>
+          <g transform="matrix(0.9293,-0.0603,0.0625,0.8516,264.6319,240.4101)">
+            <a href="proyectos.html#qa-flow-checklists" aria-label="Ir a QA Checklist">
+              <rect class="row-bg" x="12" y="100" width="318" height="40" rx="8" />
+              <circle cx="30" cy="120" r="8.5" fill="#ffd22b" />
+              <text class="row-label" x="47" y="128">QA Checklist</text>
+              <path class="row-chev" d="M309 114 L315 120 L309 126" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            </a>
+          </g>
 
-          <a href="proyectos.html#harness-manager" aria-label="Ir a Harness Manager">
-            <rect class="row-bg" x="12" y="142" width="318" height="40" rx="8" />
-            <circle cx="30" cy="162" r="8.5" fill="#ff5545" />
-            <text class="row-label" x="47" y="170">Harness Manager</text>
-            <path class="row-chev" d="M309 156 L315 162 L309 168" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-          </a>
+          <g transform="matrix(0.9286,-0.0926,0.0627,0.855,264.7044,245.4722)">
+            <a href="proyectos.html#harness-manager" aria-label="Ir a Harness Manager">
+              <rect class="row-bg" x="12" y="142" width="318" height="40" rx="8" />
+              <circle cx="30" cy="162" r="8.5" fill="#ff5545" />
+              <text class="row-label" x="47" y="170">Harness Manager</text>
+              <path class="row-chev" d="M309 156 L315 162 L309 168" fill="none" stroke="#eaf9ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            </a>
+          </g>
         </g>
 
         <!-- Logros board: the painted "Test Execution" screen is a link.
-             Transparent overlay — the artwork shows through untouched. -->
+             Transparent overlay — the artwork shows through untouched.
+             The painted screen is a TRAPEZOID (left edge 161px tall, right
+             edge 223px), so its box can't be an affine rect: both polygons
+             carry the 4 vertices measured off mainPage-bg-night.jpg
+             (TL 1082,202 / TR 1390,174 / BR 1390,421 / BL 1078,383) —
+             edit each point independently to re-register the box. -->
         <a class="board-link" href="#" aria-label="Ir a Logros">
-          <!-- Invisible full-board hit area (frame included) -->
-          <polygon class="board-hit" points="1083,199 1402,176 1421,365 1080,386" />
-          <!-- Screen halo: drawn in panel-local space so it follows the
-               board's perspective exactly -->
-          <g transform="matrix(0.858,-0.057,0.033,0.850,1097.5,208.3)">
-            <rect class="board-link-bg" x="-15" y="-19" width="370" height="232" rx="20" />
-            <text class="board-link-title" x="170" y="58" text-anchor="middle">Logros</text>
-            <line class="board-link-rule" x1="64" y1="72" x2="276" y2="72" />
+          <!-- Invisible hit area: frame glow centerline -->
+          <polygon class="board-hit" points="1082,202 1390,174 1390,421 1078,383" />
+          <!-- Hover halo: same quad inset 11px, just inside the glow -->
+          <polygon class="board-link-bg" points="1093,212 1379,186 1379,409 1089,373" />
+          <!-- Title and chevron ride the same perspective: each is a
+               least-squares affine of the homography into the halo quad -->
+          <g transform="matrix(0.7308,-0.0337,-0.0122,0.7861,1089.7238,222.1906)">
+            <text class="board-link-title" x="150" y="18" text-anchor="middle">Logros</text>
+          </g>
+          <g transform="matrix(0.9613,-0.1432,-0.0043,0.9031,1035.0991,214.7926)">
             <path class="board-link-chev" d="M294 42 L306 54 L294 66" />
           </g>
         </a>

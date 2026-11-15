@@ -80,7 +80,7 @@
 .board-menu .board-link-title {
   fill: #eaf9ff;
   font-family: var(--font-heading);
-  font-size: 34px;
+  font-size: 28px;
   letter-spacing: 0.06em;
   transition: fill 0.15s ease, filter 0.15s ease;
 }
