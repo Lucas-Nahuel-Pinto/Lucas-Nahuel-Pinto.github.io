@@ -108,7 +108,10 @@ export function initPageTransitions() {
 
     const anchor = event.target.closest && event.target.closest('a[href]');
     if (!anchor) return;
-    if (anchor.target && anchor.target.toLowerCase() !== '_self') return;
+    // getAttribute, not .target: SVG <a> exposes .target as an
+    // SVGAnimatedString object, which has no toLowerCase().
+    const target = anchor.getAttribute('target');
+    if (target && target.toLowerCase() !== '_self') return;
     if (anchor.hasAttribute('download')) return;
 
     const url = resolveInternalUrl(anchor.getAttribute('href'));
