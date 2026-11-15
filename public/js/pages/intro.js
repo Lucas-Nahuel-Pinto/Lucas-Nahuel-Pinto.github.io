@@ -1,4 +1,5 @@
 import { initLangSwitch } from '/js/lib/i18n.js';
+import { initThemeSwitch } from '/js/lib/theme.js';
 import { initPageLoader, showLoader } from '/js/lib/loader.js';
 import { initPageTransitions, setPageExitAnimation, VEIL_FADE_MS, wait } from '/js/lib/transitions.js';
 import { zoomPageOut } from '/js/lib/page-zoom.js';
@@ -6,6 +7,7 @@ import { zoomPageOut } from '/js/lib/page-zoom.js';
 initPageLoader();
 initPageTransitions();
 initLangSwitch();
+initThemeSwitch();
 
 // ---------- Exit dive (intro -> About) ----------
 // Scaling #page-zoom moves the WHOLE scene — background, navbar, chart and

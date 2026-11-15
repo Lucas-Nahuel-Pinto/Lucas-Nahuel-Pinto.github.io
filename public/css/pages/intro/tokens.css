@@ -26,10 +26,16 @@ body {
 #page-zoom {
   position: fixed;
   inset: 0;
-  /* Same artwork as mainPage-bg.jpg with the baked board text removed,
-     so the interactive overlays can draw their own labels. */
-  background-image: url("/mainPage-bg-menu.jpg");
+  /* Night artwork (dark mode, the default). js/lib/theme.js flips
+     data-theme on <html>; the day variant swaps in below. */
+  background-image: url("/mainPage-bg-night.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+}
+
+/* Light mode: same scene, daytime artwork. Higher specificity than the
+   #page-zoom id rule above, so it wins without !important. */
+[data-theme="light"] #page-zoom {
+  background-image: url("/mainPage-bg-day.jpg");
 }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,6 +8,19 @@
       name="description"
       content="Menú principal 3D en forma de gráfico de torta: About Me y proyectos personales de Lucas Pinto."
     />
+    <!-- Theme: apply the stored preference before the first paint so the
+         intro never flashes the default (dark) artwork. Dark ships as the
+         static data-theme="dark" on <html> — no JS needed for the default. -->
+    <script>
+      try {
+        var storedTheme = localStorage.getItem('portfolio-theme');
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+          document.documentElement.dataset.theme = storedTheme;
+        }
+      } catch (error) {
+        /* private mode / storage disabled: stay on the dark default */
+      }
+    </script>
     <!-- Loading veil: inline critical CSS — no fetch, so the very first
          paint is always the opaque veil even if Firefox forces layout
          before the other stylesheets load (bug 1404468). -->
