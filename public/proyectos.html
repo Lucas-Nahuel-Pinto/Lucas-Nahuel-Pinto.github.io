@@ -1,10 +1,23 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lucas Pinto | Proyectos</title>
     <meta name="description" content="Proyectos del portfolio de Lucas Pinto: QA Flow Checklists, Jira Traceability Manager y Harness Manager." />
+    <!-- Theme: apply the stored preference before the first paint so the
+         page never flashes the default (dark) artwork. Dark ships as the
+         static data-theme="dark" on <html> — no JS needed for the default. -->
+    <script>
+      try {
+        var storedTheme = localStorage.getItem('portfolio-theme');
+        if (storedTheme === 'light' || storedTheme === 'dark') {
+          document.documentElement.dataset.theme = storedTheme;
+        }
+      } catch (error) {
+        /* private mode / storage disabled: stay on the dark default */
+      }
+    </script>
     <!-- Loading veil: inline critical CSS — no fetch, so the very first
          paint is always the opaque veil even if Firefox forces layout
          before the other stylesheets load (bug 1404468). -->
@@ -74,18 +87,78 @@
     <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/5ac3fe7c6abd2f62067f266d89671492?family=HelveticaNowDisplay-Medium" type="text/css" />
     <link rel="stylesheet" href="https://db.onlinewebfonts.com/c/1aa3377e489837a26d019bba501e779d?family=HelveticaNowDisplayW01-Rg" type="text/css" />
     <link rel="stylesheet" href="/css/base/reset.css" />
+    <link rel="stylesheet" href="/css/base/hud.css" />
     <link rel="stylesheet" href="/css/pages/proyectos/tokens.css" />
     <link rel="stylesheet" href="/css/pages/proyectos/carousel.css" />
     <link rel="stylesheet" href="/css/pages/proyectos/info.css" />
   </head>
   <body>
     <!-- Loading veil: paints on the first frame, hidden by js/lib/loader.js -->
-    <div id="page-loader" role="status" aria-label="Cargando">
+    <div id="page-loader" role="status" aria-label="Cargando" data-i18n-aria="loading">
       <span class="loader-spinner" aria-hidden="true"></span>
     </div>
 
+    <!-- CORNER HUD: same concentric wedge as intro/about, core holds the
+         back arrow to the main menu. The ES/EN and dark/light switches
+         ride the ring — js/lib/i18n.js + js/lib/theme.js run from
+         js/pages/proyectos/index.js. -->
+    <div class="corner-hud">
+      <svg class="corner-hud__shape" viewBox="0 0 260 260" aria-hidden="true">
+        <defs>
+          <!-- Diagonal sheen, same trick the artwork's holograms use -->
+          <linearGradient id="hud-sheen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#78f0ff" stop-opacity="0.2" />
+            <stop offset="0.55" stop-color="#78f0ff" stop-opacity="0.05" />
+            <stop offset="1" stop-color="#78f0ff" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <!-- Outer ring: quarter disc minus the inner quarter (evenodd) -->
+        <path
+          class="corner-hud__ring"
+          fill-rule="evenodd"
+          d="M0 0 H260 A260 260 0 0 1 0 260 Z M0 0 H150 A150 150 0 0 1 0 150 Z"
+        />
+        <!-- Inner concentric disc (clipped to the corner by the viewBox) -->
+        <circle class="corner-hud__core" cx="0" cy="0" r="150" />
+        <!-- Sheen over the whole wedge, on top of both fills -->
+        <path class="corner-hud__sheen" d="M0 0 H260 A260 260 0 0 1 0 260 Z" />
+      </svg>
+
+      <a class="corner-hud__brand corner-hud__back" href="/intro.html" aria-label="Volver a la intro" data-i18n-aria="backIntro">
+        <svg viewBox="0 0 10 18" fill="none" aria-hidden="true">
+          <path d="M9 1 L1 9 L9 17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </a>
+
+      <div class="corner-hud__controls">
+        <div class="lang-switch" role="group" aria-label="Idioma" data-i18n-aria="language">
+          <button type="button" data-lang="es" aria-pressed="true">ES</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
+        <!-- Dark/light switch: icon shows the mode the click switches to
+             (sun while dark, moon while light), matching the aria-label;
+             js/lib/theme.js owns the label, persistence and artwork swap. -->
+        <button type="button" class="theme-switch" aria-label="Cambiar a modo claro">
+          <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <svg class="theme-icon theme-icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+        </button>
+      </div>
+    </div><!-- /.corner-hud -->
+
     <main>
-      <section id="proyectos-carousel" aria-label="Proyectos">
+      <section id="proyectos-carousel" aria-label="Proyectos" data-i18n-aria="projects">
         <div class="slide is-active" data-slug="qa-flow-checklists">
           <div class="slide-media" aria-hidden="true">
             <video id="slide-scrub-video" muted playsinline preload="auto">
@@ -102,7 +175,7 @@
               <path d="M42 71l4 4 8-8" />
             </svg>
             <h2 class="slide-title" style="--accent: #facc15;">QA Flow Checklists</h2>
-            <p class="slide-tagline">221 decisiones de QA, de shift-left a regression.</p>
+            <p class="slide-tagline" data-i18n="taglineQa">221 decisiones de QA, de shift-left a regression.</p>
           </div>
         </div>
         <div class="slide" data-slug="jira-traceability">
@@ -114,7 +187,7 @@
               <path d="M28 22h8M58 22h8" />
             </svg>
             <h2 class="slide-title" style="--accent: #2bff88;">Jira Traceability Manager</h2>
-            <p class="slide-tagline">De 2-3 horas de auditoría manual a 30 segundos.</p>
+            <p class="slide-tagline" data-i18n="taglineJira">De 2-3 horas de auditoría manual a 30 segundos.</p>
           </div>
         </div>
         <div class="slide" data-slug="harness-manager">
@@ -125,16 +198,16 @@
               <path d="M50 22v56" />
             </svg>
             <h2 class="slide-title" style="--accent: #ff3355;">Harness Manager</h2>
-            <p class="slide-tagline">Cualquier arnés, desde el navegador.</p>
+            <p class="slide-tagline" data-i18n="taglineHarness">Cualquier arnés, desde el navegador.</p>
           </div>
         </div>
-        <button class="car-arrow car-arrow--prev" id="car-prev" aria-label="Proyecto anterior">
+        <button class="car-arrow car-arrow--prev" id="car-prev" aria-label="Proyecto anterior" data-i18n-aria="prevProject">
           <svg viewBox="0 0 18 10" fill="none" aria-hidden="true"><path d="M1 1 L9 5 L17 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
-        <button class="car-arrow car-arrow--next" id="car-next" aria-label="Proyecto siguiente">
+        <button class="car-arrow car-arrow--next" id="car-next" aria-label="Proyecto siguiente" data-i18n-aria="nextProject">
           <svg viewBox="0 0 18 10" fill="none" aria-hidden="true"><path d="M1 9 L9 5 L17 1" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
-        <div class="car-dots" id="car-dots" role="tablist" aria-label="Proyectos"></div>
+        <div class="car-dots" id="car-dots" role="tablist" aria-label="Proyectos" data-i18n-aria="projects"></div>
       </section>
 
       <section id="proyectos-info">

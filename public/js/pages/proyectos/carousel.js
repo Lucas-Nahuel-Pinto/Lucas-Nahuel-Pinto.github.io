@@ -1,7 +1,10 @@
 /**
  * Projects carousel: slides, detail section, chips, dots, arrows, keyboard,
- * hash deep links and swipe.
+ * hash deep links and swipe. The detail copy follows the ES/EN switch:
+ * langchange re-renders the visible section.
  */
+import { getLang, t } from '/js/lib/i18n.js';
+
 export function createCarousel({ projects, carouselId = 'proyectos-carousel' }) {
   const carousel = document.getElementById(carouselId);
   const slides = Array.prototype.slice.call(carousel.querySelectorAll('.slide'));
@@ -16,19 +19,31 @@ export function createCarousel({ projects, carouselId = 'proyectos-carousel' }) 
     return index === -1 ? 0 : index;
   }
 
+  /** Language-aware copy: titles are product names and stay put. */
+  function localized(project) {
+    const en = getLang() === 'en' && project.en;
+    return {
+      tagline: en ? project.en.tagline : project.tagline,
+      idea: en ? project.en.idea : project.idea,
+      problems: en ? project.en.problems : project.problems,
+      metricLabel: en ? project.en.metricLabel : project.metric.label
+    };
+  }
+
   function renderInfo(project) {
+    const copy = localized(project);
     infoContent.innerHTML =
       '<h1 style="color:' + project.accent + ';">' + project.title + '</h1>' +
-      '<p class="info-tagline">' + project.tagline + '</p>' +
+      '<p class="info-tagline">' + copy.tagline + '</p>' +
       '<div class="info-block">' +
-        '<h3>Cómo surgió la idea</h3><p>' + project.idea + '</p>' +
+        '<h3>' + t('ideaHeading') + '</h3><p>' + copy.idea + '</p>' +
       '</div>' +
       '<div class="info-block">' +
-        '<h3>Qué problemas resuelve</h3><p>' + project.problems + '</p>' +
+        '<h3>' + t('problemsHeading') + '</h3><p>' + copy.problems + '</p>' +
       '</div>' +
       '<div class="info-metric">' +
         '<span class="metric-value">' + project.metric.value + '</span>' +
-        '<span class="metric-label">' + project.metric.label + '</span>' +
+        '<span class="metric-label">' + copy.metricLabel + '</span>' +
       '</div>';
   }
 
@@ -47,6 +62,8 @@ export function createCarousel({ projects, carouselId = 'proyectos-carousel' }) 
   function syncDots() {
     Array.prototype.forEach.call(dotsWrap.children, (dot, index) => {
       dot.classList.toggle('is-active', index === current);
+      // Refresh the label too: it carries the language-aware "Go to …".
+      dot.setAttribute('aria-label', t('goTo') + ' ' + projects[index].title);
     });
   }
 
@@ -73,7 +90,7 @@ export function createCarousel({ projects, carouselId = 'proyectos-carousel' }) 
       const dot = document.createElement('button');
       dot.type = 'button';
       dot.className = 'car-dot' + (index === current ? ' is-active' : '');
-      dot.setAttribute('aria-label', 'Ir a ' + project.title);
+      dot.setAttribute('aria-label', t('goTo') + ' ' + project.title);
       dot.addEventListener('click', () => goTo(index));
       dotsWrap.appendChild(dot);
     });
@@ -134,6 +151,10 @@ export function createCarousel({ projects, carouselId = 'proyectos-carousel' }) 
   initSwipe();
   current = indexOfSlug(window.location.hash.replace('#', ''));
   render();
+
+  // ES/EN flip while on the page: re-render the visible detail section
+  // (slide taglines are static [data-i18n] markup and swap on their own).
+  window.addEventListener('langchange', render);
 
   return {
     goTo,
