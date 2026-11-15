@@ -30,8 +30,8 @@
   pointer-events: none;
   /* Cut the left extreme with a gradient so the artwork melts into the
      video background instead of ending on a hard vertical seam. */
-  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 33%, #000 95%);
-  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 33%, #000 95%);
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 28%, #000 95%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 28%, #000 95%);
 }
 
 @media (max-width: 767px) {

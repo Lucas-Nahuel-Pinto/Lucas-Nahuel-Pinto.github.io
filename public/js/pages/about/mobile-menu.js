@@ -1,4 +1,6 @@
 /** Mobile hamburger: toggles the full-screen overlay and morphs the bars. */
+import { t } from '/js/lib/i18n.js';
+
 export function initMobileMenu() {
   const overlay = document.getElementById('mobile-menu');
   const bars = [
@@ -21,9 +23,14 @@ export function initMobileMenu() {
 
   let isOpen = false;
 
+  // Label announces the ACTION (open/close) in the current language.
+  function syncLabel() {
+    toggle.setAttribute('aria-label', t(isOpen ? 'menuClose' : 'menuOpen'));
+  }
+
   function setMenu(open) {
     isOpen = open;
-    toggle.setAttribute('aria-label', open ? 'Close Menu' : 'Open Menu');
+    syncLabel();
 
     if (open) {
       overlay.classList.remove('opacity-0', 'pointer-events-none');
@@ -45,4 +52,8 @@ export function initMobileMenu() {
   document.querySelectorAll('.mobile-link').forEach((link) => {
     link.addEventListener('click', () => setMenu(false));
   });
+
+  // Initial label (markup ships the Spanish default) + ES/EN flips.
+  syncLabel();
+  window.addEventListener('langchange', syncLabel);
 }

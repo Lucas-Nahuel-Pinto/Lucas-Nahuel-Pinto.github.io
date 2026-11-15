@@ -89,13 +89,13 @@
     <noscript><style>#page-loader { display: none; }</style></noscript>
     <link rel="stylesheet" href="/css/base/reset.css" />
     <link rel="stylesheet" href="/css/pages/intro/tokens.css" />
-    <link rel="stylesheet" href="/css/pages/intro/nav.css" />
+    <link rel="stylesheet" href="/css/base/hud.css" />
     <link rel="stylesheet" href="/css/pages/intro/stage.css" />
     <link rel="stylesheet" href="/css/pages/intro/board.css" />
   </head>
   <body>
     <!-- Loading veil: paints on the first frame, hidden by js/lib/loader.js -->
-    <div id="page-loader" role="status" aria-label="Cargando">
+    <div id="page-loader" role="status" aria-label="Cargando" data-i18n-aria="loading">
       <span class="loader-spinner" aria-hidden="true"></span>
     </div>
 
@@ -136,8 +136,9 @@
           <button type="button" data-lang="es" aria-pressed="true">ES</button>
           <button type="button" data-lang="en" aria-pressed="false">EN</button>
         </div>
-        <!-- Dark/light switch: icon shows the CURRENT mode (moon = dark,
-             sun = light); js/lib/theme.js owns the label and persistence. -->
+        <!-- Dark/light switch: icon shows the mode the click switches to
+             (sun while dark, moon while light), matching the aria-label;
+             js/lib/theme.js owns the label and persistence. -->
         <button type="button" class="theme-switch" aria-label="Cambiar a modo claro">
           <svg class="theme-icon theme-icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
@@ -164,12 +165,12 @@
         <canvas id="chart"></canvas>
 
         <!-- Minimalist side arrows (rotate menu) -->
-        <button type="button" class="chart-arrow chart-arrow--left" aria-label="Seccion anterior">
+        <button type="button" class="chart-arrow chart-arrow--left" aria-label="Seccion anterior" data-i18n-aria="prevSection">
           <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
             <path d="M13 1 L5 5 L13 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </button>
-        <button type="button" class="chart-arrow chart-arrow--right" aria-label="Seccion siguiente">
+        <button type="button" class="chart-arrow chart-arrow--right" aria-label="Seccion siguiente" data-i18n-aria="nextSection">
           <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
             <path d="M5 1 L13 5 L5 9" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
@@ -196,6 +197,7 @@
         preserveAspectRatio="none"
         role="group"
         aria-label="Seleccionar proyecto"
+        data-i18n-aria="selectProject"
       >
         <!-- Projects board: project menu.
              Panel-local coordinates (340x216) mapped onto the board's quad.
@@ -204,11 +206,11 @@
              one matrix per row keeps every row parallel to its own edge. -->
         <g>
           <g transform="matrix(0.9258,0.0082,0.0626,0.8358,269.6518,215.6371)">
-            <text class="panel-title" x="98" y="37" fill="#ffffff">Proyectos</text>
+            <text class="panel-title" x="98" y="37" fill="#ffffff" data-i18n="projects">Proyectos</text>
           </g>
 
           <g transform="matrix(0.9299,-0.0282,0.0623,0.8483,264.5511,235.2481)">
-            <a href="proyectos.html#jira-traceability" aria-label="Ir a Jira Traceability Manager">
+            <a href="proyectos.html#jira-traceability" aria-label="Ir a Jira Traceability Manager" data-i18n-aria="goToJira">
               <rect class="row-bg" x="12" y="58" width="318" height="40" rx="8" />
               <circle cx="30" cy="78" r="8.5" fill="#43e05a" />
               <text class="row-label" x="47" y="86">Jira T. Manager</text>
@@ -217,7 +219,7 @@
           </g>
 
           <g transform="matrix(0.9293,-0.0603,0.0625,0.8516,264.6319,240.4101)">
-            <a href="proyectos.html#qa-flow-checklists" aria-label="Ir a QA Checklist">
+            <a href="proyectos.html#qa-flow-checklists" aria-label="Ir a QA Checklist" data-i18n-aria="goToQa">
               <rect class="row-bg" x="12" y="100" width="318" height="40" rx="8" />
               <circle cx="30" cy="120" r="8.5" fill="#ffd22b" />
               <text class="row-label" x="47" y="128">QA Checklist</text>
@@ -226,7 +228,7 @@
           </g>
 
           <g transform="matrix(0.9286,-0.0926,0.0627,0.855,264.7044,245.4722)">
-            <a href="proyectos.html#harness-manager" aria-label="Ir a Harness Manager">
+            <a href="proyectos.html#harness-manager" aria-label="Ir a Harness Manager" data-i18n-aria="goToHarness">
               <rect class="row-bg" x="12" y="142" width="318" height="40" rx="8" />
               <circle cx="30" cy="162" r="8.5" fill="#ff5545" />
               <text class="row-label" x="47" y="170">Harness Manager</text>
@@ -242,7 +244,7 @@
              carry the 4 vertices measured off mainPage-bg-night.jpg
              (TL 1082,202 / TR 1390,174 / BR 1390,421 / BL 1078,383) —
              edit each point independently to re-register the box. -->
-        <a class="board-link" href="#" aria-label="Ir a Logros">
+        <a class="board-link" href="#" aria-label="Ir a Logros" data-i18n-aria="goToAchievements">
           <!-- Invisible hit area: frame glow centerline -->
           <polygon class="board-hit" points="1082,202 1390,174 1390,421 1078,383" />
           <!-- Hover halo: same quad inset 11px, just inside the glow -->
@@ -250,7 +252,7 @@
           <!-- Title and chevron ride the same perspective: each is a
                least-squares affine of the homography into the halo quad -->
           <g transform="matrix(0.7308,-0.0337,-0.0122,0.7861,1089.7238,222.1906)">
-            <text class="board-link-title" x="150" y="18" text-anchor="middle">Logros</text>
+            <text class="board-link-title" x="150" y="18" text-anchor="middle" data-i18n="achievements">Logros</text>
           </g>
           <g transform="matrix(0.9613,-0.1432,-0.0043,0.9031,1035.0991,214.7926)">
             <path class="board-link-chev" d="M294 42 L306 54 L294 66" />
@@ -259,8 +261,8 @@
       </svg>
 
       <!-- Real links: keyboard, SEO and semantic layer over the 3D canvas -->
-      <nav class="sr-only" aria-label="Secciones del portfolio">
-        <a id="sr-about" href="about.html">About Me</a>
+      <nav class="sr-only" aria-label="Secciones del portfolio" data-i18n-aria="portfolioSections">
+        <a id="sr-about" href="about.html" data-i18n="about">About Me</a>
         <a id="sr-p1" href="proyectos.html#harness-manager">Harness Manager</a>
         <a id="sr-p2" href="proyectos.html#qa-flow-checklists">QA Checklist</a>
         <a id="sr-p3" href="proyectos.html#jira-traceability">Jira Traceability Manager</a>

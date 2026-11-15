@@ -3,13 +3,20 @@
  *
  * Dark is the default: <html data-theme="dark"> ships in the markup and a
  * tiny head script applies the stored preference before the first paint,
- * so the intro never flashes the wrong artwork. This module owns the
+ * so a page never flashes the wrong artwork. This module owns the
  * button label, persists the choice in localStorage and preloads the
- * OTHER background after window load (never before — it would delay the
+ * OTHER artwork after window load (never before — it would delay the
  * load event the loading veil waits on), so toggling swaps instantly with
  * no empty frame.
  *
- * The icon shows the CURRENT mode: moon while dark, sun while light.
+ * Artwork sources: pages can point elements at per-theme images with
+ * data-theme-src-dark / data-theme-src-light (about's overlay <img>) —
+ * those swap here on every theme change. Pages whose artwork is a CSS
+ * background (intro's #page-zoom) are served from BACKGROUNDS instead.
+ *
+ * The icon shows the MODE THE CLICK SWITCHES TO: sun while dark
+ * (click → light), moon while light (click → dark) — the same target
+ * the aria-label announces.
  */
 
 const STORAGE_KEY = 'portfolio-theme';
@@ -44,14 +51,43 @@ function storeTheme(theme) {
 /** Resolves once the theme's artwork is decoded (cached after first use). */
 function preload(theme) {
   if (!preloads[theme]) {
-    preloads[theme] = new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => resolve();
-      img.onerror = () => resolve();
-      img.src = BACKGROUNDS[theme];
-    });
+    const urls = sourcesFor(theme);
+    preloads[theme] = Promise.all(
+      urls.map(
+        (url) =>
+          new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            img.src = url;
+          })
+      )
+    );
   }
   return preloads[theme];
+}
+
+/** Artwork URLs the theme needs on THIS page. */
+function sourcesFor(theme) {
+  const urls = [];
+  const push = (url) => {
+    if (url && urls.indexOf(url) === -1) urls.push(url);
+  };
+  // CSS-background artwork (intro's #page-zoom wrapper)
+  if (document.getElementById('page-zoom')) push(BACKGROUNDS[theme]);
+  // Element artwork (about's overlay <img>)
+  document.querySelectorAll('[data-theme-src-dark]').forEach((el) => {
+    push(el.getAttribute(theme === 'light' ? 'data-theme-src-light' : 'data-theme-src-dark'));
+  });
+  return urls;
+}
+
+/** Points every [data-theme-src-*] element at the current theme's artwork. */
+function syncArtwork(theme) {
+  document.querySelectorAll('[data-theme-src-dark]').forEach((el) => {
+    const url = el.getAttribute(theme === 'light' ? 'data-theme-src-light' : 'data-theme-src-dark');
+    if (url && el.getAttribute('src') !== url) el.src = url;
+  });
 }
 
 function syncButton(theme) {
@@ -66,6 +102,7 @@ export function applyTheme(theme) {
   current = theme;
   storeTheme(theme);
   document.documentElement.dataset.theme = theme;
+  syncArtwork(theme);
   syncButton(theme);
   window.dispatchEvent(new CustomEvent('themechange', { detail: { theme } }));
 }
@@ -80,6 +117,7 @@ export function initThemeSwitch() {
 
   // The head script already set the attribute; adopt it as the truth.
   current = readDomTheme();
+  syncArtwork(current);
   syncButton(current);
 
   button.addEventListener('click', async () => {

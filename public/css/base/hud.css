@@ -1,7 +1,9 @@
-/* Fixed top-left HUD: a quarter-circle wedge welded into the corner with a
-   concentric inner disc. The brand sits inside the core, the ES/EN and
-   theme switches ride the ring (polar slots below). The fills mirror the
-   artwork's holograms: dark translucent glass, thin cyan rim, soft glow. */
+/* Shared corner HUD: a quarter-circle wedge welded into the top-left corner
+   with a concentric inner disc. The core holds the page's identity link
+   (intro: the brand; about: the back arrow) and the ES/EN + dark/light
+   switches ride the ring (polar slots below). The fills mirror the
+   artwork's holograms: dark translucent glass, thin cyan rim, soft glow.
+   Used by intro.html and about.html — keep both in sync with this file. */
 .corner-hud {
   position: fixed;
   top: 0;
@@ -9,7 +11,7 @@
   z-index: 10;
   width: 260px;
   height: 260px;
-  /* Only the brand and the switches take clicks; the wedge is decor. */
+  /* Only the core link and the switches take clicks; the wedge is decor. */
   pointer-events: none;
   /* The SVG and every slot below stay in the 260px coordinate space;
      this renders the whole wedge at 50% of its drawn size. */
@@ -46,8 +48,8 @@
 
 .corner-hud__brand {
   position: absolute;
-  /* Centroid of the visible quarter disc, so the name reads centered */
-  left: 60px;
+  /* Centroid of the visible quarter disc, so the content reads centered */
+  left: 58px;
   top: 60px;
   transform: translate(-50%, -50%);
   color: #cfefff;
@@ -62,6 +64,29 @@
 
 .corner-hud__brand:hover {
   color: #fff;
+}
+
+/* Core link when it holds a back arrow instead of the brand (about and
+   proyectos): center the chevron in the core disc — the tall 10x18 viewBox
+   rides off the inline baseline, so grid + line-height 0. Tuned values
+   (36px glyph, nudged left) came from the visual pass on about. */
+.corner-hud__back {
+  display: grid;
+  place-items: center;
+  line-height: 0;
+  left: 18%;
+}
+
+.corner-hud__back svg {
+  display: block;
+  width: 36px;
+  height: auto;
+  filter: drop-shadow(0 0 6px rgba(150, 240, 255, 0.95));
+  transition: filter 0.15s ease;
+}
+
+.corner-hud__back:hover svg {
+  filter: drop-shadow(0 0 10px rgba(190, 248, 255, 1));
 }
 
 /* Controls sit at fixed polar slots inside the 150–260 ring band: the
@@ -90,12 +115,12 @@
 
 .corner-hud a:focus-visible,
 .corner-hud button:focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--focus, #facc15);
   outline-offset: 4px;
   border-radius: 12px;
 }
 
-/* Shrink the wedge on narrow screens so it never swallows the board
+/* Shrink the wedge on narrow screens so it never swallows the content
    (multipliers on top of the base 0.5). */
 @media (max-width: 900px) {
   .corner-hud {
@@ -143,7 +168,8 @@
 }
 
 /* Dark/light switch: same glass chip as the language switch, holding a
-   single icon — the moon while dark (default), the sun while light. */
+   single icon — the icon shows the MODE THE CLICK SWITCHES TO (sun while
+   dark, moon while light), matching the aria-label's action wording. */
 .theme-switch {
   display: flex;
   align-items: center;
@@ -168,10 +194,10 @@
   height: 33px;
 }
 
-[data-theme="dark"] .theme-icon--moon {
+[data-theme="dark"] .theme-icon--sun {
   display: block;
 }
 
-[data-theme="light"] .theme-icon--sun {
+[data-theme="light"] .theme-icon--moon {
   display: block;
 }

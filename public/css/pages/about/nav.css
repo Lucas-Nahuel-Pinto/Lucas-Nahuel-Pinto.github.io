@@ -1,5 +1,5 @@
-/* Holographic HUD buttons: the scroll hints that bookend the wheel and the
-   navbar back arrow. Same recipe as intro.html's chart arrows. */
+/* Holographic HUD buttons: the scroll hints that bookend the wheel.
+   Same recipe as intro.html's chart arrows. */
 .wheel-hint {
   position: relative;
   top: auto;
@@ -54,20 +54,5 @@
   margin-top: 18px;
 }
 
-/* Navbar back arrow: force the chevron to sit dead-center in the 44px
-   square (tall 10x18 viewBox, inline baseline can nudge it off). */
-.nav-back {
-  display: grid;
-  place-items: center;
-  line-height: 0;
-  flex: none;
-  margin-inline: 0;
-}
-
-.nav-back svg {
-  display: block;
-  width: 45%;
-  height: auto;
-  /* Same glyph as the wheel hints, only rotated to point left */
-  transform: rotate(-90deg);
-}
+/* The corner-HUD core link (.corner-hud__back) moved to css/base/hud.css
+   so proyectos.html shares the same tuned back-arrow slot. */
