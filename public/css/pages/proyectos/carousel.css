@@ -35,9 +35,14 @@
   inset: 0;
   overflow: hidden;
   pointer-events: none;
-  /* Yellow field: matches the hero video's baked-in background
-     (sampled #FCC714), so the pre-load frame blends seamlessly. */
+  /* QA's yellow field (sampled #FCC714) so its pre-load frame blends;
+     the Jira hero bakes in a green screen — override below. */
   background: #fcc714;
+}
+
+/* Jira hero: green screen baked into the video (sampled #40B22B). */
+.slide[data-slug="jira-traceability"] .slide-media {
+  background: #40b22b;
 }
 
 .slide-media video {
@@ -49,23 +54,24 @@
   object-position: center;
 }
 
-/* Dots sit on the yellow band on this slide: flip them to dark ink. */
-#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-dot {
+/* Dots sit on the bright video fields (QA yellow, Jira green): flip them
+   to dark ink. The active slide carrying a full-bleed video selects both. */
+#proyectos-carousel:has(.slide.is-active .slide-media) .car-dot {
   background: rgba(4, 6, 15, 0.35);
 }
 
-#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-dot.is-active {
+#proyectos-carousel:has(.slide.is-active .slide-media) .car-dot.is-active {
   background: #04060f;
 }
 
-/* Arrows: translucent navy turns olive on yellow — go solid ink here. */
-#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow {
+/* Arrows: translucent navy turns muddy on the bright fields — go solid ink. */
+#proyectos-carousel:has(.slide.is-active .slide-media) .car-arrow {
   background: #04060f;
   border-color: rgba(4, 6, 15, 0.6);
 }
 
-#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow:hover,
-#proyectos-carousel:has(.slide[data-slug="qa-flow-checklists"].is-active) .car-arrow:focus-visible {
+#proyectos-carousel:has(.slide.is-active .slide-media) .car-arrow:hover,
+#proyectos-carousel:has(.slide.is-active .slide-media) .car-arrow:focus-visible {
   background: rgba(4, 6, 15, 0.82);
   border-color: rgba(4, 6, 15, 0.9);
 }
@@ -80,21 +86,6 @@
   gap: 18px;
 }
 
-/* Video slides carry their own visual: drop the duplicate SVG icon. */
-.slide:has(.slide-media) .slide-icon {
-  display: none;
-}
-
-/* No scrim: flip the copy from light to dark ink so it stays legible on the
-   yellow field and on the light clipboard. */
-.slide:has(.slide-media) .slide-title {
-  color: #04060f;
-}
-
-.slide:has(.slide-media) .slide-tagline {
-  color: rgba(4, 6, 15, 0.85);
-}
-
 .slide-icon {
   width: clamp(90px, 16vw, 150px);
   height: auto;
@@ -107,13 +98,27 @@
   filter: drop-shadow(0 0 18px rgba(120, 220, 255, 0.35));
 }
 
+/* Every project title rides centered at the top of its slide — flush-top
+   tuning (8px) from the visual pass — in white over the amber video and
+   over the dark field alike; the soft dark shadow is what keeps white
+   readable on the yellow. Icons and taglines keep the middle stack. */
 .slide-title {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  padding-inline: 24px;
+  z-index: 2;
   margin: 0;
+  text-align: center;
   font-family: var(--font-heading);
   font-size: clamp(38px, 7.5vw, 84px);
   line-height: 1.05;
   letter-spacing: -0.02em;
-  color: var(--accent, #facc15);
+  color: #fff;
+  text-shadow:
+    0 2px 14px rgba(4, 6, 15, 0.55),
+    0 1px 2px rgba(4, 6, 15, 0.4);
 }
 
 .slide-tagline {
@@ -189,6 +194,81 @@
   background: #fff;
 }
 
+/* Scroll hint: one wheel tick (or a tap on the chevron) drops the whole
+   page to the detail section below. Same holographic recipe as about's
+   wheel hints. Parks in the bottom-right corner on the dots' baseline —
+   clear of the QA clipboard's drop shadow, which owns bottom-center. */
+.car-scroll {
+  position: absolute;
+  right: 20px;
+  bottom: 26px;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  cursor: pointer;
+  border: 2px solid rgba(126, 232, 255, 0.95);
+  border-radius: 12px;
+  background:
+    linear-gradient(112deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.04) 32%, rgba(255, 255, 255, 0) 50%),
+    linear-gradient(180deg, rgba(0, 170, 255, 0.32) 0%, rgba(0, 70, 175, 0.55) 55%, rgba(1, 22, 74, 0.85) 100%);
+  box-shadow:
+    0 0 10px rgba(80, 215, 255, 0.6),
+    0 0 24px rgba(0, 150, 255, 0.3),
+    inset 0 0 14px rgba(80, 215, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+}
+
+.car-scroll:hover,
+.car-scroll:focus-visible {
+  filter: brightness(1.25);
+  box-shadow:
+    0 0 14px rgba(120, 230, 255, 0.9),
+    0 0 32px rgba(0, 170, 255, 0.5),
+    inset 0 0 18px rgba(120, 230, 255, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.car-scroll:focus-visible {
+  outline: 2px solid #facc15;
+  outline-offset: 3px;
+}
+
+.car-scroll svg {
+  display: block;
+  width: 45%;
+  height: auto;
+  filter: drop-shadow(0 0 5px rgba(150, 240, 255, 0.95));
+  animation: car-scroll-bob 1.6s ease-in-out infinite;
+}
+
+@keyframes car-scroll-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+/* The hint rides the bright video fields too: go solid ink like the
+   arrows and dots do there. */
+#proyectos-carousel:has(.slide.is-active .slide-media) .car-scroll {
+  background: #04060f;
+  border-color: rgba(4, 6, 15, 0.6);
+}
+
+#proyectos-carousel:has(.slide.is-active .slide-media) .car-scroll:hover,
+#proyectos-carousel:has(.slide.is-active .slide-media) .car-scroll:focus-visible {
+  background: rgba(4, 6, 15, 0.82);
+  border-color: rgba(4, 6, 15, 0.9);
+}
+
 @media (max-width: 767px) {
   .slide {
     padding: 120px 20px 90px;
@@ -209,6 +289,12 @@
   .car-arrow--next {
     right: 14px;
   }
+
+  /* Same right edge as the arrows: the hint stacks under .car-arrow--next
+     (20px gap), keeping one clean control column. */
+  .car-scroll {
+    right: 14px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -218,5 +304,9 @@
 
   .car-dot {
     transition: none;
+  }
+
+  .car-scroll svg {
+    animation: none;
   }
 }

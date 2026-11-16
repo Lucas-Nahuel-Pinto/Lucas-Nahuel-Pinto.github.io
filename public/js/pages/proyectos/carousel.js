@@ -19,7 +19,9 @@ export function createCarousel({ projects, carouselId = 'proyectos-carousel' }) 
     return index === -1 ? 0 : index;
   }
 
-  /** Language-aware copy: titles are product names and stay put. */
+  /** Language-aware copy: titles are product names and stay put. The
+      tagline is optional — QA dropped its subtitle, so the detail section
+      renders without one when the field is missing. */
   function localized(project) {
     const en = getLang() === 'en' && project.en;
     return {
@@ -32,9 +34,10 @@ export function createCarousel({ projects, carouselId = 'proyectos-carousel' }) 
 
   function renderInfo(project) {
     const copy = localized(project);
+    const tagline = copy.tagline ? '<p class="info-tagline">' + copy.tagline + '</p>' : '';
     infoContent.innerHTML =
       '<h1 style="color:' + project.accent + ';">' + project.title + '</h1>' +
-      '<p class="info-tagline">' + copy.tagline + '</p>' +
+      tagline +
       '<div class="info-block">' +
         '<h3>' + t('ideaHeading') + '</h3><p>' + copy.idea + '</p>' +
       '</div>' +
@@ -146,9 +149,66 @@ export function createCarousel({ projects, carouselId = 'proyectos-carousel' }) 
     });
   }
 
+  /**
+   * One wheel tick over the slide drops the whole page to the detail
+   * section below (and back up from its top edge); the chevron does the
+   * same for clicks, taps and Enter/Space. Native scrolling stays
+   * untouched once the detail section is well in view. A short lock
+   * absorbs the rest of the trackpad/mouse momentum while gliding.
+   */
+  function initScrollHint() {
+    const hint = document.getElementById('car-scroll');
+    const info = document.getElementById('proyectos-info');
+    const loader = document.getElementById('page-loader');
+    if (!hint || !info) return;
+
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let animating = false;
+
+    function infoTop() {
+      return Math.round(info.getBoundingClientRect().top + window.scrollY);
+    }
+
+    function snap(top) {
+      if (animating) return;
+      animating = true;
+      window.scrollTo({ top: top, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+      // No cross-browser "smooth scroll finished" signal we can rely on
+      // here; 900ms covers a full-viewport jump in Firefox and Chromium.
+      window.setTimeout(() => {
+        animating = false;
+      }, 900);
+    }
+
+    hint.addEventListener('click', () => snap(infoTop()));
+
+    window.addEventListener(
+      'wheel',
+      (event) => {
+        if (event.ctrlKey) return; // pinch zoom: browser's gesture
+        if (loader && !loader.classList.contains('is-done')) return;
+        if (animating) {
+          event.preventDefault(); // absorb momentum while gliding
+          return;
+        }
+        const y = window.scrollY;
+        const t = infoTop();
+        if (event.deltaY > 0 && y < t - 40) {
+          event.preventDefault();
+          snap(t);
+        } else if (event.deltaY < 0 && y > 40 && y < t + 40) {
+          event.preventDefault();
+          snap(0);
+        }
+      },
+      { passive: false }
+    );
+  }
+
   buildDots();
   initNavigation();
   initSwipe();
+  initScrollHint();
   current = indexOfSlug(window.location.hash.replace('#', ''));
   render();
 

@@ -1,6 +1,6 @@
 /**
- * Projects page entry point: carousel plus the QA hero video scrub, which is
- * only meaningful while the first slide is active.
+ * Projects page entry point: carousel plus the hero video scrubs (QA and
+ * Jira), each only meaningful while its own slide is active.
  */
 import { PROJECTS } from '/js/pages/proyectos/data.js';
 import { createCarousel } from '/js/pages/proyectos/carousel.js';
@@ -21,4 +21,10 @@ createVideoScrub({
   video: document.getElementById('slide-scrub-video'),
   sensitivity: 0.8,
   isEnabled: () => carousel.activeSlug() === 'qa-flow-checklists'
+});
+
+createVideoScrub({
+  video: document.getElementById('jtm-scrub-video'),
+  sensitivity: 0.8,
+  isEnabled: () => carousel.activeSlug() === 'jira-traceability'
 });

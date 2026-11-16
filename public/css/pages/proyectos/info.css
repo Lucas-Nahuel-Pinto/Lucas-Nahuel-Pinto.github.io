@@ -43,6 +43,12 @@
   color: var(--accent, #facc15);
 }
 
+/* Projects without a tagline: the heading needs the breathing room the
+   (absent) subtitle used to carry. h1 + .info-block only matches then. */
+#proyectos-info h1 + .info-block {
+  margin-top: 48px;
+}
+
 #proyectos-info .info-tagline {
   margin: 0 0 48px;
   font-size: clamp(16px, 2vw, 20px);

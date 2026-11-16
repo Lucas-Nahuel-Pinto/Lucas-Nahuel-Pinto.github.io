@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lucas Pinto | Proyectos</title>
-    <meta name="description" content="Proyectos del portfolio de Lucas Pinto: QA Flow Checklists, Jira Traceability Manager y Harness Manager." />
+    <meta name="description" content="Proyectos del portfolio de Lucas Pinto: QA Checklist, Jira Traceability Manager y Harness Manager." />
     <!-- Theme: apply the stored preference before the first paint so the
          page never flashes the default (dark) artwork. Dark ships as the
          static data-theme="dark" on <html> — no JS needed for the default. -->
@@ -173,38 +173,25 @@
               <source src="/assets/aistudio/QA-checklist-hero.mp4" type="video/mp4" />
             </video>
           </div>
-          <div class="slide-inner">
-            <svg class="slide-icon" viewBox="0 0 100 100" aria-hidden="true">
-              <rect x="32" y="24" width="36" height="52" rx="4" />
-              <path d="M44 24v-6h12v6" />
-              <path d="M38 44h24M38 52h16" />
-              <circle cx="42" cy="68" r="6" />
-              <path d="M42 71l4 4 8-8" />
-            </svg>
-            <h2 class="slide-title" style="--accent: #facc15;">QA Flow Checklists</h2>
-            <p class="slide-tagline" data-i18n="taglineQa">221 decisiones de QA, de shift-left a regression.</p>
-          </div>
+          <h2 class="slide-title">QA checklist</h2>
         </div>
         <div class="slide" data-slug="jira-traceability">
-          <div class="slide-inner">
-            <svg class="slide-icon" viewBox="0 0 100 100" aria-hidden="true">
-              <rect x="18" y="28" width="20" height="40" rx="2" />
-              <rect x="30" y="28" width="20" height="40" rx="2" />
-              <rect x="42" y="28" width="20" height="40" rx="2" />
-              <path d="M28 22h8M58 22h8" />
-            </svg>
-            <h2 class="slide-title" style="--accent: #2bff88;">Jira Traceability Manager</h2>
-            <p class="slide-tagline" data-i18n="taglineJira">De 2-3 horas de auditoría manual a 30 segundos.</p>
+          <div class="slide-media" aria-hidden="true">
+            <video id="jtm-scrub-video" muted playsinline preload="auto">
+              <!-- Full-bleed hero: the green screen is baked into the video. -->
+              <source src="/assets/aistudio/jtm-hero.mp4" type="video/mp4" />
+            </video>
           </div>
+          <h2 class="slide-title">Jira Traceability Manager</h2>
         </div>
         <div class="slide" data-slug="harness-manager">
+          <h2 class="slide-title">Harness Manager</h2>
           <div class="slide-inner">
             <svg class="slide-icon" viewBox="0 0 100 100" aria-hidden="true">
               <path d="M18 30 L6 50 L18 70" />
               <path d="M82 30 L94 50 L82 70" />
               <path d="M50 22v56" />
             </svg>
-            <h2 class="slide-title" style="--accent: #ff3355;">Harness Manager</h2>
             <p class="slide-tagline" data-i18n="taglineHarness">Cualquier arnés, desde el navegador.</p>
           </div>
         </div>
@@ -215,6 +202,14 @@
           <svg viewBox="0 0 18 10" fill="none" aria-hidden="true"><path d="M1 9 L9 5 L17 1" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </button>
         <div class="car-dots" id="car-dots" role="tablist" aria-label="Proyectos" data-i18n-aria="projects"></div>
+        <!-- Scroll hint: one wheel tick (or a tap on the chevron) drops the
+             whole page to the detail section below. Same holographic recipe
+             as about's wheel hints. -->
+        <button type="button" class="car-scroll" id="car-scroll" aria-label="Bajar a los detalles" data-i18n-aria="scrollToDetails">
+          <svg viewBox="0 0 18 10" fill="none" aria-hidden="true">
+            <path d="M1 1 L9 9 L17 1" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
       </section>
 
       <section id="proyectos-info">

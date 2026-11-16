@@ -68,7 +68,7 @@ export const PROJECTS: Project[] = [
           metric: { value: '221', label: 'ítems en 5 checklists' },
         },
         caseStudy: {
-          title: 'QA Flow Checklists',
+          title: 'QA Checklist',
           pitch:
             'Estandaricé mi flujo QA completo en cinco checklists navegables: 221 decisiones que van del pre-sprint al regression, siempre a un clic.',
           tags: ['Proceso QA', 'Shift-left', 'Estandarización'],
@@ -163,7 +163,7 @@ export const PROJECTS: Project[] = [
           metric: { value: '221', label: 'items across 5 checklists' },
         },
         caseStudy: {
-          title: 'QA Flow Checklists',
+          title: 'QA Checklist',
           pitch:
             'I standardized my full QA flow into five navigable checklists: 221 decisions spanning pre-sprint to regression, always one click away.',
           tags: ['QA process', 'Shift-left', 'Standardization'],
