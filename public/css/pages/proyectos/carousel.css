@@ -45,6 +45,11 @@
   background: #40b22b;
 }
 
+/* Harness hero: red field baked into the video (sampled #F92312). */
+.slide[data-slug="harness-manager"] .slide-media {
+  background: #f92312;
+}
+
 .slide-media video {
   position: absolute;
   inset: 0;

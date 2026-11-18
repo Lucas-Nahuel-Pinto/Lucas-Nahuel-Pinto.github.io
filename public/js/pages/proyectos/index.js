@@ -1,6 +1,6 @@
 /**
- * Projects page entry point: carousel plus the hero video scrubs (QA and
- * Jira), each only meaningful while its own slide is active.
+ * Projects page entry point: carousel plus the hero video scrubs (QA, Jira
+ * and Harness), each only meaningful while its own slide is active.
  */
 import { PROJECTS } from '/js/pages/proyectos/data.js';
 import { createCarousel } from '/js/pages/proyectos/carousel.js';
@@ -27,4 +27,10 @@ createVideoScrub({
   video: document.getElementById('jtm-scrub-video'),
   sensitivity: 0.8,
   isEnabled: () => carousel.activeSlug() === 'jira-traceability'
+});
+
+createVideoScrub({
+  video: document.getElementById('harness-scrub-video'),
+  sensitivity: 0.8,
+  isEnabled: () => carousel.activeSlug() === 'harness-manager'
 });
