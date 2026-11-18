@@ -115,7 +115,7 @@ function translateNodes(lang) {
 }
 
 function syncSwitchButtons(lang) {
-  document.querySelectorAll('.lang-switch button').forEach((button) => {
+  document.querySelectorAll('button[data-lang]').forEach((button) => {
     button.setAttribute('aria-pressed', String(button.getAttribute('data-lang') === lang));
   });
 }
@@ -140,7 +140,7 @@ export function t(key) {
 }
 
 export function initLangSwitch() {
-  document.querySelectorAll('.lang-switch button').forEach((button) => {
+  document.querySelectorAll('button[data-lang]').forEach((button) => {
     button.addEventListener('click', () => applyLang(button.getAttribute('data-lang')));
   });
 

@@ -1,5 +1,6 @@
 /**
- * Dark/light theme switch next to the ES/EN control.
+ * Dark/light theme switch — the HUD's top ring sector (the .theme-switch
+ * class is kept on the sector button so this selector still finds it).
  *
  * Dark is the default: <html data-theme="dark"> ships in the markup and a
  * tiny head script applies the stored preference before the first paint,
