@@ -157,7 +157,7 @@
 }
 
 /* Structured full copy (Experiencia): each role is a bold heading with its
-   items as separate glass modules in a 3-column row — the row spans the
+   items as interactive flip cards in a 3-column row — the row spans the
    full width of the expanded panel, up to the right padding edge. */
 #option-panel-text .copy-list {
   margin: 0;
@@ -190,15 +190,88 @@
   list-style: none;
 }
 
-#option-panel-text .copy-list > li > ul > li {
+/* FLIP CARD: front = HUD line-art drawing + label, back = the copy. Both
+   faces share one grid cell (grid-area: 1/1) so the row keeps the text's
+   height and the front overlays it exactly; perspective sits on the card
+   and the scene rotates on .is-flipped. */
+#option-panel-text .copy-card {
+  position: relative;
   margin: 0;
-  padding: 16px 18px;
+  padding: 0;
+  list-style: none;
   font-size: clamp(15px, 1.2vw, 17px);
   line-height: 1.55;
+  cursor: pointer;
+  border-radius: 12px;
+  perspective: 1200px;
+}
+
+#option-panel-text .copy-card-scene {
+  display: grid;
+  transform-style: preserve-3d;
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#option-panel-text .copy-card.is-flipped .copy-card-scene {
+  transform: rotateY(180deg);
+}
+
+#option-panel-text .copy-card-face {
+  grid-area: 1 / 1;
+  padding: 16px 18px;
+  box-sizing: border-box;
   background: rgba(10, 40, 80, 0.45);
   border: 1px solid rgba(120, 220, 255, 0.35);
   border-radius: 12px;
-  box-sizing: border-box;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transition: border-color 0.2s ease;
+}
+
+#option-panel-text .copy-card-front {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+
+#option-panel-text .copy-card-back {
+  /* The copy stays left-aligned readable text, rotated away until flip.
+     Solid, not glass: Firefox keeps painting the front face behind this
+     one (backface-visibility does not hide it there), and a translucent
+     background would bleed the drawing through the text. */
+  transform: rotateY(180deg);
+  text-align: left;
+  background: #0a2850;
+}
+
+#option-panel-text .copy-card:hover .copy-card-face {
+  border-color: rgba(160, 235, 255, 0.8);
+}
+
+#option-panel-text .copy-card:focus-visible {
+  outline: 2px solid rgba(160, 235, 255, 0.95);
+  outline-offset: 2px;
+}
+
+#option-panel-text .copy-card-icon {
+  width: clamp(44px, 4vw, 60px);
+  height: clamp(44px, 4vw, 60px);
+  color: #78dcff;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(120, 220, 255, 0.5));
+}
+
+#option-panel-text .copy-card-label {
+  color: #fff;
+  font-weight: 700;
+  font-size: clamp(14px, 1.1vw, 16px);
 }
 
 @media (max-width: 1199px) {
@@ -347,6 +420,11 @@
   #option-panel-expand,
   #option-panel-expand .chev svg {
     animation: none;
+  }
+
+  #option-panel-text .copy-card-scene {
+    /* No 3D spin: the faces swap instantly. */
+    transition: none;
   }
 
   #option-panel-close {

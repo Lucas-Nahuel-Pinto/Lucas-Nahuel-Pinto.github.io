@@ -22,17 +22,41 @@ const PANEL_COPY = {
         {
           role: 'Consultora – Cliente del sector de seguros de salud | QA Engineer | 4 años',
           bullets: [
-            'Participé en el testing de una plataforma integral para la gestión de pacientes y procesos administrativos de una aseguradora de salud.',
-            'Trabajé principalmente en los módulos de autorización prioritaria de tratamientos y medicamentos, y de asistencia al usuario para la evaluación de elegibilidad a descuentos.',
-            'También participé en pruebas de funcionalidades relacionadas con verificación de seguros, reclamos, facturación y reportes financieros.'
+            {
+              text: 'Participé en el testing de una plataforma integral para la gestión de pacientes y procesos administrativos de una aseguradora de salud.',
+              label: 'Plataforma de pacientes',
+              icon: 'patients'
+            },
+            {
+              text: 'Trabajé principalmente en los módulos de autorización prioritaria de tratamientos y medicamentos, y de asistencia al usuario para la evaluación de elegibilidad a descuentos.',
+              label: 'Autorizaciones',
+              icon: 'shield'
+            },
+            {
+              text: 'También participé en pruebas de funcionalidades relacionadas con verificación de seguros, reclamos, facturación y reportes financieros.',
+              label: 'Reclamos y facturación',
+              icon: 'invoice'
+            }
           ]
         },
         {
           role: 'Upex | Agentic QA Engineer | 1 año',
           bullets: [
-            'Trabajé en el desarrollo desde cero de un Test Management System basado en inteligencia artificial, con funcionalidades y workflows orientados al testing agéntico.',
-            'Participé en todas las etapas del ciclo de QA, desde el refinamiento de historias de usuario y la planificación hasta la automatización, regresión y release.',
-            'Utilicé un arnés de OpenCode personalizado, compuesto por un agente principal de QA y subagentes especializados en diferentes tareas del proceso con skills especificas para cada etapa del flujo de trabajo.'
+            {
+              text: 'Trabajé en el desarrollo desde cero de un Test Management System basado en inteligencia artificial, con funcionalidades y workflows orientados al testing agéntico.',
+              label: 'TMS con IA',
+              icon: 'aiChip'
+            },
+            {
+              text: 'Participé en todas las etapas del ciclo de QA, desde el refinamiento de historias de usuario y la planificación hasta la automatización, regresión y release.',
+              label: 'Ciclo de QA',
+              icon: 'cycle'
+            },
+            {
+              text: 'Utilicé un arnés de OpenCode personalizado, compuesto por un agente principal de QA y subagentes especializados en diferentes tareas del proceso con skills especificas para cada etapa del flujo de trabajo.',
+              label: 'Arnés de OpenCode',
+              icon: 'harness'
+            }
           ]
         }
       ]
@@ -77,17 +101,41 @@ const PANEL_COPY = {
         {
           role: 'Consulting firm – Health insurance client | QA Engineer | 4 years',
           bullets: [
-            'Tested an integral platform for patient and administrative-process management at a health insurer.',
-            'Worked mainly on the priority treatment and medication authorization module, and on user assistance for discount eligibility assessment.',
-            'Also tested functionalities related to insurance verification, claims, billing and financial reports.'
+            {
+              text: 'Tested an integral platform for patient and administrative-process management at a health insurer.',
+              label: 'Patient platform',
+              icon: 'patients'
+            },
+            {
+              text: 'Worked mainly on the priority treatment and medication authorization module, and on user assistance for discount eligibility assessment.',
+              label: 'Authorizations',
+              icon: 'shield'
+            },
+            {
+              text: 'Also tested functionalities related to insurance verification, claims, billing and financial reports.',
+              label: 'Claims & billing',
+              icon: 'invoice'
+            }
           ]
         },
         {
           role: 'Upex | Agentic QA Engineer | 1 year',
           bullets: [
-            'Built an AI-based Test Management System from scratch, with features and workflows aimed at agentic testing.',
-            'Worked across every stage of the QA cycle, from user-story refinement and planning through automation, regression and release.',
-            'Used a custom OpenCode harness made of a main QA agent plus specialized subagents for different tasks of the process, with specific skills for each stage of the workflow.'
+            {
+              text: 'Built an AI-based Test Management System from scratch, with features and workflows aimed at agentic testing.',
+              label: 'AI Test Management System',
+              icon: 'aiChip'
+            },
+            {
+              text: 'Worked across every stage of the QA cycle, from user-story refinement and planning through automation, regression and release.',
+              label: 'QA cycle',
+              icon: 'cycle'
+            },
+            {
+              text: 'Used a custom OpenCode harness made of a main QA agent plus specialized subagents for different tasks of the process, with specific skills for each stage of the workflow.',
+              label: 'OpenCode harness',
+              icon: 'harness'
+            }
           ]
         }
       ]
@@ -120,6 +168,78 @@ const PANEL_COPY = {
 };
 
 const CONTACT_LINKEDIN = 'https://www.linkedin.com/in/pinto-lucas-nahuel/';
+
+// HUD line-art drawings for the flip-card fronts: [tag, attrs] pairs built
+// with createElementNS (the panel's no-innerHTML rule). One per Experience
+// card, language-independent — the label travels with the copy instead.
+const CARD_ICONS = {
+  patients: [
+    ['rect', { x: '4', y: '8', width: '40', height: '26', rx: '3' }],
+    ['path', { d: 'M10 21h6l3-6 4 12 3-6h7' }],
+    ['path', { d: 'M24 34v6' }],
+    ['path', { d: 'M16 40h16' }]
+  ],
+  shield: [
+    ['path', { d: 'M24 6l14 5v11c0 9.5-5.7 15.7-14 20-8.3-4.3-14-10.5-14-20V11l14-5z' }],
+    ['path', { d: 'M17.5 24.5l4.5 4.5 8.5-9.5' }]
+  ],
+  invoice: [
+    ['path', { d: 'M12 6h24v36l-6-4-6 4-6-4-6 4V6z' }],
+    ['path', { d: 'M24 15v14' }],
+    [
+      'path',
+      {
+        d: 'M27.5 18.5c0-1.7-1.6-2.8-3.5-2.8s-3.5 1.1-3.5 2.8 1.6 2.5 3.5 2.8 3.5 1.1 3.5 2.8-1.6 2.8-3.5 2.8-3.5-1.1-3.5-2.8'
+      }
+    ]
+  ],
+  aiChip: [
+    ['rect', { x: '14', y: '14', width: '20', height: '20', rx: '3' }],
+    ['circle', { cx: '21', cy: '21', r: '1.8' }],
+    ['circle', { cx: '27', cy: '27', r: '1.8' }],
+    ['path', { d: 'M21 21l6 6' }],
+    ['path', { d: 'M20 14V7' }],
+    ['path', { d: 'M28 14V7' }],
+    ['path', { d: 'M20 34v7' }],
+    ['path', { d: 'M28 34v7' }],
+    ['path', { d: 'M14 20H7' }],
+    ['path', { d: 'M14 28H7' }],
+    ['path', { d: 'M34 20h7' }],
+    ['path', { d: 'M34 28h7' }]
+  ],
+  cycle: [
+    ['path', { d: 'M24 8A16 16 0 1 0 40 24' }],
+    ['path', { d: 'M36 28l4-4 4 4' }],
+    ['path', { d: 'M17.5 24.5l4.5 4.5 9-10' }]
+  ],
+  harness: [
+    ['circle', { cx: '24', cy: '24', r: '7' }],
+    ['circle', { cx: '24', cy: '24', r: '2' }],
+    ['circle', { cx: '8', cy: '8', r: '3.5' }],
+    ['circle', { cx: '40', cy: '8', r: '3.5' }],
+    ['circle', { cx: '8', cy: '40', r: '3.5' }],
+    ['circle', { cx: '40', cy: '40', r: '3.5' }],
+    ['path', { d: 'M11 11l6 6' }],
+    ['path', { d: 'M37 11l-6 6' }],
+    ['path', { d: 'M11 37l6-6' }],
+    ['path', { d: 'M37 37l-6-6' }]
+  ]
+};
+
+function buildCardIcon(name) {
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 48 48');
+  svg.setAttribute('class', 'copy-card-icon');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  (CARD_ICONS[name] || []).forEach(([tag, attrs]) => {
+    const node = document.createElementNS(NS, tag);
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+    svg.appendChild(node);
+  });
+  return svg;
+}
 
 export function createOptionPanel() {
   const panel = document.getElementById('option-panel');
@@ -185,9 +305,10 @@ export function createOptionPanel() {
   }
 
   // Copy can be a plain string (teasers, most entries) or a structured
-  // list of { role, bullets } (the Experiencia full view). Strings go
-  // through textContent; the list is built with DOM APIs — never HTML
-  // parsing — so the panel keeps its no-innerHTML rule.
+  // list of { role, bullets } (the Experiencia full view), where each
+  // bullet is { text, label, icon } rendered as a two-faced flip card.
+  // Everything is built with DOM APIs — never HTML parsing — so the panel
+  // keeps its no-innerHTML rule.
   function renderCopy(content) {
     // .is-structured lets CSS give the module grid the full panel width
     // while plain paragraphs keep a readable measure.
@@ -204,16 +325,78 @@ export function createOptionPanel() {
       role.textContent = entry.role;
       item.appendChild(role);
       const sub = document.createElement('ul');
-      entry.bullets.forEach((line) => {
-        const bullet = document.createElement('li');
-        bullet.textContent = line;
-        sub.appendChild(bullet);
+      entry.bullets.forEach((bullet) => {
+        sub.appendChild(buildFlipCard(bullet));
       });
       item.appendChild(sub);
       list.appendChild(item);
     });
     text.replaceChildren(list);
   }
+
+  // One Experience card: role=button + aria-pressed so click and keyboard
+  // announce the toggle. The back face (the copy) stays in the DOM — the
+  // visual flip never hides the text from assistive tech.
+  function buildFlipCard(bullet) {
+    const card = document.createElement('li');
+    card.className = 'copy-card';
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
+    card.setAttribute('aria-pressed', 'false');
+    card.setAttribute('aria-label', bullet.label);
+
+    const scene = document.createElement('div');
+    scene.className = 'copy-card-scene';
+
+    const front = document.createElement('div');
+    front.className = 'copy-card-face copy-card-front';
+    front.appendChild(buildCardIcon(bullet.icon));
+    const label = document.createElement('span');
+    label.className = 'copy-card-label';
+    label.textContent = bullet.label;
+    front.appendChild(label);
+
+    const back = document.createElement('div');
+    back.className = 'copy-card-face copy-card-back';
+    back.textContent = bullet.text;
+
+    scene.append(front, back);
+    card.appendChild(scene);
+    return card;
+  }
+
+  function flipCard(card) {
+    const flipped = card.classList.toggle('is-flipped');
+    card.setAttribute('aria-pressed', String(flipped));
+  }
+
+  // Click flips, but a text selection on the back face must not: the drag
+  // that selects fires selectstart, and the flag is re-armed on the next
+  // pointerdown so it never leaks into a later plain click.
+  let selectingInCard = false;
+  text.addEventListener('pointerdown', () => {
+    selectingInCard = false;
+  });
+  text.addEventListener('selectstart', (event) => {
+    if (event.target.closest && event.target.closest('.copy-card')) {
+      selectingInCard = true;
+    }
+  });
+  text.addEventListener('click', (event) => {
+    const card = event.target.closest && event.target.closest('.copy-card');
+    const wasSelecting = selectingInCard;
+    selectingInCard = false;
+    if (!card || wasSelecting) return;
+    flipCard(card);
+  });
+  text.addEventListener('keydown', (event) => {
+    const card = event.target.closest && event.target.closest('.copy-card');
+    if (!card) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      flipCard(card);
+    }
+  });
 
   // The visible copy always matches the level: full text while expanded,
   // teaser while narrow (entries without a full copy always show their one
