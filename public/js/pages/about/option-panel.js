@@ -10,7 +10,7 @@ const PANEL_COPY = {
   es: {
     '#contacto': {
       title: 'Contactar',
-      color: '#ffffff',
+      color: '#facc15',
       text: 'Elegí el canal que más te convenga.'
     },
     '#experiencia': {
@@ -63,7 +63,7 @@ const PANEL_COPY = {
     },
     '#resueltos': {
       title: 'Logros',
-      color: '#2bff88',
+      color: '#facc15',
       text:
         'Resultados que se miden con datos: regresiones que bajaron de horas a minutos, bugs críticos cazados antes de llegar al usuario y cobertura estable que sostiene el ritmo de entregas. Cada logro nace de un problema real, se resuelve con criterio y se valida con métricas, no con impresiones.',
       textFull:
@@ -71,7 +71,7 @@ const PANEL_COPY = {
     },
     '#herramientas': {
       title: 'Herramientas',
-      color: '#38bdf8',
+      color: '#facc15',
       text:
         'El stack que uso a diario: Playwright y Selenium para automatización, Postman y consola para APIs, Git con CI para integrar cambios, y Jira para seguir el trabajo de cerca. Evalúo herramientas nuevas con ojo crítico y descarto las que no suman valor real al equipo.',
       textFull:
@@ -79,7 +79,7 @@ const PANEL_COPY = {
     },
     '#proyectos': {
       title: 'Mis Proyectos',
-      color: '#ff3355',
+      color: '#facc15',
       text:
         'Trabajos personales y experimentos donde pruebo ideas de punta a punta: automatización de flujos completos, integraciones con APIs y pequeñas aplicaciones resueltas con recursos propios. Un espacio para explorar sin límites y llevar lo aprendido en el día a día a proyectos propios.',
       textFull:
@@ -89,7 +89,7 @@ const PANEL_COPY = {
   en: {
     '#contacto': {
       title: 'Contact',
-      color: '#ffffff',
+      color: '#facc15',
       text: 'Pick the channel that works best for you.'
     },
     '#experiencia': {
@@ -142,7 +142,7 @@ const PANEL_COPY = {
     },
     '#resueltos': {
       title: 'Achievements',
-      color: '#2bff88',
+      color: '#facc15',
       text:
         'Results measured with data: regressions cut from hours to minutes, critical bugs caught before they reach users, and stable coverage that keeps deliveries moving. Every achievement starts from a real problem, is solved with judgment, and is validated with metrics, not impressions.',
       textFull:
@@ -150,7 +150,7 @@ const PANEL_COPY = {
     },
     '#herramientas': {
       title: 'Tools',
-      color: '#38bdf8',
+      color: '#facc15',
       text:
         'The stack I use daily: Playwright and Selenium for automation, Postman and the console for APIs, Git with CI to integrate changes, and Jira to track work closely. I evaluate new tools with a critical eye and discard the ones that do not bring real value to the team.',
       textFull:
@@ -158,7 +158,7 @@ const PANEL_COPY = {
     },
     '#proyectos': {
       title: 'My Projects',
-      color: '#ff3355',
+      color: '#facc15',
       text:
         'Personal work and experiments where I test ideas end to end: full-flow automation, API integrations, and small applications built with my own resources. A space to explore without limits and turn everyday learning into projects of my own.',
       textFull:
