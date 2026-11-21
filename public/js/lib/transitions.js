@@ -27,8 +27,10 @@ export function wait(ms) {
 
 /**
  * Register this page's custom exit animation. Receives the target URL and
- * returns a promise that resolves when navigation should happen, or
- * null/undefined to fall back to the default veil exit.
+ * the anchor that was clicked (undefined for JS-driven navigations, e.g.
+ * the 3D pie's sector picks) and returns a promise that resolves when
+ * navigation should happen, or null/undefined to fall back to the default
+ * veil exit.
  */
 export function setPageExitAnimation(fn) {
   exitAnimation = fn;
@@ -40,13 +42,13 @@ export function defaultExit() {
   return wait(VEIL_FADE_MS);
 }
 
-function runExit(url) {
+function runExit(url, anchor) {
   if (exiting) return; // one navigation per page lifetime
   exiting = true;
 
   let run;
   try {
-    run = (exitAnimation && exitAnimation(url)) || defaultExit();
+    run = (exitAnimation && exitAnimation(url, anchor)) || defaultExit();
   } catch (error) {
     run = defaultExit();
   }
@@ -118,6 +120,6 @@ export function initPageTransitions() {
     if (!url) return;
 
     event.preventDefault();
-    runExit(url);
+    runExit(url, anchor);
   });
 }

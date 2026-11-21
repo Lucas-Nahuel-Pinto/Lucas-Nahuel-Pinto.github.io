@@ -17,8 +17,11 @@ initThemeSwitch();
 // motion) keeps the default plain veil.
 const ZOOM_MS = 600;
 
-setPageExitAnimation((url) => {
+setPageExitAnimation((url, anchor) => {
   if (!url.pathname.endsWith('/about.html')) return null;
+  // Opted-out links (Lucas Pinto brand, Logros board) get the plain veil:
+  // the dive belongs to the pie and the About links proper.
+  if (anchor && anchor.hasAttribute('data-no-zoom')) return null;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
 
   zoomPageOut({ origin: document.getElementById('chart'), duration: ZOOM_MS });
