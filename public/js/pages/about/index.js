@@ -33,6 +33,21 @@ const wheel = createWheel({
   }
 });
 
+// Deep link (intro.html's Logros board → about.html#resueltos): center the
+// wheel on the hashed option and open its panel with the full copy already
+// deployed. Waits for the loader so the slide-in plays as the veil clears
+// instead of hiding behind it. Load-time only — later hash edits are inert.
+initPageLoader().then(() => {
+  if (!window.location.hash) return;
+  const index = wheelItems.findIndex(
+    (item) => item.getAttribute('href') === window.location.hash
+  );
+  if (index < 0) return;
+  wheel.goTo(index);
+  const target = wheelItems[index];
+  panel.open(target.getAttribute('href'), target, { expanded: true });
+});
+
 // Arrow / PageUp-PageDown work from anywhere on the page.
 document.addEventListener('keydown', (event) => {
   if (event.altKey || event.ctrlKey || event.metaKey) return;

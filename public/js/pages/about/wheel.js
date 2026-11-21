@@ -50,6 +50,17 @@ export function createWheel({ wheel, items, onSelect }) {
     if (active && onSelect) onSelect(active);
   }
 
+  /**
+   * Programmatic centering for deep links (about.html#resueltos): sets the
+   * slot directly, bypassing the step throttle. It does NOT fire onSelect —
+   * the caller opens the panel itself, since a deep link wants a specific
+   * expansion level that the auto-open does not provide.
+   */
+  function goTo(index) {
+    center = ((index % items.length) + items.length) % items.length;
+    render();
+  }
+
   wheel.addEventListener(
     'wheel',
     (event) => {
@@ -103,5 +114,5 @@ export function createWheel({ wheel, items, onSelect }) {
 
   render();
 
-  return { step, render, activeItem };
+  return { step, render, goTo, activeItem };
 }

@@ -454,7 +454,7 @@ export function createOptionPanel() {
     return true;
   }
 
-  function open(key, opener) {
+  function open(key, opener, options) {
     if (opener !== undefined) returnFocus = opener;
 
     if (isOpen) {
@@ -475,8 +475,11 @@ export function createOptionPanel() {
     panel.removeAttribute('inert');
     panel.setAttribute('aria-hidden', 'false');
     // Opens at rest (collapsed): expanding is the user's choice via the
-    // toggle, and once chosen it sticks across wheel selections.
+    // toggle, and once chosen it sticks across wheel selections. A deep
+    // link can ask for more: options.expanded arrives with the full copy
+    // already deployed (setExpanded no-ops on mobile, no expansion there).
     panel.classList.add('is-open');
+    if (options && options.expanded) setExpanded(true, 240);
   }
 
   function close() {
