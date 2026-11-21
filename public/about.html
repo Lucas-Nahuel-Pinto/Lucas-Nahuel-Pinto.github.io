@@ -123,6 +123,13 @@
         <source src="/assets/aistudio/face-aboutMe_030dc440.mp4" type="video/mp4" />
       </video>
 
+      <!-- FACE VEIL: flat image in the video's own background tone
+           (#000c22, sampled from the frame). Above the video, below the
+           artwork: on panel expansion it fades 0 -> 100% and covers the
+           person in place — the face never moves, it disappears behind
+           the same blue it lived in. -->
+      <div id="face-veil" aria-hidden="true" class="pointer-events-none"></div>
+
       <!-- OVERLAY IMAGE (right half only, above the video, below the UI).
            pointer-events:none + window-level scrub listeners => the mouse-scrub
            animation keeps working exactly as before. object-position:left keeps
@@ -161,11 +168,22 @@
         </button>
         <div id="option-panel-body">
           <h2 id="option-panel-title"></h2>
-          <p id="option-panel-text"></p>
+          <div id="option-panel-text"></div>
           <div id="option-panel-actions">
             <a id="option-panel-mail" href="#" data-i18n="sendMail">Enviar mail</a>
             <a id="option-panel-linkedin" href="https://www.linkedin.com/in/pinto-lucas-nahuel/" target="_blank" rel="noopener noreferrer" data-i18n="goLinkedIn">Ir a LinkedIn</a>
           </div>
+          <!-- Expand (two-level copy only): widens the panel to the left —
+               the wheel tucks into the HUD column and the glass stops
+               before touching the wheel — then reveals the full text. -->
+          <button type="button" id="option-panel-expand" aria-expanded="false" aria-controls="option-panel" hidden>
+            <span id="option-panel-expand-label" data-i18n="readMore">Leer más</span>
+            <span class="chev" aria-hidden="true">
+              <svg viewBox="0 0 10 16" width="10" height="16" fill="none">
+                <path d="M8 2 L3 8 L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+          </button>
         </div>
       </aside>
 

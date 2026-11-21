@@ -1,5 +1,6 @@
-/* Background layers: mouse-scrubbed video, right-half artwork and the top
-   scrim that keeps the navbar legible over the bright artwork edge. */
+/* Background layers: mouse-scrubbed video, the face veil that covers the
+   person on expansion, right-half artwork and the top scrim that keeps
+   the navbar legible over the bright artwork edge. */
 #scrub-video {
   position: fixed;
   inset: 0;
@@ -9,6 +10,25 @@
   object-fit: cover;
   object-position: 70% center;
   pointer-events: none;
+}
+
+/* FACE VEIL: flat image in the video's own background tone (#000c22,
+   sampled from the frame). Sits above the video (later in the DOM, same
+   z-index) and below the artwork (z-1). On expansion it fades 0 -> 100%
+   and covers the person IN PLACE — the face never moves, it disappears
+   behind the same blue it lived in. */
+#face-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: url('/about-face-veil.png') center / cover no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html:has(#option-panel.is-expanded) #face-veil {
+  opacity: 1;
 }
 
 /* Overlay artwork: right half, above the video, below the UI.
@@ -57,4 +77,15 @@
   height: 96px;
   pointer-events: none;
   background: linear-gradient(180deg, rgba(2, 10, 26, 0.78) 0%, rgba(2, 10, 26, 0) 100%);
+}
+
+/* CAMERA PAN: expanding the option panel slides the panel edge left and
+   tucks the wheel under the HUD column — the artwork stays EXACTLY where
+   it is (no transform: same size, same position, both themes), and the
+   face never moves either; the veil covers it. */
+
+@media (prefers-reduced-motion: reduce) {
+  #face-veil {
+    transition: none;
+  }
 }
