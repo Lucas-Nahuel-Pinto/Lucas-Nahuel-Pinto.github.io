@@ -60,6 +60,20 @@
   width: var(--panel-expanded-w, 65%);
 }
 
+/* DEEP-LINK ARRIVAL (html.is-deeplink, set by JS while the loading veil is
+   still up): panel, wheel and face veil snap to their final state with no
+   transitions, so the veil reveals an already-deployed panel instead of
+   the deployment itself. JS drops the class after the first frames — no
+   property changes on removal, so nothing re-animates afterwards. */
+html.is-deeplink #option-panel,
+html.is-deeplink #option-panel-close,
+html.is-deeplink #option-panel-body,
+html.is-deeplink .wheel-wrap,
+html.is-deeplink .wheel-item,
+html.is-deeplink #face-veil {
+  transition: none;
+}
+
 /* Plain paragraphs keep a readable measure even in the wide panel; the
    structured Experiencia list (.is-structured) uses the full width. Only
    the expanded state is ever wide enough for the cap to bite. */

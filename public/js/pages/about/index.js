@@ -34,18 +34,26 @@ const wheel = createWheel({
 });
 
 // Deep link (intro.html's Logros board → about.html#resueltos): center the
-// wheel on the hashed option and open its panel with the full copy already
-// deployed. Waits for the loader so the slide-in plays as the veil clears
-// instead of hiding behind it. Load-time only — later hash edits are inert.
+// wheel on the hashed option and arrive with the panel already deployed.
+// This runs when the loader resolves — before the veil's first painted
+// frame — and html.is-deeplink kills the panel/wheel transitions for the
+// first frames, so the veil reveals the final state instead of the
+// deployment itself. Load-time only — later hash edits are inert.
 initPageLoader().then(() => {
   if (!window.location.hash) return;
   const index = wheelItems.findIndex(
     (item) => item.getAttribute('href') === window.location.hash
   );
   if (index < 0) return;
+  document.documentElement.classList.add('is-deeplink');
   wheel.goTo(index);
   const target = wheelItems[index];
-  panel.open(target.getAttribute('href'), target, { expanded: true });
+  panel.open(target.getAttribute('href'), target, { expanded: true, instant: true });
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      document.documentElement.classList.remove('is-deeplink');
+    })
+  );
 });
 
 // Arrow / PageUp-PageDown work from anywhere on the page.

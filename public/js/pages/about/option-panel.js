@@ -477,9 +477,11 @@ export function createOptionPanel() {
     // Opens at rest (collapsed): expanding is the user's choice via the
     // toggle, and once chosen it sticks across wheel selections. A deep
     // link can ask for more: options.expanded arrives with the full copy
-    // already deployed (setExpanded no-ops on mobile, no expansion there).
+    // already deployed (setExpanded no-ops on mobile, no expansion there);
+    // options.instant drops the text delay too — with the transitions
+    // killed there is no width animation left for the words to land with.
     panel.classList.add('is-open');
-    if (options && options.expanded) setExpanded(true, 240);
+    if (options && options.expanded) setExpanded(true, options.instant ? 0 : 240);
   }
 
   function close() {
