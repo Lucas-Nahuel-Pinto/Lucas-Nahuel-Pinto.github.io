@@ -1,0 +1,287 @@
+/* Shared corner HUD: a quarter-circle wedge welded into the top-left corner
+   with a concentric inner disc. The core (inner quarter disc, r=150) is ONE
+   link — intro: the brand; about/proyectos: the back arrow — clipped to the
+   disc so the whole nucleus answers clicks, not just the glyph. The outer
+   band (r=150–260) splits into three equal 30° sector buttons, placed from
+   the top edge down: theme (0–30°), EN (30–60°), ES (60–90°) — the first
+   and last keep today's angular slots for the toggle and the lang switch.
+   Each button is clipped to the exact ring slice, its label parked at the
+   sector's polar centroid (mid-radius 205). Sectors inherit the ring's
+   glass look, light up individually on hover/focus and carry the active
+   state (selected lang, light mode) in the old chip's cyan gradient. The
+   fills mirror the artwork's holograms: dark translucent glass, thin cyan
+   rim, soft glow.
+   Used by intro.html, about.html and proyectos.html — keep all three in
+   sync with this file. */
+.corner-hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 260px;
+  height: 260px;
+  /* Only the core link and the three sector buttons take clicks; the rest is decor. */
+  pointer-events: none;
+  /* The SVG and every slot below stay in the 260px coordinate space;
+     this renders the whole wedge at 50% of its drawn size. */
+  transform: scale(var(--hud-scale, 0.5));
+  transform-origin: top left;
+}
+
+.corner-hud__shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* Clips the inner circle (and the glow) to the corner */
+  overflow: hidden;
+}
+
+.corner-hud__ring {
+  fill: rgba(2, 14, 38, 0.72);
+  stroke: rgba(140, 245, 255, 0.9);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 7px rgba(80, 215, 255, 0.55));
+}
+
+.corner-hud__core {
+  fill: rgba(4, 24, 60, 0.86);
+  stroke: rgba(140, 245, 255, 1);
+  stroke-width: 2.5;
+  filter: drop-shadow(0 0 9px rgba(80, 215, 255, 0.5));
+  transition: fill 0.15s ease, filter 0.15s ease;
+}
+
+/* The whole core answers its link (hover + keyboard focus): the disc
+   itself brightens instead of only the glyph. */
+.corner-hud:has(.corner-hud__brand:hover) .corner-hud__core,
+.corner-hud:has(.corner-hud__brand:focus-visible) .corner-hud__core {
+  fill: rgba(9, 46, 102, 0.95);
+  filter: drop-shadow(0 0 15px rgba(80, 215, 255, 0.85));
+}
+
+/* Radial hairlines splitting the band into the three 30° sectors (they
+   fall where two sector buttons' edges meet). */
+.corner-hud__divider {
+  stroke: rgba(140, 245, 255, 0.55);
+  stroke-width: 1.5;
+  filter: drop-shadow(0 0 4px rgba(80, 215, 255, 0.35));
+}
+
+/* Sector overlays over the band: transparent at rest (the ring shows
+   through), lit on hover, cyan gradient for the active state. Ties are
+   settled by source order — hover, then active, then focus — except the
+   theme's light-mode state, which outranks hover by specificity. */
+.corner-hud__sector {
+  fill: transparent;
+  transition: fill 0.15s ease, filter 0.15s ease;
+}
+
+.corner-hud:has(.hud-sector--theme:hover) .corner-hud__sector--theme,
+.corner-hud:has(.hud-sector--en:hover) .corner-hud__sector--en,
+.corner-hud:has(.hud-sector--es:hover) .corner-hud__sector--es {
+  fill: rgba(120, 240, 255, 0.16);
+  filter: drop-shadow(0 0 8px rgba(80, 215, 255, 0.6));
+}
+
+.corner-hud:has(.hud-sector--es[aria-pressed="true"]) .corner-hud__sector--es,
+.corner-hud:has(.hud-sector--en[aria-pressed="true"]) .corner-hud__sector--en {
+  fill: url(#hud-sector-active);
+  filter: drop-shadow(0 0 9px rgba(80, 215, 255, 0.7));
+}
+
+/* Light mode = theme sector active (same gradient semantics as the
+   pressed lang sector). Specificity beats the hover rule above. */
+html[data-theme="light"] .corner-hud:has(.hud-sector--theme) .corner-hud__sector--theme {
+  fill: url(#hud-sector-active);
+  filter: drop-shadow(0 0 9px rgba(80, 215, 255, 0.7));
+}
+
+.corner-hud:has(.hud-sector--theme:focus-visible) .corner-hud__sector--theme,
+.corner-hud:has(.hud-sector--en:focus-visible) .corner-hud__sector--en,
+.corner-hud:has(.hud-sector--es:focus-visible) .corner-hud__sector--es {
+  fill: url(#hud-sector-active);
+  filter: drop-shadow(0 0 12px rgba(160, 245, 255, 1));
+}
+
+/* Even in light mode (sector already lit) keyboard focus must still read:
+   outrank the light-active glow with a brighter one. Same specificity,
+   later in the file → wins when both apply. */
+html[data-theme] .corner-hud:has(.hud-sector--theme:focus-visible) .corner-hud__sector--theme {
+  filter: drop-shadow(0 0 14px rgba(190, 250, 255, 1));
+}
+
+.corner-hud__sheen {
+  fill: url(#hud-sheen);
+}
+
+/* Core link: the full quarter disc (r=150) is the hit area, so the
+   nucleus works as one big button. Grid + padding re-center the content
+   at its old optical spot: brand at (58,60), arrow at (46.8,60). */
+.corner-hud__brand {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 150px;
+  height: 150px;
+  display: grid;
+  place-items: center;
+  padding: 0 34px 30px 0;
+  clip-path: path("M0 0 H150 A150 150 0 0 1 0 150 Z");
+  color: #cfefff;
+  font-size: 30px;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  user-select: none;
+  pointer-events: auto;
+  transition: color 0.15s ease;
+}
+
+.corner-hud__brand:hover {
+  color: #fff;
+}
+
+/* Back arrow variant (about and proyectos): same disc, arrow nudged to
+   its tuned spot — the tall 10x18 viewBox rides off the inline baseline,
+   so grid + line-height 0. Tuned values (36px glyph, nudged left) came
+   from the visual pass on about. */
+.corner-hud__back {
+  padding: 0 56.4px 30px 0;
+  line-height: 0;
+}
+
+.corner-hud__back svg {
+  display: block;
+  width: 36px;
+  height: auto;
+  filter: drop-shadow(0 0 6px rgba(150, 240, 255, 0.95));
+  transition: filter 0.15s ease;
+}
+
+.corner-hud__back:hover svg {
+  filter: drop-shadow(0 0 10px rgba(190, 248, 255, 1));
+}
+
+/* Ring-sector buttons: transparent slices over the band, clipped to the
+   exact annulus sector so stray clicks fall through to the page or the
+   neighbouring control. */
+.hud-sector {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(207, 239, 255, 0.85);
+  font-family: inherit;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: color 0.15s ease, text-shadow 0.15s ease;
+}
+
+.hud-sector:hover,
+.hud-sector:focus-visible {
+  color: #fff;
+}
+
+.hud-sector[aria-pressed="true"] {
+  color: #fff;
+  text-shadow: 0 0 9px rgba(120, 240, 255, 0.85);
+}
+
+/* Boxes are each sector's bounding box in the 260-space; the clip turns
+   them back into ring slices (θ from the top edge: theme 0–30°, EN
+   30–60°, ES 60–90°). Radii and sweep flags stay in SVG space — the
+   boxes are translated, never scaled. */
+.hud-sector--theme {
+  left: 129.9px;
+  top: 0;
+  width: 130.1px;
+  height: 130px;
+  clip-path: path("M20.1 0 L130.1 0 A260 260 0 0 1 95.27 130 L0 75 A150 150 0 0 0 20.1 0 Z");
+}
+
+.hud-sector--en {
+  left: 75px;
+  top: 75px;
+  width: 150.17px;
+  height: 150.17px;
+  clip-path: path("M54.9 0 L150.17 55 A260 260 0 0 1 55 150.17 L0 54.9 A150 150 0 0 0 54.9 0 Z");
+}
+
+.hud-sector--es {
+  left: 0;
+  top: 129.9px;
+  width: 130px;
+  height: 130.1px;
+  clip-path: path("M75 0 L130 95.27 A260 260 0 0 1 0 130.1 L0 20.1 A150 150 0 0 0 75 0 Z");
+}
+
+/* Labels sit at each sector's polar centroid (r=205, θ=15°/45°/75°),
+   converted to the sector box's local coordinates. */
+.hud-sector__label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+}
+
+.hud-sector--en .hud-sector__label {
+  left: 69.97px;
+  top: 69.97px;
+}
+
+.hud-sector--es .hud-sector__label {
+  left: 53.07px;
+  top: 68.14px;
+}
+
+/* Sun/moon glyph inside the theme sector: the icon shows the MODE THE
+   CLICK SWITCHES TO (sun while dark, moon while light), matching the
+   aria-label; js/lib/theme.js owns the label, persistence and swap. */
+.hud-sector--theme .theme-icon {
+  position: absolute;
+  left: 68.14px;
+  top: 53.07px;
+  transform: translate(-50%, -50%);
+}
+
+.theme-icon {
+  display: none;
+  width: 33px;
+  height: 33px;
+}
+
+[data-theme="dark"] .theme-icon--sun {
+  display: block;
+}
+
+[data-theme="light"] .theme-icon--moon {
+  display: block;
+}
+
+/* The clip-path above hides the outline on the core/sectors, so their
+   lit shape (rules with :has() at the top of this file) is the focus
+   indicator; the outline stays for any unclipped control. */
+.corner-hud a:focus-visible,
+.corner-hud button:focus-visible {
+  outline: 2px solid var(--focus, #facc15);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+/* Shrink the wedge on narrow screens so it never swallows the content
+   (multipliers on top of the base 0.5). */
+@media (max-width: 900px) {
+  .corner-hud {
+    --hud-scale: 0.39;
+  }
+}
+
+@media (max-width: 560px) {
+  .corner-hud {
+    --hud-scale: 0.3;
+  }
+}

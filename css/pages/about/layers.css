@@ -1,0 +1,91 @@
+/* Background layers: mouse-scrubbed video, the face veil that covers the
+   person on expansion, right-half artwork and the top scrim that keeps
+   the navbar legible over the bright artwork edge. */
+#scrub-video {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 70% center;
+  pointer-events: none;
+}
+
+/* FACE VEIL: flat image in the video's own background tone (#000c22,
+   sampled from the frame). Sits above the video (later in the DOM, same
+   z-index) and below the artwork (z-1). On expansion it fades 0 -> 100%
+   and covers the person IN PLACE — the face never moves, it disappears
+   behind the same blue it lived in. */
+#face-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: url('/about-face-veil.png') center / cover no-repeat;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html:has(#option-panel.is-expanded) #face-veil {
+  opacity: 1;
+}
+
+/* Overlay artwork: right half, above the video, below the UI.
+   pointer-events:none + window-level scrub listeners => the mouse-scrub
+   animation is unaffected. Darkened so text panels over it keep WCAG
+   contrast (measured: white text 8.3:1 median over it). */
+#about-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1;
+  height: 100%;
+  width: 50%;
+  object-fit: cover;
+  /* Keeps the transparent edge + window frame on screen center so the
+     person in the left half of the video is never covered. */
+  object-position: left center;
+  filter: brightness(0.7) saturate(1);
+  pointer-events: none;
+  /* Cut the left extreme with a gradient so the artwork melts into the
+     video background instead of ending on a hard vertical seam. */
+  -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 28%, #000 95%);
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 28%, #000 95%);
+}
+
+@media (max-width: 767px) {
+  /* Narrow viewport: "left" would show only the PNG's transparent edge,
+     so crop from the artwork side instead. The mask fades the hard
+     vertical seam into the video and keeps the wheel text readable. */
+  #about-overlay {
+    object-position: right center;
+    -webkit-mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, #000 22%);
+    mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, #000 22%);
+  }
+}
+
+/* TOP SCRIM: the navbar lands on the overlay's bright cyan frame strip;
+   this gradient restores WCAG contrast (measured 1.03:1 before it)
+   without hiding the artwork. */
+#top-scrim {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  width: 50%;
+  height: 96px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(2, 10, 26, 0.78) 0%, rgba(2, 10, 26, 0) 100%);
+}
+
+/* CAMERA PAN: expanding the option panel slides the panel edge left and
+   tucks the wheel under the HUD column — the artwork stays EXACTLY where
+   it is (no transform: same size, same position, both themes), and the
+   face never moves either; the veil covers it. */
+
+@media (prefers-reduced-motion: reduce) {
+  #face-veil {
+    transition: none;
+  }
+}
