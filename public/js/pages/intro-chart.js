@@ -233,6 +233,8 @@ function init(renderer) {
 
   // ---------- Interaction state ----------
   let hovered = null; // mesh under the pointer (mouse)
+  let boardHover = null; // board row under the pointer (mouse)
+  let boardFocus = null; // board row holding keyboard focus
 
   // Sectors that present a "clickable" hand cursor on hover.
   // Keep in sync with MENU entries that are meant to read as links.
@@ -241,7 +243,10 @@ function init(renderer) {
   let focused = null; // mesh whose sr link has keyboard focus
 
   function activeMesh() {
-    return hovered || focused || selected;
+    // Canvas hover wins over the board rows, which win over keyboard focus
+    // and touch selection. Board state lives apart from `hovered` so the
+    // canvas pointerleave never clears a highlight a row turned on.
+    return hovered || boardHover || boardFocus || focused || selected;
   }
 
   function updateLabel() {
@@ -387,6 +392,55 @@ function init(renderer) {
     if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
     if (e.key === 'ArrowRight') { e.preventDefault(); rotateMenu(1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); rotateMenu(-1); }
+  });
+
+  // ---------- Board rows drive the same highlight ----------
+  // The painted Projects panel lists the same three projects as the outer
+  // sectors, so rows and sectors match by href (never by order). A row
+  // under the pointer — or holding keyboard focus — turns its sector to
+  // face the user, stretches it and shows its name above the chart,
+  // exactly like hovering the sector itself.
+  function faceEntry(entry) {
+    // Same formula as the load-time orientation, but the delta is
+    // normalized into (-180deg, 180deg] so the chart always takes the
+    // short way around instead of spinning 240deg to a neighbouring sector.
+    const TAU = Math.PI * 2;
+    const want = FACE_USER - entry.center * DEG;
+    let delta = (((want - targetZ) % TAU) + TAU) % TAU;
+    if (delta > Math.PI) delta -= TAU;
+    targetZ += delta;
+    // Keep the arrow keys sequential from the sector the user just faced.
+    const idx = NAV_ORDER.indexOf(entry.id);
+    if (idx >= 0) navIdx = idx;
+  }
+
+  document.querySelectorAll('.board-menu a[href]').forEach((row) => {
+    const mesh = meshes.find((m) => m.userData.entry.href === row.getAttribute('href'));
+    if (!mesh) return;
+    const entry = mesh.userData.entry;
+
+    row.addEventListener('pointerenter', (event) => {
+      if (event.pointerType !== 'mouse') return;
+      boardHover = mesh;
+      faceEntry(entry);
+      updateLabel();
+    });
+    row.addEventListener('pointerleave', (event) => {
+      if (event.pointerType !== 'mouse') return;
+      if (boardHover === mesh) boardHover = null;
+      updateLabel();
+    });
+    // Keyboard mirror of the hover: the rows are real links, so tabbing
+    // through the panel highlights its sector the same way.
+    row.addEventListener('focus', () => {
+      boardFocus = mesh;
+      faceEntry(entry);
+      updateLabel();
+    });
+    row.addEventListener('blur', () => {
+      if (boardFocus === mesh) boardFocus = null;
+      updateLabel();
+    });
   });
 
   // ---------- Resize ----------
