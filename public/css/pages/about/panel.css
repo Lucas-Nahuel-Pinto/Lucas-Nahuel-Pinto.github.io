@@ -157,7 +157,7 @@
 }
 
 /* Structured full copy (Experiencia): each role is a bold heading with its
-   items as interactive flip cards in a 3-column row — the row spans the
+   items as interactive flip cards, one card per row — each card spans the
    full width of the expanded panel, up to the right padding edge. */
 #option-panel-text .copy-list {
   margin: 0;
@@ -183,7 +183,7 @@
 
 #option-panel-text .copy-list > li > ul {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 14px;
   margin: 0;
   padding: 0;
@@ -272,14 +272,6 @@
   color: #fff;
   font-weight: 700;
   font-size: clamp(14px, 1.1vw, 16px);
-}
-
-@media (max-width: 1199px) {
-  /* Narrow desktop: three columns would squeeze the modules into
-     unreadable slivers — stack them instead. */
-  #option-panel-text .copy-list > li > ul {
-    grid-template-columns: 1fr;
-  }
 }
 
 #option-panel-actions {
