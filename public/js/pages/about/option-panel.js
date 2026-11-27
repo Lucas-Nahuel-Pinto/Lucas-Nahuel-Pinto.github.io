@@ -78,7 +78,7 @@ const PANEL_COPY = {
         'Resultados que se miden con datos: regresiones que bajaron de horas a minutos, bugs críticos cazados antes de llegar al usuario y cobertura estable que sostiene el ritmo de entregas. Cada logro nace de un problema real, se resuelve con criterio y se valida con métricas, no con impresiones. Trabajo con evidencia: casos priorizados por riesgo, defectos con pasos exactos y reproducible, y reportes que separan el ruido de lo que de verdad bloquea el release. Si algo se rompe, primero va el diagnóstico —qué cambió, en qué entorno, con qué datos— y después la solución; si algo funciona, queda automatizado para no depender de nadie.'
     },
     '#herramientas': {
-      title: 'Herramientas',
+      title: 'Habilidades',
       color: '#facc15',
       text:
         'El stack que uso a diario: Playwright y Selenium para automatización, Postman y consola para APIs, Git con CI para integrar cambios, y Jira para seguir el trabajo de cerca. Evalúo herramientas nuevas con ojo crítico y descarto las que no suman valor real al equipo.',
@@ -165,7 +165,7 @@ const PANEL_COPY = {
         'Results measured with data: regressions cut from hours to minutes, critical bugs caught before they reach users, and stable coverage that keeps deliveries moving. Every achievement starts from a real problem, is solved with judgment, and is validated with metrics, not impressions. I work from evidence: cases prioritized by risk, defects with exact steps and a clear repro, and reports that separate the noise from what truly blocks the release. When something breaks, the diagnosis comes first —what changed, in which environment, with which data— and the fix after; when something works, it gets automated so it no longer depends on anyone.'
     },
     '#herramientas': {
-      title: 'Tools',
+      title: 'Skills',
       color: '#facc15',
       text:
         'The stack I use daily: Playwright and Selenium for automation, Postman and the console for APIs, Git with CI to integrate changes, and Jira to track work closely. I evaluate new tools with a critical eye and discard the ones that do not bring real value to the team.',
