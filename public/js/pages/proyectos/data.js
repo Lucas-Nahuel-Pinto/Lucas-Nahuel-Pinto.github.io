@@ -3,8 +3,8 @@
     (titles are product names and stay identical in both languages). */
 export const PROJECTS = [
   {
-    slug: 'qa-flow-checklists',
-    title: 'QA Checklist',
+    slug: 'qa-flow-checker',
+    title: 'QA Flow Checker',
     accent: '#facc15',
     icon: 'clipboard',
     idea:
@@ -21,8 +21,8 @@ export const PROJECTS = [
     }
   },
   {
-    slug: 'jira-traceability',
-    title: 'Jira Traceability Manager',
+    slug: 'jira-trace-mapper',
+    title: 'Jira Trace Mapper',
     accent: '#2bff88',
     tagline: 'De 2-3 horas de auditoría manual a 30 segundos.',
     icon: 'kanban',
@@ -41,8 +41,8 @@ export const PROJECTS = [
     }
   },
   {
-    slug: 'harness-manager',
-    title: 'Harness Manager',
+    slug: 'agents-manager',
+    title: 'Agents Manager',
     accent: '#ff3355',
     tagline: 'Cualquier arnés, desde el navegador.',
     icon: 'code',

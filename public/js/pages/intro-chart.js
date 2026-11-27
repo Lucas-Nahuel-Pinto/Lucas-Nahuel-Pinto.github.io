@@ -18,17 +18,17 @@ const MENU = [
   {
     id: 'about',
     kind: 'center',
-    label: 'About Me',
+    label: 'Mi Metodología',
     href: 'about.html',
-    color: 0x0059bf, // white (About Me)
+    color: 0x0059bf, // blue (center disc)
     css: '#ffffff',
     sr: 'sr-about'
   },
   {
     id: 'p1',
     kind: 'segment',
-    label: 'Harness Manager',
-    href: 'proyectos.html#harness-manager',
+    label: 'Agents Manager',
+    href: 'proyectos.html#agents-manager',
     color: 0xff3355, // neon red
     css: '#ffffff',
     sr: 'sr-p1',
@@ -37,8 +37,8 @@ const MENU = [
   {
     id: 'p2',
     kind: 'segment',
-    label: 'QA Checklist',
-    href: 'proyectos.html#qa-flow-checklists',
+    label: 'QA Flow Checker',
+    href: 'proyectos.html#qa-flow-checker',
     color: 0xffe600, // neon yellow
     css: '#ffffff',
     sr: 'sr-p2',
@@ -47,8 +47,8 @@ const MENU = [
   {
     id: 'p3',
     kind: 'segment',
-    label: 'Jira Traceability Manager',
-    href: 'proyectos.html#jira-traceability',
+    label: 'Jira Trace Mapper',
+    href: 'proyectos.html#jira-trace-mapper',
     color: 0x2bff88, // neon green
     css: '#ffffff',
     sr: 'sr-p3',
@@ -260,10 +260,10 @@ function init(renderer) {
     }
   }
 
-  // The "About Me" label follows the ES/EN switch (product names stay).
+  // The center label follows the ES/EN switch (product names stay).
   function applyChartLang(lang) {
     const about = MENU.find((m) => m.id === 'about');
-    if (about) about.label = lang === 'en' ? 'About Me' : 'Sobre mí';
+    if (about) about.label = lang === 'en' ? 'My Methodology' : 'Mi Metodología';
     if (labelEl.classList.contains('is-visible')) updateLabel();
   }
   applyChartLang(document.documentElement.lang || 'es');
@@ -356,7 +356,7 @@ function init(renderer) {
   let targetZ = FACE_USER - firstSegment.center * DEG;
   group.rotation.z = targetZ;
 
-  // Traversal order: the center (About Me) is part of the arrow list too.
+  // Traversal order: the center (My Methodology) is part of the arrow list too.
   const NAV_ORDER = ['about', 'p1', 'p2', 'p3'];
   let navIdx = 1; // first segment is in front at load
 

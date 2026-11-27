@@ -15,6 +15,7 @@ const DICTIONARIES = {
   es: {
     language: 'Idioma',
     about: 'Sobre mí',
+    methodology: 'Metodología',
     loading: 'Cargando',
     backIntro: 'Volver a la intro',
     closePanel: 'Cerrar panel',
@@ -43,14 +44,15 @@ const DICTIONARIES = {
     scrollToDetails: 'Bajar a los detalles',
     selectProject: 'Seleccionar proyecto',
     goToAchievements: 'Ir a Logros',
-    goToJira: 'Ir a Jira Traceability Manager',
-    goToQa: 'Ir a QA Checklist',
-    goToHarness: 'Ir a Harness Manager',
+    goToJira: 'Ir a Jira Trace Mapper',
+    goToQa: 'Ir a QA Flow Checker',
+    goToHarness: 'Ir a Agents Manager',
     portfolioSections: 'Secciones del portfolio'
   },
   en: {
     language: 'Language',
     about: 'About Me',
+    methodology: 'Methodology',
     loading: 'Loading',
     backIntro: 'Back to the intro',
     closePanel: 'Close panel',
@@ -79,9 +81,9 @@ const DICTIONARIES = {
     scrollToDetails: 'Scroll to the details',
     selectProject: 'Select project',
     goToAchievements: 'Go to Achievements',
-    goToJira: 'Go to Jira Traceability Manager',
-    goToQa: 'Go to QA Checklist',
-    goToHarness: 'Go to Harness Manager',
+    goToJira: 'Go to Jira Trace Mapper',
+    goToQa: 'Go to QA Flow Checker',
+    goToHarness: 'Go to Agents Manager',
     portfolioSections: 'Portfolio sections'
   }
 };

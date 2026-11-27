@@ -61,6 +61,14 @@ const PANEL_COPY = {
         }
       ]
     },
+    '#metodologia': {
+      title: 'Metodología',
+      color: '#facc15',
+      text:
+        'Mi proceso de QA con agentes de IA en tres etapas: discovery y research para entender el producto, diseño de la estrategia de testing, y automatización agéntica con un arnés de OpenCode. Cada etapa termina en un artefacto que la siguiente consume —brief, spec, tests, release— sin perder el criterio humano en las decisiones.',
+      textFull:
+        'Mi proceso de QA con agentes de IA en tres etapas: discovery y research para entender el producto, diseño de la estrategia de testing, y automatización agéntica con un arnés de OpenCode. Cada etapa termina en un artefacto que la siguiente consume —brief, spec, tests, release— sin perder el criterio humano en las decisiones. En discovery convierto entrevistas e ideas en jobs to be done, segmentos y un journey con puntos de fricción; en diseño, ese material alimenta la arquitectura de información, los flujos y la dirección visual; en automatización, un agente principal de QA coordina subagentes especializados por etapa, con skills propias para research, wireframes, review y handoff. El mismo arnés sostiene mis tres proyectos personales, así que lo que aprendo en uno vuelve a los otros.'
+    },
     '#resueltos': {
       title: 'Logros',
       color: '#facc15',
@@ -139,6 +147,14 @@ const PANEL_COPY = {
           ]
         }
       ]
+    },
+    '#metodologia': {
+      title: 'Methodology',
+      color: '#facc15',
+      text:
+        'My QA process with AI agents runs in three stages: discovery and research to understand the product, test-strategy design, and agentic automation with an OpenCode harness. Every stage ends in an artifact the next one consumes —brief, spec, tests, release— without losing human judgment on the decisions.',
+      textFull:
+        'My QA process with AI agents runs in three stages: discovery and research to understand the product, test-strategy design, and agentic automation with an OpenCode harness. Every stage ends in an artifact the next one consumes —brief, spec, tests, release— without losing human judgment on the decisions. In discovery I turn interviews and ideas into jobs to be done, segments and a journey with named friction points; in design that material feeds the information architecture, flows and visual direction; in automation a main QA agent coordinates specialized subagents per stage, each with its own skills for research, wireframes, review and handoff. The same harness backs my three personal projects, so what I learn in one flows back into the others.'
     },
     '#resueltos': {
       title: 'Achievements',

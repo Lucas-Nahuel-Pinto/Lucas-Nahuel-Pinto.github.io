@@ -20,17 +20,17 @@ const carousel = createCarousel({ projects: PROJECTS });
 createVideoScrub({
   video: document.getElementById('slide-scrub-video'),
   sensitivity: 0.8,
-  isEnabled: () => carousel.activeSlug() === 'qa-flow-checklists'
+  isEnabled: () => carousel.activeSlug() === 'qa-flow-checker'
 });
 
 createVideoScrub({
   video: document.getElementById('jtm-scrub-video'),
   sensitivity: 0.8,
-  isEnabled: () => carousel.activeSlug() === 'jira-traceability'
+  isEnabled: () => carousel.activeSlug() === 'jira-trace-mapper'
 });
 
 createVideoScrub({
   video: document.getElementById('harness-scrub-video'),
   sensitivity: 0.8,
-  isEnabled: () => carousel.activeSlug() === 'harness-manager'
+  isEnabled: () => carousel.activeSlug() === 'agents-manager'
 });
