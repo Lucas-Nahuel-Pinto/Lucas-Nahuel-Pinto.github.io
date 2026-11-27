@@ -19,7 +19,7 @@ const MENU = [
     id: 'about',
     kind: 'center',
     label: 'Mi Metodología',
-    href: 'about.html',
+    href: 'about.html#metodologia',
     color: 0x0059bf, // blue (center disc)
     css: '#ffffff',
     sr: 'sr-about'
