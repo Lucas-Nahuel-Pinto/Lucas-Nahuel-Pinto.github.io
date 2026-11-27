@@ -86,7 +86,7 @@ const PANEL_COPY = {
         'El stack que uso a diario: Playwright y Selenium para automatización, Postman y consola para APIs, Git con CI para integrar cambios, y Jira para seguir el trabajo de cerca. Evalúo herramientas nuevas con ojo crítico y descarto las que no suman valor real al equipo. Prefiero pocas herramientas dominadas a muchas a medias: Playwright sostiene la suite de regresión, Postman permite explorar una API antes de escribir un solo test, el CI con ramas cortas avisa en minutos si algo se rompió, y Jira hace visible el estado del trabajo sin preguntar. Cuando aparece una herramienta nueva que promete, la pruebo en un caso real antes de adoptarla.'
     },
     '#proyectos': {
-      title: 'Mis Proyectos',
+      title: 'Proyectos',
       color: '#facc15',
       text:
         'Trabajos personales y experimentos donde pruebo ideas de punta a punta: automatización de flujos completos, integraciones con APIs y pequeñas aplicaciones resueltas con recursos propios. Un espacio para explorar sin límites y llevar lo aprendido en el día a día a proyectos propios.',
@@ -173,7 +173,7 @@ const PANEL_COPY = {
         'The stack I use daily: Playwright and Selenium for automation, Postman and the console for APIs, Git with CI to integrate changes, and Jira to track work closely. I evaluate new tools with a critical eye and discard the ones that do not bring real value to the team. I prefer a few tools I master over many I only half-know: Playwright backs the regression suite, Postman lets me explore an API before writing a single test, short-lived branches with CI flag breakage in minutes, and Jira makes the state of work visible without asking. When a promising new tool shows up, I try it on a real case before adopting it.'
     },
     '#proyectos': {
-      title: 'My Projects',
+      title: 'Projects',
       color: '#facc15',
       text:
         'Personal work and experiments where I test ideas end to end: full-flow automation, API integrations, and small applications built with my own resources. A space to explore without limits and turn everyday learning into projects of my own.',
