@@ -1,7 +1,8 @@
 /**
- * Infinite-loop depth wheel: five anchors rendered as three visible slots.
- * Only the center item is interactive; moving the wheel re-assigns
- * data-slot values so CSS drives the depth/blur/scale.
+ * Infinite-loop depth wheel: six anchors rendered as three visible slots
+ * (farther items stay hidden at ±3). Only the center item is interactive;
+ * moving the wheel re-assigns data-slot values so CSS drives the
+ * depth/blur/scale.
  */
 
 const STEP_THROTTLE_MS = 300;
